@@ -1,0 +1,71 @@
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "error.h"
+#include "tasks.h"
+
+int main(int argc, char** argv) {
+	if (argc != 3) {
+		printf(
+		    "Usage: %s <flag> <x>\n"
+		    "Flags:\n"
+		    "  - /h, -h: prints the first 100 numbers divisible by 'x'\n"
+		    "  - /p, -p: determines if 'x' is a prime number\n"
+		    "  - /s, -s: converts 'x' to hex\n"
+		    "  - /e, -e: raises numbers from lab-task-1 to 10 to powers from 1 to 'x' < 10\n"
+		    "  - /a, -a: computes the sum of numbers from 1 to 'x'\n"
+		    "  - /f, -f: computes the factorial of 'x'\n",
+		    argv[0]);
+		return -ERROR_INVALID_PARAMETER;
+	}
+
+	char* flag = argv[1];
+	if (flag[0] != '-' && flag[0] != '/') {
+		fprintf(stderr, "Invalid flag: %s\n", flag);
+		return -ERROR_INVALID_PARAMETER;
+	}
+
+	char* endPtr;
+	long x = strtol(argv[2], &endPtr, 10);
+	if (*endPtr != '\0' || errno != 0) {
+		fprintf(stderr, "Invalid 'x': %s; malformed number or out of range\n", argv[2]);
+		return -ERROR_INVALID_PARAMETER;
+	}
+
+	error_t error = ERROR_SUCCESS;
+	switch (flag[1]) {
+		case 'h': {
+			error = print_divisible(x);
+			break;
+		}
+		case 'p': {
+			error = print_is_prime(x);
+			break;
+		}
+		case 's': {
+			error = print_hex(x);
+			break;
+		}
+		case 'e': {
+			error = print_powers(x);
+			break;
+		}
+		case 'a': {
+			error = print_sums(x);
+			break;
+		}
+		case 'f': {
+			error = print_factorial(x);
+			break;
+		}
+		default:
+			fprintf(stderr, "Invalid flag: %s\n", flag);
+			return -ERROR_INVALID_PARAMETER;
+	}
+
+	if (error != ERROR_SUCCESS) {
+		error_print(error);
+		return -(int)error;
+	}
+}
