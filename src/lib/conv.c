@@ -15,7 +15,7 @@ error_t str_to_long(char* in, long* out) {
 			value = value * 10 + (*in - '0');
 			if (value < 0) return ERROR_OVERFLOW;
 		} else {
-			return ERROR_UNEXPECTED_TOKEN;
+			return ERROR_INVALID_PARAMETER;
 		}
 	}
 
@@ -46,12 +46,15 @@ error_t str_to_double(char* in, double* out) {
 
 			if (fracDivisor) {
 				frac = frac * 10 + digit;
+				if (frac < 0) return ERROR_OVERFLOW;
 				fracDivisor *= 10;
+				if (fracDivisor < 0) return ERROR_OVERFLOW;
 			} else {
 				integer = integer * 10 + digit;
+				if (integer < 0) return ERROR_OVERFLOW;
 			}
 		} else {
-			return ERROR_UNEXPECTED_TOKEN;
+			return ERROR_INVALID_PARAMETER;
 		}
 	}
 
