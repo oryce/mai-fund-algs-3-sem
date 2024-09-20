@@ -21,23 +21,25 @@ error_t print_divisible(long x) {
 
 error_t print_is_prime(long x) {
 	if (x == 0) return ERROR_INVALID_PARAMETER;
-	if (x < 0) x = -x;
 
-	if (x == 1) {
+	long n = x;
+	if (n < 0) n = -n;
+
+	if (n == 1) {
 		fprintf(stdout, "%ld is neither a prime nor a composite number\n", x);
 		return ERROR_SUCCESS;
 	}
 
-	if (x == 2 || x == 3) {
+	if (n == 2 || n == 3) {
 		fprintf(stdout, "%ld is a prime number\n", x);
 		return ERROR_SUCCESS;
-	} else if (x % 2 == 0 || x % 3 == 0) {
+	} else if (n % 2 == 0 || n % 3 == 0) {
 		fprintf(stdout, "%ld is a composite number\n", x);
 		return ERROR_SUCCESS;
 	}
 
-	for (long i = 5; i * i <= x; i += 6) {
-		if (x % i == 0 || x % (i + 2) == 0) {
+	for (long i = 5; i * i <= n; i += 6) {
+		if (n % i == 0 || n % (i + 2) == 0) {
 			fprintf(stdout, "%ld is a composite number\n", x);
 			return ERROR_SUCCESS;
 		}
