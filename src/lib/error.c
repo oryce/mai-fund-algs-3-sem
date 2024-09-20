@@ -13,6 +13,12 @@ void error_print(error_t error) {
 		case ERROR_INVALID_PARAMETER:
 			fprintf(stderr, "Error: Invalid parameter\n");
 			break;
+		case ERROR_LIMIT_FAIL:
+			fprintf(stderr, "Error: Limit cannot be computed\n");
+			break;
+		case ERROR_HEAP_ALLOCATION:
+			fprintf(stderr, "Error: Cannot allocate heap memory\n");
+			break;
 		default:
 			fprintf(stderr, "Unknown error\n");
 	}

@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include "mth.h"
+
 error_t print_divisible(long x) {
 	if (x <= 0) return ERROR_INVALID_PARAMETER;
 
@@ -67,24 +69,20 @@ error_t print_hex(long x) {
 	return ERROR_SUCCESS;
 }
 
-long long_pow(long base, long power) {
-	long result = base;
-
-	for (int i = 1; i != power; ++i) {
-		result *= base;
-	}
-
-	return result;
-}
-
 error_t print_powers(long x) {
 	if (x < 1 || x > 10) return ERROR_INVALID_PARAMETER;
+
+	long result;
+	error_t error;
 
 	fprintf(stdout, "Base  | Power | Base^Power\n");
 
 	for (int base = 1; base != 10 + 1; ++base) {
 		for (int power = 1; power != x + 1; ++power) {
-			fprintf(stdout, "%5d | %5d | %10ld\n", base, power, long_pow(base, power));
+			error = mth_long_pow(base, power, &result);
+			if (error != ERROR_SUCCESS) return error;
+
+			fprintf(stdout, "%5d | %5d | %10ld\n", base, power, result);
 		}
 	}
 
@@ -106,16 +104,10 @@ error_t print_sums(long x) {
 }
 
 error_t print_factorial(long x) {
-	if (x < 0) return ERROR_INVALID_PARAMETER;
+	long result;
 
-	long result = 1;
-
-	if (x > 1) {
-		for (int i = 2; i != (x + 1); ++i) {
-			result *= i;
-			if (result < 0) return ERROR_OVERFLOW;
-		}
-	}
+	error_t error = mth_factorial((int)x, &result);
+	if (error != ERROR_SUCCESS) return error;
 
 	fprintf(stdout, "Factorial of %ld is %ld\n", x, result);
 	return ERROR_SUCCESS;
