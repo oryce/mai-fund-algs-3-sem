@@ -1,11 +1,12 @@
-#include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "error.h"
 #include "tasks.h"
+#include "conv.h"
 
 int main(int argc, char** argv) {
+	error_t error;
+
 	if (argc != 3) {
 		printf(
 		    "Usage: %s <flag> <x>\n"
@@ -26,14 +27,13 @@ int main(int argc, char** argv) {
 		return -ERROR_INVALID_PARAMETER;
 	}
 
-	char* endPtr;
-	long x = strtol(argv[2], &endPtr, 10);
-	if (*endPtr != '\0' || errno != 0) {
+	long x;
+	error = str_to_long(argv[2], &x);
+	if (error != ERROR_SUCCESS) {
 		fprintf(stderr, "Invalid 'x': %s; malformed number or out of range\n", argv[2]);
 		return -ERROR_INVALID_PARAMETER;
 	}
 
-	error_t error = ERROR_SUCCESS;
 	switch (flag[1]) {
 		case 'h': {
 			error = print_divisible(x);

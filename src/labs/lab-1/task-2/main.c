@@ -1,10 +1,9 @@
-#include <errno.h>
 #include <float.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "error.h"
 #include "tasks.h"
+#include "conv.h"
 
 typedef double (*compute_function_t)(double);
 
@@ -15,6 +14,8 @@ typedef struct compute_entry {
 } compute_entry_t;
 
 int main(int argc, char** argv) {
+	error_t error;
+
 	if (argc != 2) {
 		printf(
 		    "Usage: %s <epsilon>\n"
@@ -23,9 +24,9 @@ int main(int argc, char** argv) {
 		return -ERROR_INVALID_PARAMETER;
 	}
 
-	char* endPtr;
-	double epsilon = strtod(argv[1], &endPtr);
-	if (*endPtr != 0 || errno != 0) {
+	double epsilon;
+	error = str_to_double(argv[1], &epsilon);
+	if (error != ERROR_SUCCESS) {
 		fprintf(stderr, "Invalid 'epsilon': malformed number or out of range.\n");
 		return -ERROR_INVALID_PARAMETER;
 	}
