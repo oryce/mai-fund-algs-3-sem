@@ -15,3 +15,5 @@
 
 - [Задача 1](src/labs/lab-1/task-1)
 - [Задача 2](src/labs/lab-1/task-2)
+- [Задача 3](src/labs/lab-1/task-3)
+- [Задача 4](src/labs/lab-1/task-4)

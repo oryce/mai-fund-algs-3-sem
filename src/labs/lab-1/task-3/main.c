@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 	int nOpts = sizeof(opts) / sizeof(opt_t);
 
 	if (argc == 1) {
-		printf("Usage: %s <flag> <x>\nFlags:\n", argv[0]);
+		printf("Usage: %s <flag> <...>\nFlags:\n", argv[0]);
 		print_opts(opts, nOpts);
 		return -ERROR_INVALID_PARAMETER;
 	}
