@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
 
 	if (argc < 2) {
 		printf(
-		    "Usage: %s <eps> <x>\n"
+		    "Usage: %s <eps>\n"
 		    "Computes various integrals given an error margin.\n",
 		    argv[0]);
 		return -ERROR_INVALID_PARAMETER;
