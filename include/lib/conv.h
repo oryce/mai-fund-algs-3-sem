@@ -1,3 +1,5 @@
+#pragma once
+
 #include "error.h"
 
 error_t str_to_long(char* in, long* out);
