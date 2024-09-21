@@ -4,11 +4,11 @@
 #include "lib/error.h"
 #include "tasks.h"
 
-typedef error_t (*series_func_t)(double eps, double x, double* out);
+typedef error_t (*integral_func_t)(double eps, double x, double* out);
 
 typedef struct series {
 	char name[8];
-	series_func_t func;
+	integral_func_t func;
 } series_t;
 
 int main(int argc, char** argv) {
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
 	double eps;
 	error = str_to_double(argv[1], &eps);
 	if (error != ERROR_SUCCESS) {
-		fprintf(stderr, "Invalid 'epsilon': malformed number or out of range.\n");
+		fprintf(stderr, "Invalid 'eps': malformed number or out of range.\n");
 		return -ERROR_INVALID_PARAMETER;
 	}
 

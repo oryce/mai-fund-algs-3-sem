@@ -9,5 +9,6 @@ typedef long error_t;
 #define ERROR_HEAP_ALLOCATION 4L
 #define ERROR_IO 5L
 #define ERROR_DIVERGING 6L
+#define ERROR_INTEGRAL_FAIL 7L
 
 void error_print(error_t error);

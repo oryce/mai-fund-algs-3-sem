@@ -1,6 +1,9 @@
 #include "lib/mth.h"
 
 #include <math.h>
+#include <limits.h>
+
+#define MTH_MAX_INTEGRAL_PARTITIONS (INT_MAX / 2)
 
 error_t mth_long_pow(long n, int power, long* out) {
 	if (power == 0) {
@@ -126,5 +129,45 @@ error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes) {
 		}
 	}
 
+	return ERROR_SUCCESS;
+}
+
+/**
+ * Computes an approximate value of the definite integral of f(x) within [a; b]
+ * using the Trapezoid rule, given a partition number.
+ *
+ * @param f integrated function
+ * @param a lower bound
+ * @param b upper bound
+ * @param n partition number
+ *
+ * @return approximate integral value
+ */
+double trapezoidal_integral(double f(double x), double a, double b, int n) {
+	double h = (b - a) / n;  // Partition width; divided evenly
+	double sum = 0;
+
+	for (int k = 0; k < n; ++k) {
+		sum += (f(a + k * h) + f(a + (k + 1) * h)) / 2 * h;
+	}
+
+	return sum;
+}
+
+error_t mth_integral(double f(double x), double a, double b, double eps, double* out) {
+	int n = 2; // Number of partitions
+
+	double current = trapezoidal_integral(f, a, b, n);
+	double next = trapezoidal_integral(f, a, b, n * 2);
+
+	while (fabs(current - next) > eps) {
+		n *= 2;
+		if (n > MTH_MAX_INTEGRAL_PARTITIONS) return ERROR_INTEGRAL_FAIL;
+
+		current = next;
+		next = trapezoidal_integral(f, a, b, n * 2);
+	}
+
+	*out = next;
 	return ERROR_SUCCESS;
 }
