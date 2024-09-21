@@ -2,7 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "mth.h"
+#include "lib/mth.h"
 #include "tasks.h"
 
 double gamma_sequence(int n) {

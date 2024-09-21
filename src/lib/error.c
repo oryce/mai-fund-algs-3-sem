@@ -1,4 +1,4 @@
-#include "error.h"
+#include "lib/error.h"
 
 #include <stdio.h>
 

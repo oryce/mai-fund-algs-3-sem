@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "conv.h"
-#include "error.h"
+#include "lib/conv.h"
+#include "lib/error.h"
 #include "tasks.h"
 
 typedef error_t (*opt_handler_t)(long x);
@@ -40,14 +40,12 @@ void print_opts(opt_t opts[], int nOpts) {
 int main(int argc, char** argv) {
 	error_t error;
 
-	opt_t opts[] = {
-	    { "h", "prints the first 100 numbers divisible by 'x'", &print_divisible },
-	    { "p", "determines if 'x' is a prime number", &print_is_prime },
-	    { "s", "converts 'x' to hex", &print_hex },
-	    { "e", "raises numbers from lab-task-1 to 10 to powers from 1 to 'x' < 10", &print_powers },
-	    { "a", "computes the sum of numbers from 1 to 'x'", &print_sums },
-	    { "f", "computes the factorial of 'x'", &print_factorial }
-	};
+	opt_t opts[] = {{"h", "prints the first 100 numbers divisible by 'x'", &print_divisible},
+	                {"p", "determines if 'x' is a prime number", &print_is_prime},
+	                {"s", "converts 'x' to hex", &print_hex},
+	                {"e", "raises numbers from lab-task-1 to 10 to powers from 1 to 'x' < 10", &print_powers},
+	                {"a", "computes the sum of numbers from 1 to 'x'", &print_sums},
+	                {"f", "computes the factorial of 'x'", &print_factorial}};
 	int nOpts = sizeof(opts) / sizeof(opt_t);
 
 	if (argc != 3) {

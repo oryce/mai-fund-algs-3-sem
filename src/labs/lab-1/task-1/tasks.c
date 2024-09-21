@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "mth.h"
+#include "lib/mth.h"
 
 error_t print_divisible(long x) {
 	if (x <= 0) return ERROR_INVALID_PARAMETER;

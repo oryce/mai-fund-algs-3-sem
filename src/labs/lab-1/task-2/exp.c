@@ -1,7 +1,7 @@
 #include <float.h>
 #include <math.h>
 
-#include "mth.h"
+#include "lib/mth.h"
 #include "tasks.h"
 
 double exp_sequence(int n) {

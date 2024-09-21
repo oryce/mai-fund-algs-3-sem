@@ -1,8 +1,8 @@
 #include <float.h>
 #include <math.h>
 
-#include "error.h"
-#include "mth.h"
+#include "lib/error.h"
+#include "lib/mth.h"
 #include "tasks.h"
 
 double sqrt_2_equation(double x) { return x * x - 2; }

@@ -1,9 +1,9 @@
 #include <float.h>
 #include <stdio.h>
 
-#include "error.h"
+#include "lib/conv.h"
+#include "lib/error.h"
 #include "tasks.h"
-#include "conv.h"
 
 typedef double (*compute_function_t)(double);
 

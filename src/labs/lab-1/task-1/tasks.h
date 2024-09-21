@@ -1,6 +1,6 @@
 #pragma once
 
-#include "error.h"
+#include "lib/error.h"
 
 error_t print_divisible(long x);
 

@@ -1,7 +1,7 @@
 #include <float.h>
 #include <math.h>
 
-#include "mth.h"
+#include "lib/mth.h"
 #include "tasks.h"
 
 double ln_2_sequence(int n) { return n * (pow(2, 1. / n) - 1); }
