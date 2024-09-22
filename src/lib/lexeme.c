@@ -1,4 +1,4 @@
-#include "lexeme.h"
+#include "lib/lexeme.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -11,7 +11,7 @@
 void lexeme_destroy(vector_ptr_t* lexemes) {
 	for (size_t i = 0; i != vector_ptr_size(lexemes); ++i) {
 		lexeme_t* lexeme = (lexeme_t*)vector_ptr_get(lexemes, i);
-		free((void*)lexeme->value);
+		free((char*)lexeme->value);
 		free(lexeme);
 	}
 

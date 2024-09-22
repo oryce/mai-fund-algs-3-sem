@@ -31,3 +31,5 @@ error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes);
  * @return error code; `ERROR_SUCCESS` if the computation succeeded
  */
 error_t mth_integral(double f(double x), double a, double b, double eps, double* out);
+
+inline static int mth_int_max(int a, int b) { return a > b ? a : b; }

@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "lexeme.h"
+#include "lib/lexeme.h"
 #include "lib/chars.h"
 #include "lib/conv.h"
 
