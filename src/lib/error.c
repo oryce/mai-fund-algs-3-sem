@@ -19,6 +19,9 @@ void error_print(error_t error) {
 		case ERROR_HEAP_ALLOCATION:
 			fprintf(stderr, "Error: Cannot allocate heap memory\n");
 			break;
+		case ERROR_IO:
+			fprintf(stderr, "Error: I/O error. File read/write failed\n");
+			break;
 		case ERROR_DIVERGING:
 			fprintf(stderr, "Error: Diverging sequence\n");
 			break;
