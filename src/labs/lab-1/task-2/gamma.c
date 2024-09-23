@@ -1,5 +1,6 @@
 #include <float.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "lib/mth.h"
@@ -67,9 +68,6 @@ double compute_gamma_eq(double eps) {
 	while (fabs(current - next) > eps) {
 		++n;
 
-		current = next;
-		next = gamma_eq_sequence(isPrime, n + 1);
-
 		if (n + 1 > primes) {
 			// Need to resize the prime sieve
 			primes *= 2;
@@ -91,6 +89,9 @@ double compute_gamma_eq(double eps) {
 				return DBL_MIN;
 			}
 		}
+
+		current = next;
+		next = gamma_eq_sequence(isPrime, n + 1);
 	}
 
 	free(isPrime);
