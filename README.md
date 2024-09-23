@@ -21,3 +21,6 @@
 - [Задача 6](src/labs/lab-1/task-6)
 - [Задача 7](src/labs/lab-1/task-7)
 - [Задача 8](src/labs/lab-1/task-8)
+- [Задача 9.1](src/labs/lab-1/task-9-1)
+- [Задача 9.2](src/labs/lab-1/task-9-2)
+- [Задача 10](src/labs/lab-1/task-10)

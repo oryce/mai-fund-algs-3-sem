@@ -1,5 +1,7 @@
 #include "lib/conv.h"
 
+#include "lib/chars.h"
+
 error_t str_to_long(char* in, long* out) {
 	int sign = 1;
 
@@ -73,18 +75,19 @@ error_t long_to_base(long in, int base, char* out, int outSize) {
 	bool negative = in < 0;
 	if (negative) in = -in;
 
-	int cur = 0; // Cursor to the current character
+	int cur = 0;  // Cursor to the current character
 
 	if (in == 0) {
 		if (outSize < 2) return ERROR_INVALID_PARAMETER;
 		out[cur++] = '0';
 	} else {
-		// Same as in long_to_base, but we ensure that the buffer doesn't get overrun.
+		// Ensure that the buffer isn't overrun
 		while (in != 0 && cur < outSize - 1) {
-			if (base < 10) {
-				out[cur++] = (char)('0' + (in % base));
+			int remainder = (int)(in % base);
+			if (remainder < 10) {
+				out[cur++] = (char)('0' + remainder);
 			} else {
-				out[cur++] = (char)('a' + (in % base - 10));
+				out[cur++] = (char)('a' + remainder - 10);
 			}
 
 			in /= base;
@@ -115,5 +118,30 @@ error_t long_to_base(long in, int base, char* out, int outSize) {
 		j--;
 	}
 
+	return ERROR_SUCCESS;
+}
+
+error_t num_to_base_10(const char* n, size_t length, int base, long* out) {
+	int sign = *n == '-' ? -1 : 1;
+
+	long base10 = 0;
+	long multiplier = 1;
+
+	// Skip the first char (minus sign).
+	const char* start = sign == -1 ? n + 1 : n;
+
+	for (char* ptr = (char*)(n + length - 1); ptr >= start; --ptr) {
+		bool valid = chars_is_digit(*ptr) || chars_is_alpha(*ptr);
+		if (!valid) return ERROR_INVALID_PARAMETER;
+
+		int ord = chars_is_digit(*ptr) ? (*ptr - '0') : (10 + chars_lower(*ptr) - 'a');
+
+		base10 += ord * multiplier;
+		if (base10 < 0) return ERROR_OVERFLOW;
+
+		multiplier *= base;
+	}
+
+	*out = base10 * sign;
 	return ERROR_SUCCESS;
 }
