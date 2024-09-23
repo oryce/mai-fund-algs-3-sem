@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "error.h"
 
@@ -33,3 +34,13 @@ error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes);
 error_t mth_integral(double f(double x), double a, double b, double eps, double* out);
 
 inline static int mth_int_max(int a, int b) { return a > b ? a : b; }
+
+inline static int mth_int_min(int a, int b) { return a < b ? a : b; }
+
+inline static long mth_long_max(long a, long b) { return a > b ? a : b; }
+
+inline static long mth_long_min(long a, long b) { return a < b ? a : b; }
+
+inline static long mth_rand(long min, long max) {
+	return rand() % (max - min) + min;  // NOLINT(*-msc50-cpp)
+}
