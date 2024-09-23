@@ -9,8 +9,8 @@
 error_t merge_lexemes(int argc, char** argv) {
 	error_t error = ERROR_SUCCESS;
 
-	vector_ptr_t firstLexemes = {.size = 0};
-	vector_ptr_t secondLexemes = {.size = 0};
+	vector_ptr_t firstLexemes = {.size = -1};
+	vector_ptr_t secondLexemes = {.size = -1};
 	FILE* inputFile1 = NULL;
 	FILE* inputFile2 = NULL;
 	FILE* outputFile = NULL;
@@ -94,10 +94,10 @@ cleanup:
 	fclose(inputFile2);
 	fclose(outputFile);
 
-	if (!vector_ptr_is_empty(&firstLexemes)) {
+	if (vector_ptr_size(&firstLexemes) != -1) {
 		lexeme_destroy(&firstLexemes);
 	}
-	if (!vector_ptr_is_empty(&firstLexemes)) {
+	if (vector_ptr_size(&secondLexemes) != -1) {
 		lexeme_destroy(&secondLexemes);
 	}
 
@@ -107,7 +107,7 @@ cleanup:
 error_t process_lexemes(int argc, char** argv) {
 	error_t error = ERROR_SUCCESS;
 
-	vector_ptr_t lexemes = {.size = 0};
+	vector_ptr_t lexemes = {.size = -1};
 	FILE* inputFile = NULL;
 	FILE* outputFile = NULL;
 
@@ -182,7 +182,7 @@ cleanup:
 	fclose(inputFile);
 	fclose(outputFile);
 
-	if (!vector_ptr_is_empty(&lexemes)) {
+	if (vector_ptr_size(&lexemes) != -1) {
 		lexeme_destroy(&lexemes);
 	}
 

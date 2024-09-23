@@ -57,7 +57,7 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 
 error_t determine_min_number_bases(FILE* in, FILE* out) {
 	error_t error = ERROR_SUCCESS;
-	vector_ptr_t lexemes = {.size = 0};
+	vector_ptr_t lexemes = {.size = -1};
 
 	error = lexeme_read(in, &lexemes);
 	if (error) goto cleanup;
@@ -70,7 +70,7 @@ error_t determine_min_number_bases(FILE* in, FILE* out) {
 	}
 
 cleanup:
-	if (!vector_ptr_is_empty(&lexemes)) {
+	if (vector_ptr_size(&lexemes) != -1) {
 		lexeme_destroy(&lexemes);
 	}
 	return error;
