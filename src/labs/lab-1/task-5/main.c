@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 
 	double eps;
 	error = str_to_double(argv[1], &eps);
-	if (error != ERROR_SUCCESS) {
+	if (error != ERROR_SUCCESS || eps <= 0) {
 		fprintf(stderr, "Invalid 'eps': malformed number or out of range.\n");
 		return -ERROR_INVALID_PARAMETER;
 	}

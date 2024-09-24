@@ -41,6 +41,7 @@ error_t solve_quadratic_equation(int argc, char** argv) {
 
 	error = str_to_double(argv[2], &eps);
 	if (error != ERROR_SUCCESS) return error;
+	if (eps <= 0) return ERROR_INVALID_PARAMETER;
 	error = str_to_double(argv[3], &a);
 	if (error != ERROR_SUCCESS) return error;
 	error = str_to_double(argv[4], &b);
@@ -91,12 +92,16 @@ error_t check_is_right_triangle(int argc, char** argv) {
 
 	error = str_to_double(argv[2], &eps);
 	if (error != ERROR_SUCCESS) return error;
+	if (eps <= 0) return ERROR_INVALID_PARAMETER;
 	error = str_to_double(argv[3], &a);
 	if (error != ERROR_SUCCESS) return error;
 	error = str_to_double(argv[4], &b);
 	if (error != ERROR_SUCCESS) return error;
 	error = str_to_double(argv[5], &c);
 	if (error != ERROR_SUCCESS) return error;
+	if (a == 0 || b == 0 || c == 0) {
+		return ERROR_INVALID_PARAMETER;
+	}
 
 	bool triangle = LESS(a, b + c, eps) && LESS(b, a + c, eps) && LESS(c, a + b, eps);
 	bool right_triangle =

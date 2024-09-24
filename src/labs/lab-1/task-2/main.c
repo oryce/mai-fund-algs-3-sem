@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 
 	double epsilon;
 	error = str_to_double(argv[1], &epsilon);
-	if (error != ERROR_SUCCESS) {
+	if (error != ERROR_SUCCESS || epsilon <= 0) {
 		fprintf(stderr, "Invalid 'epsilon': malformed number or out of range.\n");
 		return -ERROR_INVALID_PARAMETER;
 	}
