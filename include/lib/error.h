@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdio.h>
+
 typedef long error_t;
 
 #define ERROR_SUCCESS 0L
@@ -10,5 +12,11 @@ typedef long error_t;
 #define ERROR_IO 5L
 #define ERROR_DIVERGING 6L
 #define ERROR_INTEGRAL_FAIL 7L
+#define ERROR_OOPS 8L
 
 void error_print(error_t error);
+
+inline static error_t error_oops(const char* message) {
+	fprintf(stderr, "oops: %s", message);
+	return ERROR_OOPS;
+}
