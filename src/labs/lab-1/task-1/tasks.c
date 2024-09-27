@@ -74,16 +74,12 @@ error_t print_hex(long x) {
 error_t print_powers(long x) {
 	if (x < 1 || x > 10) return ERROR_INVALID_PARAMETER;
 
-	long result;
-	error_t error;
-
 	fprintf(stdout, "Base  | Power | Base^Power\n");
 
 	for (int base = 1; base != 10 + 1; ++base) {
+		long result = 1;
 		for (int power = 1; power != x + 1; ++power) {
-			error = mth_long_pow(base, power, &result);
-			if (error != ERROR_SUCCESS) return error;
-
+			result *= base;
 			fprintf(stdout, "%5d | %5d | %10ld\n", base, power, result);
 		}
 	}
