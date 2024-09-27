@@ -69,7 +69,7 @@ error_t str_to_double(char* in, double* out) {
 	return ERROR_SUCCESS;
 }
 
-error_t long_to_base(long in, int base, char* out, int outSize) {
+error_t conv_to_arb_base(long in, int base, char* out, int outSize) {
 	if (base > 36 || base < 2) return ERROR_INVALID_PARAMETER;
 
 	bool negative = in < 0;
@@ -121,22 +121,22 @@ error_t long_to_base(long in, int base, char* out, int outSize) {
 	return ERROR_SUCCESS;
 }
 
-error_t num_to_base_10(const char* n, size_t length, int base, long* out) {
-	int sign = *n == '-' ? -1 : 1;
-
+error_t conv_from_arb_base(const char* n, size_t length, int base, long* out) {
 	long base10 = 0;
 	long multiplier = 1;
 
 	// Skip the first char (minus sign).
+	int sign = *n == '-' ? -1 : 1;
 	const char* start = sign == -1 ? n + 1 : n;
 
+	// Traverse from the back of the number and assemble the base-10 number.
 	for (char* ptr = (char*)(n + length - 1); ptr >= start; --ptr) {
 		bool valid = chars_is_digit(*ptr) || chars_is_alpha(*ptr);
 		if (!valid) return ERROR_INVALID_PARAMETER;
 
 		int ord = chars_is_digit(*ptr) ? (*ptr - '0') : (10 + chars_lower(*ptr) - 'a');
-
 		base10 += ord * multiplier;
+
 		if (base10 < 0) return ERROR_OVERFLOW;
 
 		multiplier *= base;

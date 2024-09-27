@@ -19,7 +19,7 @@ error_t str_to_double(char* in, double* out);
  *
  * @return status code
  */
-error_t long_to_base(long in, int base, char* out, int outSize);
+error_t conv_to_arb_base(long in, int base, char* out, int outSize);
 
 /**
  * Converts a number from an arbitrary base to a base-10 number.
@@ -31,4 +31,4 @@ error_t long_to_base(long in, int base, char* out, int outSize);
  *
  * @return status code
  */
-error_t num_to_base_10(const char* n, size_t length, int base, long* out);
+error_t conv_from_arb_base(const char* n, size_t length, int base, long* out);
