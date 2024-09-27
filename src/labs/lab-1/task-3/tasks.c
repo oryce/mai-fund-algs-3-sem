@@ -71,7 +71,9 @@ error_t check_is_divisible(int argc, char** argv) {
 	error = str_to_long(argv[3], &b);
 	if (error != ERROR_SUCCESS) return error;
 
-	if (a == 0 || b == 0) return ERROR_INVALID_PARAMETER;
+	if (a == 0 || b == 0) {
+		return ERROR_INVALID_PARAMETER;
+	}
 
 	if (a % b == 0) {
 		fprintf(stdout, "%ld is divisible by %ld\n", a, b);
@@ -99,6 +101,7 @@ error_t check_is_right_triangle(int argc, char** argv) {
 	if (error != ERROR_SUCCESS) return error;
 	error = str_to_double(argv[5], &c);
 	if (error != ERROR_SUCCESS) return error;
+
 	if (a == 0 || b == 0 || c == 0) {
 		return ERROR_INVALID_PARAMETER;
 	}

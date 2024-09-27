@@ -1,47 +1,33 @@
 #include "lib/mth.h"
 
-#include <math.h>
 #include <limits.h>
+#include <math.h>
 
 #define MTH_MAX_INTEGRAL_PARTITIONS (INT_MAX / 2)
 
-error_t mth_long_pow(long n, int power, long* out) {
-	if (power == 0) {
-		*out = 1;
-		return ERROR_SUCCESS;
-	} else if (power < 0) {
-		return ERROR_INVALID_PARAMETER;
+#define MTH_BIN_POW(TYPE, NAME)                  \
+	error_t NAME(TYPE n, int power, TYPE* out) { \
+		if (power < 0) {                         \
+			return ERROR_INVALID_PARAMETER;      \
+		}                                        \
+                                                 \
+		TYPE result = 1;                         \
+                                                 \
+		while (power > 0) {                      \
+			if (power & 1) {                     \
+				result *= n;                     \
+			}                                    \
+                                                 \
+			n = n * n;                           \
+			power = power >> 1;                  \
+		}                                        \
+                                                 \
+		*out = result;                           \
+		return ERROR_SUCCESS;                    \
 	}
 
-	long result = n;
-
-	for (int i = 1; i != power; ++i) {
-		result *= n;
-		if (result < 0) return ERROR_OVERFLOW;
-	}
-
-	*out = result;
-	return ERROR_SUCCESS;
-}
-
-error_t mth_double_pow(double n, int power, double* out) {
-	if (power == 0) {
-		*out = 1.0;
-		return ERROR_SUCCESS;
-	} else if (power < 0) {
-		return ERROR_INVALID_PARAMETER;
-	}
-
-	double result = n;
-
-	for (int i = 1; i != power; ++i) {
-		result *= n;
-		if (result < 0) return ERROR_OVERFLOW;
-	}
-
-	*out = result;
-	return ERROR_SUCCESS;
-}
+MTH_BIN_POW(long, mth_long_pow)
+MTH_BIN_POW(double, mth_double_pow)
 
 double mth_sequence_limit(double sequence(int), double eps) {
 	int n = 1;
@@ -155,7 +141,7 @@ double trapezoidal_integral(double f(double x), double a, double b, int n) {
 }
 
 error_t mth_integral(double f(double x), double a, double b, double eps, double* out) {
-	int n = 2; // Number of partitions
+	int n = 2;  // Number of partitions
 
 	double current = trapezoidal_integral(f, a, b, n);
 	double next = trapezoidal_integral(f, a, b, n * 2);
