@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD "99")
 set(CMAKE_C_FLAGS "-Wall -pedantic")
 
 if (CMAKE_BUILD_TYPE STREQUAL "ASAN")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fsanitize=address")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fsanitize=address,undefined")
 endif ()
 
 include(cmake/AddTask.cmake)
