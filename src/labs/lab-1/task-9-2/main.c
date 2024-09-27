@@ -20,7 +20,40 @@ error_t random_vec(vector_i64_t* vec) {
 	return ERROR_SUCCESS;
 }
 
-int main(int argc, char** argv) {
+int64_t find_closest(int64_t value, vector_i64_t* others) {
+	size_t l = 0;
+	size_t r = vector_i64_size(others) - 1;
+
+	if (value < vector_i64_get(others, l)) {
+		return vector_i64_get(others, l);
+	} else if (value > vector_i64_get(others, r)) {
+		return vector_i64_get(others, r);
+	}
+
+	while (l <= r) {
+		size_t mid = (l + r) / 2;
+		int64_t midValue = vector_i64_get(others, mid);
+
+		if (value < midValue) {
+			if (r == 0) break;
+			r = mid - 1;
+		} else if (value > midValue) {
+			l = mid + 1;
+		} else {
+			return midValue;
+		}
+	}
+
+	if (l > vector_i64_size(others) - 1) {
+		return vector_i64_get(others, vector_i64_size(others) - 1);
+	} else {
+		int64_t lValue = vector_i64_get(others, l);
+		int64_t rValue = vector_i64_get(others, r);
+		return labs(lValue - value) < labs(rValue - value) ? lValue : rValue;
+	}
+}
+
+int main(void) {
 	error_t error;
 
 	srand(time(NULL));  // NOLINT(*-msc51-cpp)
@@ -41,31 +74,6 @@ int main(int argc, char** argv) {
 		goto cleanup;
 	}
 
-	c = vector_i64_create_with_capacity(vector_i64_size(&a));
-
-	for (int i = 0; i != vector_i64_size(&a); ++i) {
-		long aValue = vector_i64_get(&a, i);
-
-		// Find closest to value
-		long difference = -1;
-		long closest = 0;
-
-		for (int j = 0; j != vector_i64_size(&b); ++j) {
-			long bValue = vector_i64_get(&b, j);
-			long newDiff = labs(aValue - bValue);
-
-			if (difference == -1 || newDiff < difference) {
-				difference = newDiff;
-				closest = bValue;
-			}
-		}
-
-		if (!vector_i64_push_back(&c, aValue + closest)) {
-			error = ERROR_HEAP_ALLOCATION;
-			goto cleanup;
-		}
-	}
-
 	printf("Array A:\n");
 	for (int i = 0; i < vector_i64_size(&a); ++i) {
 		printf("%lld ", vector_i64_get(&a, i));
@@ -74,6 +82,23 @@ int main(int argc, char** argv) {
 	printf("\nArray B:\n");
 	for (int i = 0; i < vector_i64_size(&b); ++i) {
 		printf("%lld ", vector_i64_get(&b, i));
+	}
+
+	if (!vector_i64_sort(&b)) {
+		fprintf(stderr, "Failed to sort vector B.\n");
+		goto cleanup;
+	}
+
+	c = vector_i64_create_with_capacity(vector_i64_size(&a));
+
+	for (size_t i = 0; i != vector_i64_size(&a); ++i) {
+		int64_t value = vector_i64_get(&a, i);
+		int64_t closest = find_closest(value, &b);
+
+		if (!vector_i64_push_back(&c, value + closest)) {
+			error = ERROR_HEAP_ALLOCATION;
+			goto cleanup;
+		}
 	}
 
 	printf("\nArray C:\n");
