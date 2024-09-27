@@ -38,7 +38,7 @@ error_t str_to_double(char* in, double* out) {
 	}
 
 	double integer = 0, frac = 0;
-	int fracDivisor = 0;
+	double fracDivisor = 0;
 
 	for (; *in != '\0'; ++in) {
 		if (*in == '.' && !fracDivisor) {
