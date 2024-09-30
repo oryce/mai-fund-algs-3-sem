@@ -21,8 +21,10 @@ error_t compute_series_b(double eps, double x, double* out) {
 	double sum = term;
 
 	for (int k = 1; fabs(term) > eps; ++k) {
+		int n = k - 1;
 		// solving S(x, n) * k = S(x, n + 1) for k and simplifying the result here
-		term *= -(x * x) / ((2 * (k - 1) + 1) * (2 * (k - 1) + 2));
+		term *= -(x * x) / ((2 * n + 1) * (2 * n + 2));
+
 		sum += term;
 		if (isinf(sum)) return ERROR_DIVERGING;
 	}

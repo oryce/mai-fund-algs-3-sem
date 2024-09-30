@@ -2,9 +2,9 @@
 
 #include <stdio.h>
 
-#include "lib/lexeme.h"
 #include "lib/chars.h"
 #include "lib/conv.h"
+#include "lib/lexeme.h"
 
 error_t merge_lexemes(int argc, char** argv) {
 	error_t error = ERROR_SUCCESS;
@@ -140,13 +140,14 @@ error_t process_lexemes(int argc, char** argv) {
 	                        // (+null-byte)
 
 	for (int k = 0; k != vector_ptr_size(&lexemes); ++k) {
-		char* lexeme = (char*)((lexeme_t*)vector_ptr_get(&lexemes, k))->value;
+		lexeme_t* lexeme = vector_ptr_get(&lexemes, k);
+		char* value = (char*)lexeme->value;
 
 		int n = k + 1;
 
 		if (n % 10 == 0) {
-			for (; *lexeme != '\0'; ++lexeme) {
-				error = conv_to_arb_base(chars_lower(*lexeme), 4, numberToBase, 65);
+			for (; *value != '\0'; ++value) {
+				error = conv_to_arb_base(chars_lower(*value), 4, numberToBase, 65);
 				if (error) goto cleanup;
 
 				fprintf(outputFile, "%s", numberToBase);
@@ -154,14 +155,14 @@ error_t process_lexemes(int argc, char** argv) {
 
 			fputc(' ', outputFile);
 		} else if (n % 2 == 0) {
-			for (; *lexeme != '\0'; ++lexeme) {
-				fputc(chars_lower(*lexeme), outputFile);
+			for (; *value != '\0'; ++value) {
+				fputc(chars_lower(*value), outputFile);
 			}
 
 			fputc(' ', outputFile);
 		} else if (n % 5 == 0) {
-			for (; *lexeme != '\0'; ++lexeme) {
-				error = conv_to_arb_base(chars_lower(*lexeme), 8, numberToBase, 65);
+			for (; *value != '\0'; ++value) {
+				error = conv_to_arb_base(chars_lower(*value), 8, numberToBase, 65);
 				if (error) goto cleanup;
 
 				fprintf(outputFile, "%s", numberToBase);
@@ -169,7 +170,7 @@ error_t process_lexemes(int argc, char** argv) {
 
 			fputc(' ', outputFile);
 		} else {
-			fprintf(outputFile, "%s ", lexeme);
+			fprintf(outputFile, "%s ", value);
 		}
 
 		if (ferror(outputFile)) {

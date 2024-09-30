@@ -15,6 +15,7 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 
 	// Determine the minimum base to represent the number.
 	char* ptr;
+
 	for (ptr = (char*)startPtr; *ptr != '\0'; ++ptr) {
 		if (!chars_is_alpha(*ptr) && !chars_is_digit(*ptr)) {
 			fprintf(stderr, "Malformed lexeme: %s\n", lexeme);
