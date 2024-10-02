@@ -28,6 +28,9 @@ void error_print(error_t error) {
 		case ERROR_INTEGRAL_FAIL:
 			fprintf(stderr, "Error: Integral cannot be computed\n");
 			break;
+		case ERROR_OOPS:
+			fprintf(stderr, "Error: Unexpected condition\n");
+			break;
 		default:
 			fprintf(stderr, "Unknown error\n");
 	}
