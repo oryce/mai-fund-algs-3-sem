@@ -14,8 +14,10 @@ typedef long error_t;
 #define ERROR_INTEGRAL_FAIL 7L
 #define ERROR_OOPS 8L
 
+/** Prints the error message to `stderr`. */
 void error_print(error_t error);
 
+/** Creates an "oops" message -- an unexpected condition -- and prints it to `stderr`. */
 inline static error_t error_oops(const char* message) {
 	fprintf(stderr, "oops: %s", message);
 	return ERROR_OOPS;

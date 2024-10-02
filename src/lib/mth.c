@@ -29,17 +29,17 @@
 MTH_BIN_POW(long, mth_long_pow)
 MTH_BIN_POW(double, mth_double_pow)
 
-double mth_sequence_limit(double sequence(int), double eps) {
+double mth_sequence_limit(double f(int), double eps) {
 	int n = 1;
 
-	double current = sequence(n);
-	double next = sequence(n + 1);
+	double current = f(n);
+	double next = f(n + 1);
 
 	while (fabs(current - next) >= eps) {
 		++n;
 
 		current = next;
-		next = sequence(n + 1);
+		next = f(n + 1);
 	}
 
 	return next;
@@ -61,33 +61,16 @@ error_t mth_factorial(int n, long* out) {
 	return ERROR_SUCCESS;
 }
 
-error_t mth_combinations(int n, int k, long* out) {
-	if (n < 0 || k < 0) return ERROR_INVALID_PARAMETER;
-
-	long n_fact, k_fact, n_k_fact;
-	error_t error;
-
-	error = mth_factorial(n, &n_fact);
-	if (error != ERROR_SUCCESS) return error;
-	error = mth_factorial(k, &k_fact);
-	if (error != ERROR_SUCCESS) return error;
-	error = mth_factorial(n - k, &n_k_fact);
-	if (error != ERROR_SUCCESS) return error;
-
-	*out = n_fact / (n_k_fact * k_fact);
-	return ERROR_SUCCESS;
-}
-
-error_t mth_dichotomy(double equation(double), double a, double b, double eps, double* out) {
-	double l = equation(a);
-	double r = equation(b);
+error_t mth_dichotomy(double f(double), double a, double b, double eps, double* out) {
+	double l = f(a);
+	double r = f(b);
 
 	if (l * r > 0) return ERROR_INVALID_PARAMETER;
 
 	while (fabs(a - b) > eps) {
 		double mid = (a + b) / 2;
 
-		if (equation(mid) * l > 0) {
+		if (f(mid) * l > 0) {
 			a = mid;
 		} else {
 			b = mid;

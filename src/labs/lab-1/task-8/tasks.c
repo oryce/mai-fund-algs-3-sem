@@ -11,12 +11,10 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 	int sign = *lexeme == '-' ? -1 : 1;
 
 	// Skip the first char (minus sign).
-	const char* startPtr = sign == -1 ? lexeme + 1 : lexeme;
-
-	// Determine the minimum base to represent the number.
+	const char* start = sign == -1 ? lexeme + 1 : lexeme;
 	char* ptr;
 
-	for (ptr = (char*)startPtr; *ptr != '\0'; ++ptr) {
+	for (ptr = (char*)start; *ptr != '\0'; ++ptr) {
 		if (!chars_is_alpha(*ptr) && !chars_is_digit(*ptr)) {
 			fprintf(stderr, "Malformed lexeme: %s\n", lexeme);
 			return ERROR_INVALID_PARAMETER;
@@ -31,7 +29,7 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 	long multiplier = 1;
 
 	// Traverse backwards (|ptr| is '\0' when the first loop finishes).
-	for (ptr = ptr - 1; ptr >= startPtr; --ptr) {
+	for (ptr = ptr - 1; ptr >= start; --ptr) {
 		int ord = chars_is_alpha(*ptr) ? 10 + (chars_lower(*ptr) - 'a') : *ptr - '0';
 
 		base10 += ord * multiplier;
@@ -43,8 +41,9 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 	base10 *= sign;
 
 	// Skip leading zeros in the original number.
-	++ptr;
-	while (*ptr == '0') ++ptr;
+	do {
+		++ptr;
+	} while (*ptr == '0');
 
 	if (sign == -1) {
 		fprintf(out, "-%s %d %ld\n", ptr, base, base10);
