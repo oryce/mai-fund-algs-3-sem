@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "lib/error.h"
+#include "lib/paths.h"
 #include "tasks.h"
 
 typedef error_t (*opt_handler_t)(FILE* in, FILE* out);
@@ -94,6 +95,18 @@ int main(int argc, char** argv) {
 
 		outFile = fopen(argv[3], "w");
 
+		bool samePaths;
+
+		error = paths_same(argv[2], argv[3], &samePaths);
+		if (error) goto cleanup;
+
+		if (samePaths) {
+			fprintf(stderr, "Error: Output path must be different from the input path.\n");
+
+			error = ERROR_INVALID_PARAMETER;
+			goto cleanup;
+		}
+
 		if (outFile == NULL) {
 			fprintf(stderr, "Error: Cannot open the output file.\n");
 
@@ -112,7 +125,7 @@ int main(int argc, char** argv) {
 		}
 
 		char delimiter;
-#if defined(_WIN32)
+#ifdef _WIN32
 		delimiter = '\\';
 #else
 		delimiter = '/';

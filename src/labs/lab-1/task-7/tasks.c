@@ -5,6 +5,7 @@
 #include "lib/chars.h"
 #include "lib/conv.h"
 #include "lib/lexeme.h"
+#include "lib/paths.h"
 
 error_t merge_lexemes(int argc, char** argv) {
 	error_t error = ERROR_SUCCESS;
@@ -16,6 +17,23 @@ error_t merge_lexemes(int argc, char** argv) {
 	FILE* outputFile = NULL;
 
 	if (argc != 5) {
+		error = ERROR_INVALID_PARAMETER;
+		goto cleanup;
+	}
+
+	bool samePaths = false;
+	bool samePathsResult;
+
+	error = paths_same(argv[2], argv[4], &samePathsResult);
+	if (error) goto cleanup;
+	samePaths |= samePathsResult;
+
+	error = paths_same(argv[3], argv[4], &samePathsResult);
+	if (error) goto cleanup;
+	samePaths |= samePathsResult;
+
+	if (samePaths) {
+		fprintf(stderr, "Input and output files may not be the same.\n");
 		error = ERROR_INVALID_PARAMETER;
 		goto cleanup;
 	}
@@ -113,6 +131,17 @@ error_t process_lexemes(int argc, char** argv) {
 
 	if (argc != 4) {
 		error = ERROR_INVALID_PARAMETER;
+		goto cleanup;
+	}
+
+	bool samePaths;
+
+	error = paths_same(argv[2], argv[3], &samePaths);
+	if (error) goto cleanup;
+
+	if (samePaths) {
+		fprintf(stderr, "Input and output paths may not be the same.\n");
+		error = ERROR_IO;
 		goto cleanup;
 	}
 

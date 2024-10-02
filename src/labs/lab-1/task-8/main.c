@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "lib/error.h"
+#include "lib/paths.h"
 #include "tasks.h"
 
 int main(int argc, char** argv) {
@@ -15,6 +16,18 @@ int main(int argc, char** argv) {
 		    "Determines the minimum base for each number in the input file.\n",
 		    argv[0]);
 		return -ERROR_INVALID_PARAMETER;
+	}
+
+	bool samePaths;
+
+	error = paths_same(argv[2], argv[3], &samePaths);
+	if (error) goto cleanup;
+
+	if (samePaths) {
+		fprintf(stderr, "Input and output files may not be the same.\n");
+
+		error = ERROR_INVALID_PARAMETER;
+		goto cleanup;
 	}
 
 	inputFile = fopen(argv[1], "r");
