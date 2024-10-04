@@ -135,8 +135,9 @@ error_t conv_from_arb_base(const char* n, size_t length, int base, long* out) {
 		if (!valid) return ERROR_INVALID_PARAMETER;
 
 		int ord = chars_is_digit(*ptr) ? (*ptr - '0') : (10 + chars_lower(*ptr) - 'a');
-		base10 += ord * multiplier;
+		if (ord >= base) return ERROR_INVALID_PARAMETER;
 
+		base10 += ord * multiplier;
 		if (base10 < 0) return ERROR_OVERFLOW;
 
 		multiplier *= base;
