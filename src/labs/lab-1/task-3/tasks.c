@@ -102,15 +102,12 @@ error_t check_is_right_triangle(int argc, char** argv) {
 	error = str_to_double(argv[5], &c);
 	if (error != ERROR_SUCCESS) return error;
 
-	if (a == 0 || b == 0 || c == 0) {
-		return ERROR_INVALID_PARAMETER;
-	}
-
+	bool non_zero = a != 0 && b != 0 && c != 0;
 	bool triangle = LESS(a, b + c, eps) && LESS(b, a + c, eps) && LESS(c, a + b, eps);
 	bool right_triangle =
 	    EQUAL(a * a + b * b, c * c, eps) || EQUAL(a * a + c * c, b * b, eps) || EQUAL(b * b + c * c, a * a, eps);
 
-	if (triangle && right_triangle) {
+	if (non_zero && triangle && right_triangle) {
 		fprintf(stdout, "%f %f %f can build a right triangle\n", a, b, c);
 	} else {
 		fprintf(stdout, "%f %f %f cannot build a right triangle\n", a, b, c);
