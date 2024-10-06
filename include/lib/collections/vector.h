@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lib/deque.h"
+#include "lib/collections/deque.h"
 
 extern const size_t VECTOR_MIN_CAPACITY;
 

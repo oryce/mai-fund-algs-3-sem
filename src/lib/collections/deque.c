@@ -1,4 +1,4 @@
-#include "lib/deque.h"
+#include "lib/collections/deque.h"
 
 #include <float.h>
 #include <stdlib.h>

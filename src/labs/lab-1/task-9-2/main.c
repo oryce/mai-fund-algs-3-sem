@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "lib/collections/vector.h"
 #include "lib/error.h"
 #include "lib/mth.h"
-#include "lib/vector.h"
 
 error_t random_vec(vector_i64_t* vec) {
 	size_t size = (size_t)mth_rand(10, 10000 + 1);

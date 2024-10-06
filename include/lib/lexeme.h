@@ -2,8 +2,8 @@
 
 #include <stdio.h>
 
+#include "lib/collections/string.h"
 #include "lib/error.h"
-#include "lib/string.h"
 
 typedef struct lexeme {
 	const char* value;

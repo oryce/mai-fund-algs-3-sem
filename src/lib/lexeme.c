@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "lib/collections/string.h"
 #include "lib/error.h"
-#include "lib/string.h"
 
 void lexeme_destroy(vector_str_t* lexemes) {
 	for (size_t i = 0; i != vector_str_size(lexemes); ++i) {

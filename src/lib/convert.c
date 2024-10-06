@@ -1,6 +1,5 @@
-#include "lib/conv.h"
-
 #include "lib/chars.h"
+#include "lib/convert.h"
 
 error_t str_to_long(char* in, long* out) {
 	int sign = 1;
@@ -69,7 +68,7 @@ error_t str_to_double(char* in, double* out) {
 	return ERROR_SUCCESS;
 }
 
-error_t conv_to_arb_base(long in, int base, char* out, int outSize) {
+error_t long_to_base(long in, int base, char* out, int outSize) {
 	if (base > 36 || base < 2) return ERROR_INVALID_PARAMETER;
 
 	bool negative = in < 0;
@@ -121,7 +120,7 @@ error_t conv_to_arb_base(long in, int base, char* out, int outSize) {
 	return ERROR_SUCCESS;
 }
 
-error_t conv_from_arb_base(const char* n, size_t length, int base, long* out) {
+error_t long_from_base(const char* n, size_t length, int base, long* out) {
 	long base10 = 0;
 	long multiplier = 1;
 

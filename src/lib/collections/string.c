@@ -1,4 +1,4 @@
-#include "lib/string.h"
+#include "lib/collections/string.h"
 
 #include <string.h>
 

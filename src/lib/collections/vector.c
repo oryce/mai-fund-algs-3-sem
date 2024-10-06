@@ -1,4 +1,4 @@
-#include "lib/vector.h"
+#include "lib/collections/vector.h"
 
 #include <float.h>
 #include <stdlib.h>

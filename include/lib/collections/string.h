@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lib/vector.h"
+#include "vector.h"
 
 typedef struct string {
 	vector_i8_t buffer;

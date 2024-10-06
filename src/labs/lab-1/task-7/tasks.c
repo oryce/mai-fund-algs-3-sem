@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "lib/chars.h"
-#include "lib/conv.h"
+#include "lib/convert.h"
 #include "lib/lexeme.h"
 #include "lib/paths.h"
 
@@ -177,7 +177,7 @@ error_t process_lexemes(int argc, char** argv) {
 
 		if (n % 10 == 0) {
 			for (; *value != '\0'; ++value) {
-				error = conv_to_arb_base(chars_lower(*value), 4, numberToBase, 65);
+				error = long_to_base(chars_lower(*value), 4, numberToBase, 65);
 				if (error) goto cleanup;
 
 				fprintf(outputFile, "%s", numberToBase);
@@ -192,7 +192,7 @@ error_t process_lexemes(int argc, char** argv) {
 			fputc(' ', outputFile);
 		} else if (n % 5 == 0) {
 			for (; *value != '\0'; ++value) {
-				error = conv_to_arb_base(chars_lower(*value), 8, numberToBase, 65);
+				error = long_to_base(chars_lower(*value), 8, numberToBase, 65);
 				if (error) goto cleanup;
 
 				fprintf(outputFile, "%s", numberToBase);

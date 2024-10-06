@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "lib/conv.h"
+#include "lib/convert.h"
 
 #define ZERO(a, eps) (fabs(a) < eps)
 #define EQUAL(a, b, eps) (fabs((a) - (b)) < eps)

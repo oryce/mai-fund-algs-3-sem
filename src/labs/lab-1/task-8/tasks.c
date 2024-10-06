@@ -58,20 +58,19 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 
 error_t determine_min_number_bases(FILE* in, FILE* out) {
 	error_t error = ERROR_SUCCESS;
-	vector_lexeme_t lexemes = {.size = -1};
+	vector_str_t lexemes = {.size = -1};
 
 	error = lexeme_read(in, &lexemes);
 	if (error) goto cleanup;
 
-	for (int k = 0; k != vector_lexeme_size(&lexemes); ++k) {
-		lexeme_t lexeme = vector_lexeme_get(&lexemes, k);
-
-		error = process_lexeme(lexeme.value, out);
+	for (int k = 0; k != vector_str_size(&lexemes); ++k) {
+		string_t lexeme = vector_str_get(&lexemes, k);
+		error = process_lexeme(string_to_c_str(&lexeme), out);
 		if (error) goto cleanup;
 	}
 
 cleanup:
-	if (vector_lexeme_size(&lexemes) != -1) {
+	if (vector_str_size(&lexemes) != -1) {
 		lexeme_destroy(&lexemes);
 	}
 	return error;

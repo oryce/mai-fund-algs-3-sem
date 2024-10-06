@@ -3,16 +3,16 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "lib/conv.h"
+#include "lib/collections/string.h"
+#include "lib/convert.h"
 #include "lib/error.h"
 #include "lib/mth.h"
-#include "lib/string.h"
 
 #define ERROR_NO_NUMBERS_ENTERED (-1L)
 
 error_t finalize_input(string_t* inNumber, int base, long* outNumber) {
 	long result;
-	error_t error = conv_from_arb_base(string_to_c_str(inNumber), string_length(inNumber), base, &result);
+	error_t error = long_from_base(string_to_c_str(inNumber), string_length(inNumber), base, &result);
 
 	if (error) {
 		fprintf(stderr, "Malformed number: %s\n", string_to_c_str(inNumber));
@@ -99,7 +99,7 @@ cleanup:
 
 void print_in_base(long number, int base) {
 	char buffer[65];  // Big enough to hold a long number in base-2 (+null-term.)
-	error_t error = conv_to_arb_base(number, base, buffer, 65);
+	error_t error = long_to_base(number, base, buffer, 65);
 
 	if (error) {
 		fprintf(stderr, "Catastrophic failure");

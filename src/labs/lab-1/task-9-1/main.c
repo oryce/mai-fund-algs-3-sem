@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "lib/conv.h"
+#include "lib/convert.h"
 #include "lib/error.h"
 
 void array_min_max(long array[], size_t nItems, long a, long b) {
