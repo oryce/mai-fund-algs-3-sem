@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 	};
 	int nOpts = sizeof(opts) / sizeof(opt_t);
 
-	if (argc < 2) {
+	if (argc != 3 && argc != 4) {
 		printf(
 		    "Usage: %s <flag> <input file> [output file]\n"
 		    "Append 'n' before the flag ('/nd') to specify the output file.\n"

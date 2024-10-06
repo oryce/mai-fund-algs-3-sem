@@ -14,7 +14,7 @@ typedef struct series {
 int main(int argc, char** argv) {
 	error_t error;
 
-	if (argc < 2) {
+	if (argc != 2) {
 		printf(
 		    "Usage: %s <eps>\n"
 		    "Computes various integrals given an error margin.\n",
