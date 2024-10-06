@@ -26,11 +26,15 @@ error_t finalize_input(string_t* inNumber, int base, long* outNumber) {
 }
 
 error_t read_numbers_and_find_max(int base, long* out) {
+	error_t error = ERROR_SUCCESS;
 	long max = LONG_MIN;
 	bool anyEntered = false;
 
-	error_t error = ERROR_SUCCESS;
 	string_t input = string_create();
+	if (!input.initialized) {
+		error = ERROR_HEAP_ALLOCATION;
+		goto cleanup;
+	}
 
 	int ch;
 	bool stopped = false;
@@ -56,6 +60,10 @@ error_t read_numbers_and_find_max(int base, long* out) {
 				anyEntered = true;
 
 				input = string_create();
+				if (!input.initialized) {
+					error = ERROR_HEAP_ALLOCATION;
+					goto cleanup;
+				}
 			}
 
 			continue;

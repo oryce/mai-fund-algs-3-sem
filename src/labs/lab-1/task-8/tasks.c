@@ -40,7 +40,8 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 
 	base10 *= sign;
 
-	// Skip leading zeros in the original number.
+	// Skip leading zeros in the original number
+	// (|ptr| is back at the beginning of the number).
 	do {
 		++ptr;
 	} while (*ptr == '0');
@@ -57,20 +58,20 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 
 error_t determine_min_number_bases(FILE* in, FILE* out) {
 	error_t error = ERROR_SUCCESS;
-	vector_ptr_t lexemes = {.size = -1};
+	vector_lexeme_t lexemes = {.size = -1};
 
 	error = lexeme_read(in, &lexemes);
 	if (error) goto cleanup;
 
-	for (int k = 0; k != vector_ptr_size(&lexemes); ++k) {
-		lexeme_t* lexeme = vector_ptr_get(&lexemes, k);
+	for (int k = 0; k != vector_lexeme_size(&lexemes); ++k) {
+		lexeme_t lexeme = vector_lexeme_get(&lexemes, k);
 
-		error = process_lexeme(lexeme->value, out);
+		error = process_lexeme(lexeme.value, out);
 		if (error) goto cleanup;
 	}
 
 cleanup:
-	if (vector_ptr_size(&lexemes) != -1) {
+	if (vector_lexeme_size(&lexemes) != -1) {
 		lexeme_destroy(&lexemes);
 	}
 	return error;

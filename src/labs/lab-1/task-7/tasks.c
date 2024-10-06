@@ -10,8 +10,8 @@
 error_t merge_lexemes(int argc, char** argv) {
 	error_t error = ERROR_SUCCESS;
 
-	vector_ptr_t firstLexemes = {.size = -1};
-	vector_ptr_t secondLexemes = {.size = -1};
+	vector_str_t firstLexemes = {.size = -1};
+	vector_str_t secondLexemes = {.size = -1};
 	FILE* inputFile1 = NULL;
 	FILE* inputFile2 = NULL;
 	FILE* outputFile = NULL;
@@ -72,14 +72,15 @@ error_t merge_lexemes(int argc, char** argv) {
 	}
 
 	size_t i = 0, j = 0;
-	size_t n = vector_ptr_size(&firstLexemes);
-	size_t m = vector_ptr_size(&secondLexemes);
+	size_t n = vector_str_size(&firstLexemes);
+	size_t m = vector_str_size(&secondLexemes);
 
 	for (; i < n && j < m; ++i, ++j) {
-		lexeme_t* first = vector_ptr_get(&firstLexemes, i);
-		lexeme_t* second = vector_ptr_get(&secondLexemes, j);
+		string_t first = vector_str_get(&firstLexemes, i);
+		string_t second = vector_str_get(&secondLexemes, j);
 
-		fprintf(outputFile, "%s %s ", first->value, second->value);
+		fprintf(outputFile, "%s %s ", string_to_c_str(&first), string_to_c_str(&second));
+
 		if (ferror(outputFile)) {
 			error = ERROR_IO;
 			goto cleanup;
@@ -87,7 +88,7 @@ error_t merge_lexemes(int argc, char** argv) {
 	}
 
 	size_t k = 0;
-	vector_ptr_t remainingVec;
+	vector_str_t remainingVec;
 
 	if (i == n) {
 		k = j;
@@ -97,10 +98,10 @@ error_t merge_lexemes(int argc, char** argv) {
 		remainingVec = firstLexemes;
 	}
 
-	for (; k < vector_ptr_size(&remainingVec); ++k) {
-		lexeme_t* lexeme = vector_ptr_get(&remainingVec, k);
+	for (; k < vector_str_size(&remainingVec); ++k) {
+		string_t lexeme = vector_str_get(&remainingVec, k);
+		fprintf(outputFile, "%s ", string_to_c_str(&lexeme));
 
-		fprintf(outputFile, "%s ", lexeme->value);
 		if (ferror(outputFile)) {
 			error = ERROR_IO;
 			goto cleanup;
@@ -112,10 +113,10 @@ cleanup:
 	fclose(inputFile2);
 	fclose(outputFile);
 
-	if (vector_ptr_size(&firstLexemes) != -1) {
+	if (vector_str_size(&firstLexemes) != -1) {
 		lexeme_destroy(&firstLexemes);
 	}
-	if (vector_ptr_size(&secondLexemes) != -1) {
+	if (vector_str_size(&secondLexemes) != -1) {
 		lexeme_destroy(&secondLexemes);
 	}
 
@@ -125,7 +126,7 @@ cleanup:
 error_t process_lexemes(int argc, char** argv) {
 	error_t error = ERROR_SUCCESS;
 
-	vector_ptr_t lexemes = {.size = -1};
+	vector_str_t lexemes = {.size = -1};
 	FILE* inputFile = NULL;
 	FILE* outputFile = NULL;
 
@@ -168,9 +169,9 @@ error_t process_lexemes(int argc, char** argv) {
 	char numberToBase[65];  // Holds the current number being converted to a base. Big enough to hold a 64-bit number
 	                        // (+null-byte)
 
-	for (int k = 0; k != vector_ptr_size(&lexemes); ++k) {
-		lexeme_t* lexeme = vector_ptr_get(&lexemes, k);
-		char* value = (char*)lexeme->value;
+	for (int k = 0; k != vector_str_size(&lexemes); ++k) {
+		string_t lexeme = vector_str_get(&lexemes, k);
+		const char* value = string_to_c_str(&lexeme);
 
 		int n = k + 1;
 
@@ -212,7 +213,7 @@ cleanup:
 	fclose(inputFile);
 	fclose(outputFile);
 
-	if (vector_ptr_size(&lexemes) != -1) {
+	if (vector_str_size(&lexemes) != -1) {
 		lexeme_destroy(&lexemes);
 	}
 

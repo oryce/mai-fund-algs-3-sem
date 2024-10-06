@@ -2,41 +2,33 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "lib/error.h"
 #include "lib/string.h"
-#include "lib/vector.h"
 
-void lexeme_destroy(vector_ptr_t* lexemes) {
-	for (size_t i = 0; i != vector_ptr_size(lexemes); ++i) {
-		lexeme_t* lexeme = (lexeme_t*)vector_ptr_get(lexemes, i);
-		free((char*)lexeme->value);
-		free(lexeme);
+void lexeme_destroy(vector_str_t* lexemes) {
+	for (size_t i = 0; i != vector_str_size(lexemes); ++i) {
+		string_t lexeme = vector_str_get(lexemes, i);
+		string_destroy(&lexeme);
 	}
 
-	vector_ptr_destroy(lexemes);
+	vector_str_destroy(lexemes);
 }
 
-error_t lexeme_finalize(vector_ptr_t* lexemes, string_t* lexeme_value) {
-	lexeme_t* lexeme = malloc(sizeof(lexeme_t));
-	if (lexeme == NULL) return ERROR_HEAP_ALLOCATION;
-
-	lexeme->value = string_to_c_str(lexeme_value);
-
-	if (!vector_ptr_push_back(lexemes, lexeme)) {
-		free(lexeme);
-		return ERROR_HEAP_ALLOCATION;
-	}
-
-	return ERROR_SUCCESS;
+error_t lexeme_finalize(vector_str_t* lexemes, string_t lexeme_value) {
+	return vector_str_push_back(lexemes, lexeme_value) ? ERROR_SUCCESS : ERROR_HEAP_ALLOCATION;
 }
 
-error_t lexeme_read(FILE* file, vector_ptr_t* out) {
-	vector_ptr_t lexemes = vector_ptr_create();
+error_t lexeme_read(FILE* file, vector_str_t* out) {
 	error_t error;
+	vector_str_t lexemes = vector_str_create();
 
 	string_t lexeme_value = string_create();
+	if (!lexeme_value.initialized) {
+		error = ERROR_HEAP_ALLOCATION;
+		goto cleanup;
+	}
+
 	bool in_lexeme = false;
 
 	int ch;
@@ -48,10 +40,15 @@ error_t lexeme_read(FILE* file, vector_ptr_t* out) {
 
 		if (ch == '\t' || ch == '\n' || ch == '\r' || ch == ' ') {
 			if (in_lexeme) {
-				error = lexeme_finalize(&lexemes, &lexeme_value);
+				error = lexeme_finalize(&lexemes, lexeme_value);
 				if (error) goto cleanup;
 
 				lexeme_value = string_create();
+				if (!lexeme_value.initialized) {
+					error = ERROR_HEAP_ALLOCATION;
+					goto cleanup;
+				}
+
 				in_lexeme = false;
 			}
 
@@ -67,7 +64,7 @@ error_t lexeme_read(FILE* file, vector_ptr_t* out) {
 	}
 
 	if (in_lexeme) {
-		error = lexeme_finalize(&lexemes, &lexeme_value);
+		error = lexeme_finalize(&lexemes, lexeme_value);
 		if (error) goto cleanup;
 	} else {
 		string_destroy(&lexeme_value);
@@ -82,11 +79,11 @@ cleanup:
 	return error;
 }
 
-error_t lexeme_write(FILE* file, vector_ptr_t* lexemes, char sep) {
-	for (int i = 0; i != vector_ptr_size(lexemes); ++i) {
-		lexeme_t* lexeme = (lexeme_t*)vector_ptr_get(lexemes, i);
+error_t lexeme_write(FILE* file, vector_str_t* lexemes, char sep) {
+	for (int i = 0; i != vector_str_size(lexemes); ++i) {
+		string_t lexeme = vector_str_get(lexemes, i);
+		fprintf(file, "%s%c", string_to_c_str(&lexeme), sep);
 
-		fprintf(file, "%s%c", lexeme->value, sep);
 		if (ferror(file)) return ERROR_IO;
 	}
 

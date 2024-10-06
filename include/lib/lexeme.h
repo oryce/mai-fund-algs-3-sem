@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "lib/error.h"
-#include "lib/vector.h"
+#include "lib/string.h"
 
 typedef struct lexeme {
 	const char* value;
@@ -14,7 +14,7 @@ typedef struct lexeme {
  *
  * @param lexemes list of lexemes
  */
-void lexeme_destroy(vector_ptr_t* lexemes);
+void lexeme_destroy(vector_str_t* lexemes);
 
 /**
  * Reads lexemes from a file into a vector of lexemes.
@@ -24,7 +24,7 @@ void lexeme_destroy(vector_ptr_t* lexemes);
  *
  * @return status code
  */
-error_t lexeme_read(FILE* file, vector_ptr_t* out);
+error_t lexeme_read(FILE* file, vector_str_t* out);
 
 /**
  * Writes lexemes to a file.
@@ -35,4 +35,4 @@ error_t lexeme_read(FILE* file, vector_ptr_t* out);
  *
  * @return status code
  */
-error_t lexeme_write(FILE* file, vector_ptr_t* lexemes, char sep);
+error_t lexeme_write(FILE* file, vector_str_t* lexemes, char sep);
