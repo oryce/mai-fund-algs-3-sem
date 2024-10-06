@@ -103,7 +103,7 @@ error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes) {
 
 /**
  * Computes an approximate value of the definite integral of f(x) within [a; b]
- * using the Trapezoid rule, given a partition number.
+ * using the Trapezoidal rule, given a partition number.
  *
  * @param f integrated function
  * @param a lower bound

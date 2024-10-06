@@ -24,7 +24,7 @@ double compute_exp_series(double eps) {
 	double sum = term;
 
 	for (int n = 2; term > eps; ++n) {
-		term /= n;  // Next factorial
+		term /= n;
 		sum += term;
 	}
 
