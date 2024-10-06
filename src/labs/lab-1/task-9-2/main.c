@@ -85,7 +85,7 @@ int main(void) {
 	}
 
 	if (!vector_i64_sort(&b)) {
-		fprintf(stderr, "Failed to sort vector B.\n");
+		error = error_oops("failed to sort vector B");
 		goto cleanup;
 	}
 
