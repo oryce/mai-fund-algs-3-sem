@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 
 	bool samePaths;
 
-	error = paths_same(argv[2], argv[3], &samePaths);
+	error = paths_same(argv[1], argv[2], &samePaths);
 	if (error) goto cleanup;
 
 	if (samePaths) {
