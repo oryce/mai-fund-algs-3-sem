@@ -13,6 +13,7 @@ typedef long error_t;
 #define ERROR_DIVERGING 6L
 #define ERROR_INTEGRAL_FAIL 7L
 #define ERROR_OOPS 8L
+#define ERROR_UNDERFLOW 9L
 
 /** Prints the error message to `stderr`. */
 void error_print(error_t error);

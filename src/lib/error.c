@@ -31,6 +31,9 @@ void error_print(error_t error) {
 		case ERROR_OOPS:
 			fprintf(stderr, "Error: Unexpected condition\n");
 			break;
+		case ERROR_UNDERFLOW:
+			fprintf(stderr, "Error: Number underflow.\n");
+			break;
 		default:
 			fprintf(stderr, "Unknown error\n");
 	}

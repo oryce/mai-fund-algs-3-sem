@@ -28,3 +28,4 @@
 ### Лаба II
 
 - [Задача 1](src/labs/lab-2/task-1)
+- [Задача 2](src/labs/lab-2/task-2)
