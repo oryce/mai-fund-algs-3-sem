@@ -24,3 +24,7 @@
 - [Задача 9.1](src/labs/lab-1/task-9-1)
 - [Задача 9.2](src/labs/lab-1/task-9-2)
 - [Задача 10](src/labs/lab-1/task-10)
+
+### Лаба II
+
+- [Задача 1](src/labs/lab-2/task-1)

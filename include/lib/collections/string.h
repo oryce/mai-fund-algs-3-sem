@@ -18,6 +18,11 @@ string_t string_create(void);
 /** Destroys the string, freeing allocated memory. */
 void string_destroy(string_t* string);
 
+/** Returns whether the string was initialized successfully. */
+inline static bool string_created(string_t* string) {
+	return string->initialized;
+}
+
 /**
  * Appends a character to the input string.
  *

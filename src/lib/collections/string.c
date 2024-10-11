@@ -29,13 +29,19 @@ string_t string_create(void) {
 	return string;
 }
 
-void string_destroy(string_t* string) { vector_i8_destroy(&string->buffer); }
+void string_destroy(string_t* string) {
+	vector_i8_destroy(&string->buffer);
+	string->initialized = false;
+}
 
 bool string_append_char(string_t* string, char c) {
 	if (!string->initialized) return false;
 
-	return vector_i8_pop_back(&string->buffer) == '\0' && vector_i8_push_back(&string->buffer, c) &&
-	       vector_i8_push_back(&string->buffer, '\0');
+	bool success = true;
+	success &= vector_i8_pop_back(&string->buffer) == '\0';
+	success &= vector_i8_push_back(&string->buffer, c);
+	success &= vector_i8_push_back(&string->buffer, '\0');
+	return success;
 }
 
 bool string_append_c_str(string_t* string, const char* c) {
@@ -53,7 +59,7 @@ bool string_append_c_str(string_t* string, const char* c) {
 		if (!vector_i8_push_back(&string->buffer, *ptr)) {
 			return false;
 		}
-	} while (*ptr != '\0');
+	} while (*(ptr++) != '\0');
 
 	return true;
 }
