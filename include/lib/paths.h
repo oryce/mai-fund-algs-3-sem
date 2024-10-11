@@ -9,4 +9,4 @@
  *
  * @return `ERROR_IO` if the paths hadn't been resolved.
  */
-error_t paths_same(const char* p1, const char* p2, bool* result);
+error_t paths_same(const char* path1, const char* path2, bool* result);

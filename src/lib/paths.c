@@ -1,16 +1,34 @@
 #include "lib/paths.h"
 
-#include <stdlib.h>
-#include <limits.h>
 #include <string.h>
 
-error_t paths_same(const char* p1, const char* p2, bool* result) {
-	char abs1[PATH_MAX];
-	char abs2[PATH_MAX];
+#ifdef _WIN32
+#include <fileapi.h>
+#else
+#include <stdlib.h>
+#endif
 
-	if (realpath(p1, abs1) == NULL) return ERROR_IO;
-	if (realpath(p2, abs2) == NULL) return ERROR_IO;
+error_t paths_same(const char* path1, const char* path2, bool* result) {
+	if (path1 == NULL || path2 == NULL) {
+		return ERROR_INVALID_PARAMETER;
+	}
 
-	*result = strncmp(abs1, abs2, PATH_MAX) == 0;
+	const int pathBufSize = 4096;
+	char abs1[pathBufSize];
+	char abs2[pathBufSize];
+
+#ifdef _WIN32
+	if (!GetFullPathNameA(path1, pathBufSize, abs1, NULL)) {
+		return ERROR_IO;
+	}
+	if (!GetFullPathNameA(path2, pathBufSize, abs2, NULL)) {
+		return ERROR_IO;
+	}
+#else
+	if (realpath(path1, abs1) == NULL) return ERROR_IO;
+	if (realpath(path2, abs2) == NULL) return ERROR_IO;
+#endif
+
+	*result = strncmp(abs1, abs2, pathBufSize) == 0;
 	return ERROR_SUCCESS;
 }
