@@ -197,13 +197,12 @@ struct vector_helpers {
 		if (!result) goto cleanup;                                                                             \
                                                                                                                \
 		do {                                                                                                   \
-			size_t l = deque_idx_pop_front(&lefts);                                                            \
-			size_t r = deque_idx_pop_front(&rights);                                                           \
+			size_t l, r;                                                                                \
                                                                                                                \
-			if (l == SIZE_MAX || r == SIZE_MAX) {                                                              \
-				result = false;                                                                                \
-				goto cleanup;                                                                                  \
-			}                                                                                                  \
+			result = deque_idx_pop_front(&lefts, &l);                                                          \
+			if (!result) goto cleanup;                                                                         \
+			result = deque_idx_pop_front(&rights, &r);                                                         \
+			if (!result) goto cleanup;                                                                         \
                                                                                                                \
 			do {                                                                                               \
 				TYPE pivot = vector_##TNAME##_get(v, (l + r) / 2);                                             \

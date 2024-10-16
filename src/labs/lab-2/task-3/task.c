@@ -13,9 +13,8 @@ typedef struct match {
 	ptrdiff_t needleOffset;
 } match_t;
 
-DEFINE_DEQUE(match_t, match)
-
-IMPL_DEQUE(deque_match_t, match_t, match, (match_t){.line = -1})
+DEFINE_DEQUE(deque_match_t, match_t, match)
+IMPL_DEQUE(deque_match_t, match_t, match)
 
 match_result_t match_substring(const char* cursor, const char* needle, match_t match, ptrdiff_t* outOffset) {
 	if (cursor == NULL || needle == NULL) {
@@ -66,8 +65,8 @@ error_t find_substring_in_file(const char* needle, const char* filePath, deque_m
 
 		// Check matches that weren't checked fully due to the previous buffer running out.
 		for (size_t i = 0; i != incompleteCnt; ++i) {
-			match_t partial = deque_match_pop_front(&partialMatches);
-			if (partial.line == -1) {  // pop_front() failed
+			match_t partial;
+			if (!deque_match_pop_front(&partialMatches, &partial)) {
 				cleanup(file, &fullMatches, &partialMatches);
 				return ERROR_HEAP_ALLOCATION;
 			}
@@ -148,7 +147,11 @@ error_t find_substring_in_files(const char* needle, int fileCnt, ...) {
 		} else {
 			printf("%zu match(es) in %s:\n", deque_match_size(&matches), path);
 			while (!deque_match_is_empty(&matches)) {
-				match_t match = deque_match_pop_front(&matches);
+				match_t match;
+				if (!deque_match_pop_front(&matches, &match)) {
+					fprintf(stderr, "Can't read match from `matches`.\n");
+					return ERROR_HEAP_ALLOCATION;
+				}
 				printf("  at %d:%d\n", match.line, match.column);
 			}
 		}
