@@ -90,7 +90,7 @@ extern const int DEQUE_MIN_CAPACITY;
 			v->head = 0;                                                                                            \
 			v->tail = v->size - 1;                                                                                  \
 		} else {                                                                                                    \
-			/* If it had wrapped, we copy the two halves of the vector separately.*/                                \
+			/* If it had wrapped, we copy the multiple halves of the vector separately.*/                                \
 			size_t sizeDelta = v->capacity - newSize;                                                               \
                                                                                                                     \
 			memcpy(newBuffer + v->head - sizeDelta, v->buffer + v->head, (v->capacity - v->head) * sizeof(TYPE_T)); \

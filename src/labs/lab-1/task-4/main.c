@@ -18,7 +18,7 @@ typedef struct opt {
 
 error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
 	if (flag[0] != '-' && flag[0] != '/') {
-		return ERROR_INVALID_PARAMETER;
+		THROW(IllegalArgumentException, "flag starts with an invalid character");
 	}
 
 	++flag;
@@ -34,11 +34,11 @@ error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
 			*outOpt = opts[i];
 			outOpt->specify_output = specify_output;
 
-			return ERROR_SUCCESS;
+			return NO_EXCEPTION;
 		}
 	}
 
-	return ERROR_INVALID_PARAMETER;
+	THROWF(IllegalArgumentException, "unrecognized option: %c", flag[0]);
 }
 
 void print_opts(opt_t opts[], int nOpts) {
@@ -48,14 +48,47 @@ void print_opts(opt_t opts[], int nOpts) {
 	}
 }
 
-int main(int argc, char** argv) {
-	error_t error = ERROR_SUCCESS;
+error_t add_prefix(const char* path, char** out) {
+	const char* prefix = "out_";
+
+	*out = (char*)malloc(strlen(path) + strlen(prefix) + 1);
+	if (*out == NULL) THROW(MemoryError, "can't allocate for modified path");
+
+	char delimiter;
+#ifdef _WIN32
+	delimiter = '\\';
+#else
+	delimiter = '/';
+#endif
+
+	const char* lastSeparator = strrchr(path, delimiter);
+
+	if (lastSeparator == NULL) {
+		strcat(*out, prefix);
+		strcat(*out, path);
+	} else {
+		strncat(*out, path, lastSeparator - path + 1);
+		strcat(*out, prefix);
+		strcat(*out, lastSeparator + 1);
+	}
+
+	return NO_EXCEPTION;
+}
+
+void cleanup(FILE* input, FILE* output, char* outputPath) {
+	fclose(input);
+	fclose(output);
+	free(outputPath);
+}
+
+error_t main_(int argc, char** argv) {
+	error_t status = NO_EXCEPTION;
 
 	opt_t opts[] = {
-	    {"d", "removes digit characters from the input file", &remove_digits},
-	    {"i", "appends the letter count to each line", &count_letters},
-	    {"s", "appends the special character count to each line", &count_special_characters},
-	    {"a", "encodes non-digit characters in hex ASCII", &encode_non_digits},
+	    {"d", "removes digit characters from the input file", &task_remove_digits},
+	    {"i", "appends the letter count to each line", &task_count_letters},
+	    {"s", "appends the special character count to each line", &task_count_special_characters},
+	    {"a", "encodes non-digit characters in hex ASCII", &task_encode_non_digits},
 	};
 	int nOpts = sizeof(opts) / sizeof(opt_t);
 
@@ -66,100 +99,78 @@ int main(int argc, char** argv) {
 		    "Flags:\n",
 		    argv[0]);
 		print_opts(opts, nOpts);
-		return -ERROR_INVALID_PARAMETER;
+		return NO_EXCEPTION;
 	}
 
 	opt_t opt;
-	error = parse_opt(argv[1], opts, nOpts, &opt);
-	if (error != ERROR_SUCCESS) {
-		fprintf(stderr, "Invalid option. See usage for more details.\n");
-		return -ERROR_INVALID_PARAMETER;
+	if (FAILED((status = parse_opt(argv[1], opts, nOpts, &opt)))) {
+		fprintf(stderr, "Invalid arguments: %s.", status.message);
+		return NO_EXCEPTION;
 	}
 
 	const char* inPath = argv[2];
-	FILE* inFile = fopen(inPath, "r");
-	if (inFile == NULL) {
-		fprintf(stderr, "Error: Cannot open the input file.\n");
-		return -ERROR_IO;
+	char* outPath = NULL;
+	FILE* input = fopen(inPath, "r");
+	FILE* output = NULL;
+
+	if (input == NULL) {
+		fprintf(stderr, "Can't open the input file.\n");
+		return NO_EXCEPTION;
 	}
 
-	FILE* outFile = NULL;
-	char* outPath = NULL;
 	if (opt.specify_output) {
 		if (argc != 4) {
-			fprintf(stderr, "Error: Specify the output file.\n");
-
-			error = ERROR_INVALID_PARAMETER;
-			goto cleanup;
+			cleanup(input, output, outPath);
+			fprintf(stderr, "Specify the output file.\n");
+			return NO_EXCEPTION;
 		}
-
-		outFile = fopen(argv[3], "w");
 
 		bool samePaths;
-
-		error = paths_same(argv[2], argv[3], &samePaths);
-		if (error) goto cleanup;
-
+		if (FAILED((status = paths_same(argv[2], argv[3], &samePaths)))) {
+			cleanup(input, output, outPath);
+			fprintf(stderr, "Path is malformed.\n");
+			return NO_EXCEPTION;
+		}
 		if (samePaths) {
-			fprintf(stderr, "Error: Output path must be different from the input path.\n");
-
-			error = ERROR_INVALID_PARAMETER;
-			goto cleanup;
+			cleanup(input, output, outPath);
+			fprintf(stderr, "Output path must be different from the input path.\n");
+			return NO_EXCEPTION;
 		}
 
-		if (outFile == NULL) {
-			fprintf(stderr, "Error: Cannot open the output file.\n");
-
-			error = ERROR_IO;
-			goto cleanup;
+		output = fopen(argv[3], "w");
+		if (output == NULL) {
+			cleanup(input, output, outPath);
+			fprintf(stderr, "Can't open the output file.\n");
+			return NO_EXCEPTION;
 		}
 	} else {
-		const char* prefix = "out_";
-		outPath = (char*)malloc(strlen(inPath) + strlen(prefix) + 1);
-
-		if (outPath == NULL) {
-			fprintf(stderr, "Error: Cannot allocate for the output file name.\n");
-
-			error = ERROR_HEAP_ALLOCATION;
-			goto cleanup;
+		if (FAILED((status = add_prefix(inPath, &outPath)))) {
+			cleanup(input, output, outPath);
+			PASS(status);
 		}
 
-		char delimiter;
-#ifdef _WIN32
-		delimiter = '\\';
-#else
-		delimiter = '/';
-#endif
-		const char* lastSep = strrchr(inPath, delimiter);
-		if (lastSep == NULL) {
-			strcat(outPath, prefix);
-			strcat(outPath, inPath);
-		} else {
-			// Copy everything before the filename, including the separator
-			strncat(outPath, inPath, lastSep - inPath + 1);
-			strcat(outPath, prefix);
-			// Append the filename
-			strcat(outPath, lastSep + 1);
-		}
-
-		outFile = fopen(outPath, "w");
-		if (outFile == NULL) {
-			fprintf(stderr, "Error: Cannot open output file.\n");
-
-			error = ERROR_IO;
-			goto cleanup;
+		output = fopen(outPath, "w");
+		if (output == NULL) {
+			cleanup(input, output, outPath);
+			fprintf(stderr, "Can't open the output file.\n");
+			return NO_EXCEPTION;
 		}
 	}
 
-	error = opt.handler(inFile, outFile);
-	if (error != ERROR_SUCCESS) {
+	status = opt.handler(input, output);
+	cleanup(input, output, outPath);
+
+	if (FAILED(status)) {
+		PASS(status);
+	} else {
+		return NO_EXCEPTION;
+	}
+}
+
+int main(int argc, char** argv) {
+	error_t error = main_(argc, argv);
+	if (FAILED(error)) {
 		error_print(error);
+		return (int)error.code;
 	}
-
-cleanup:
-	fclose(inFile);
-	fclose(outFile);
-	free(outPath);
-
-	return (int)(-error);
 }

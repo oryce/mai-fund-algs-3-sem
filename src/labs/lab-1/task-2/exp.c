@@ -8,7 +8,7 @@ double exp_sequence(int n) {
 	double value;
 
 	error_t error = mth_double_pow(1 + 1 / (double)n, n, &value);
-	if (error != ERROR_SUCCESS) return DBL_MIN;
+	if (FAILED(error)) return DBL_MIN;
 
 	return value;
 }
@@ -35,7 +35,7 @@ double compute_exp_eq(double eps) {
 	double value;
 
 	error_t error = mth_dichotomy(&exp_equation, 2.0, 3.0, eps, &value);
-	if (error != ERROR_SUCCESS) return DBL_MIN;
+	if (FAILED(error)) return DBL_MIN;
 
 	return value;
 }

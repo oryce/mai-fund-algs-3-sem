@@ -4,7 +4,7 @@
 
 const string_t STRING_DEF = {.initialized = false};
 
-/** Comparison function for |vector_string_t|, which takes two void pointers. */
+/** Comparison function for |vector_string_t|, which takes multiple void pointers. */
 inline static int string_vector_compare(const void* p1, const void* p2) {
 	return string_compare((const string_t*)p1, (const string_t*)p2);
 }

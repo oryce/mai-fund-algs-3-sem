@@ -11,14 +11,14 @@ double pi_sequence(int n) {
 	long nominator;
 
 	error = mth_factorial(n, &n_fact);
-	if (error != ERROR_SUCCESS) return DBL_MIN;
+	if (FAILED(error)) return DBL_MIN;
 	error = mth_factorial(2 * n, &two_n_fact);
-	if (error != ERROR_SUCCESS) return DBL_MIN;
+	if (FAILED(error)) return DBL_MIN;
 
 	error = mth_long_pow(2, n, &two_to_n);
-	if (error != ERROR_SUCCESS) return DBL_MIN;
+	if (FAILED(error)) return DBL_MIN;
 	error = mth_long_pow(two_to_n * n_fact, 4, &nominator);
-	if (error != ERROR_SUCCESS) return DBL_MIN;
+	if (FAILED(error)) return DBL_MIN;
 	double denominator = (double)(n * two_n_fact * two_n_fact);
 	if (denominator < 0) return DBL_MIN;
 
@@ -42,7 +42,7 @@ double compute_pi_lim(double eps) {
 		++n;
 
 		error = mth_double_pow(2.0 * n + 1, 2, &two_n_p_1_sq);
-		if (error != ERROR_SUCCESS) return DBL_MIN;
+		if (FAILED(error)) return DBL_MIN;
 
 		current = next;
 		next *= (4.0 * n * (n + 1)) / two_n_p_1_sq;
@@ -67,7 +67,7 @@ double compute_pi_eq(double eps) {
 	double value;
 
 	error_t error = mth_dichotomy(&pi_equation, 2.5, 3.5, eps, &value);
-	if (error != ERROR_SUCCESS) return DBL_MIN;
+	if (FAILED(error)) return DBL_MIN;
 
 	return value;
 }

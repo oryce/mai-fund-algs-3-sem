@@ -1,5 +1,6 @@
-#include "lib/chars.h"
 #include "lib/convert.h"
+
+#include "lib/chars.h"
 
 error_t str_to_long(char* in, long* out) {
 	int sign = 1;
@@ -14,19 +15,21 @@ error_t str_to_long(char* in, long* out) {
 	for (; *in != '\0'; ++in) {
 		if (*in >= '0' && *in <= '9') {
 			value = value * 10 + (*in - '0');
-			if (value < 0) return ERROR_OVERFLOW;
+			if (value < 0) {
+				THROW(OverflowException, "long overflow; number is too large");
+			}
 		} else {
-			return ERROR_INVALID_PARAMETER;
+			THROWF(UnexpectedTokenException, "%c", *in);
 		}
 	}
 
 	*out = value * sign;
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
 error_t str_to_double(char* in, double* out) {
 	if ((*in == '.' || *in == '-') && *(in + 1) == '\0') {
-		return ERROR_INVALID_PARAMETER;
+		THROW(IllegalArgumentException, "invalid number");
 	}
 
 	int sign = 1;
@@ -47,15 +50,21 @@ error_t str_to_double(char* in, double* out) {
 
 			if (fracDivisor) {
 				frac = frac * 10 + digit;
-				if (frac < 0) return ERROR_OVERFLOW;
+				if (frac < 0) {
+					THROW(OverflowException, "double overflow in fractional part");
+				}
 				fracDivisor *= 10;
-				if (fracDivisor < 0) return ERROR_OVERFLOW;
+				if (fracDivisor < 0) {
+					THROW(OverflowException, "double overflow in fractional divisor");
+				}
 			} else {
 				integer = integer * 10 + digit;
-				if (integer < 0) return ERROR_OVERFLOW;
+				if (integer < 0) {
+					THROW(OverflowException, "double overflow in integer part");
+				}
 			}
 		} else {
-			return ERROR_INVALID_PARAMETER;
+			THROWF(UnexpectedTokenException, "unexpected token: %c", *in);
 		}
 	}
 
@@ -65,11 +74,13 @@ error_t str_to_double(char* in, double* out) {
 		*out = sign * integer;
 	}
 
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
 error_t long_to_base(long in, int base, char* out, int outSize) {
-	if (base > 36 || base < 2) return ERROR_INVALID_PARAMETER;
+	if (base > 36 || base < 2) {
+		THROWF(IllegalArgumentException, "invalid base: %d", base);
+	}
 
 	bool negative = in < 0;
 	if (negative) in = -in;
@@ -77,10 +88,11 @@ error_t long_to_base(long in, int base, char* out, int outSize) {
 	int cur = 0;  // Cursor to the current character
 
 	if (in == 0) {
-		if (outSize < 2) return ERROR_INVALID_PARAMETER;
+		if (outSize < 2) {
+			THROW(IllegalArgumentException, "buffer is too small");
+		}
 		out[cur++] = '0';
 	} else {
-		// Ensure that the buffer isn't overrun
 		while (in != 0 && cur < outSize - 1) {
 			int remainder = (int)(in % base);
 			if (remainder < 10) {
@@ -88,20 +100,23 @@ error_t long_to_base(long in, int base, char* out, int outSize) {
 			} else {
 				out[cur++] = (char)('a' + remainder - 10);
 			}
-
 			in /= base;
 		}
-
-		// Buffer too small to hold result.
-		if (in != 0) return ERROR_INVALID_PARAMETER;
+		if (in != 0) {
+			THROW(IllegalArgumentException, "buffer is too small");
+		}
 	}
 
 	if (negative) {
-		if (cur >= outSize - 1) return ERROR_INVALID_PARAMETER;
+		if (cur >= outSize - 1) {
+			THROW(IllegalArgumentException, "buffer is too small");
+		}
 		out[cur++] = '-';
 	}
 
-	if (cur >= outSize) return ERROR_INVALID_PARAMETER;
+	if (cur >= outSize) {
+		THROW(IllegalArgumentException, "buffer is too small");
+	}
 	out[cur] = '\0';
 
 	// Reverse the string in-place.
@@ -117,7 +132,7 @@ error_t long_to_base(long in, int base, char* out, int outSize) {
 		j--;
 	}
 
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
 error_t long_from_base(const char* n, size_t length, int base, long* out) {
@@ -131,17 +146,23 @@ error_t long_from_base(const char* n, size_t length, int base, long* out) {
 	// Traverse from the back of the number and assemble the base-10 number.
 	for (char* ptr = (char*)(n + length - 1); ptr >= start; --ptr) {
 		bool valid = chars_is_digit(*ptr) || chars_is_alpha(*ptr);
-		if (!valid) return ERROR_INVALID_PARAMETER;
+		if (!valid) {
+			THROWF(UnexpectedTokenException, "invalid character: %c", *ptr);
+		}
 
 		int ord = chars_is_digit(*ptr) ? (*ptr - '0') : (10 + chars_lower(*ptr) - 'a');
-		if (ord >= base) return ERROR_INVALID_PARAMETER;
+		if (ord >= base) {
+			THROWF(UnexpectedTokenException, "invalid character %c for base %d", *ptr, base);
+		}
 
 		base10 += ord * multiplier;
-		if (base10 < 0) return ERROR_OVERFLOW;
+		if (base10 < 0) {
+			THROW(OverflowException, "input number is too large");
+		}
 
 		multiplier *= base;
 	}
 
 	*out = base10 * sign;
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }

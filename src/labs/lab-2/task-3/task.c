@@ -40,7 +40,7 @@ match_result_t match_substring(const char* cursor, const char* needle, match_t m
 	return MATCH_FULL;
 }
 
-inline static void cleanup(FILE* file, deque_match_t* full, deque_match_t* partial) {
+inline static void cleanup_(FILE* file, deque_match_t* full, deque_match_t* partial) {
 	fclose(file);
 	deque_match_destroy(full);
 	deque_match_destroy(partial);
@@ -49,7 +49,7 @@ inline static void cleanup(FILE* file, deque_match_t* full, deque_match_t* parti
 error_t find_substring_in_file(const char* needle, const char* filePath, deque_match_t* matches) {
 	FILE* file = fopen(filePath, "r");
 	if (file == NULL) {
-		return ERROR_IO;
+		THROW(IOException, "can't open input file");
 	}
 
 	deque_match_t fullMatches = deque_match_create();
@@ -67,8 +67,8 @@ error_t find_substring_in_file(const char* needle, const char* filePath, deque_m
 		for (size_t i = 0; i != incompleteCnt; ++i) {
 			match_t partial;
 			if (!deque_match_pop_front(&partialMatches, &partial)) {
-				cleanup(file, &fullMatches, &partialMatches);
-				return ERROR_HEAP_ALLOCATION;
+				cleanup_(file, &fullMatches, &partialMatches);
+				THROW(MemoryError, "can't get partial match");
 			}
 
 			ptrdiff_t newOffset;
@@ -76,14 +76,14 @@ error_t find_substring_in_file(const char* needle, const char* filePath, deque_m
 
 			if (result == MATCH_FULL) {
 				if (!deque_match_push_back(&fullMatches, partial)) {
-					cleanup(file, &fullMatches, &partialMatches);
-					return ERROR_HEAP_ALLOCATION;
+					cleanup_(file, &fullMatches, &partialMatches);
+					THROW(MemoryError, "can't insert full match");
 				}
 			} else if (result == MATCH_PARTIAL) {
 				partial.needleOffset = newOffset;
 				if (!deque_match_push_back(&partialMatches, partial)) {
-					cleanup(file, &fullMatches, &partialMatches);
-					return ERROR_HEAP_ALLOCATION;
+					cleanup_(file, &fullMatches, &partialMatches);
+					THROW(MemoryError, "can't insert partial match");
 				}
 			}
 		}
@@ -103,15 +103,15 @@ error_t find_substring_in_file(const char* needle, const char* filePath, deque_m
 
 			if (result == MATCH_FULL) {
 				if (!deque_match_push_back(&fullMatches, match)) {
-					cleanup(file, &fullMatches, &partialMatches);
-					return ERROR_HEAP_ALLOCATION;
+					cleanup_(file, &fullMatches, &partialMatches);
+					THROW(MemoryError, "can't insert full match");
 				}
 			} else if (result == MATCH_PARTIAL) {
 				// If the haystack buffer ran out, but the needle didn't, "schedule" it for checking.
 				match.needleOffset = newOffset;
 				if (!deque_match_push_back(&partialMatches, match)) {
-					cleanup(file, &fullMatches, &partialMatches);
-					return ERROR_HEAP_ALLOCATION;
+					cleanup_(file, &fullMatches, &partialMatches);
+					THROW(MemoryError, "can't insert partial match into queue");
 				}
 			}
 
@@ -120,18 +120,20 @@ error_t find_substring_in_file(const char* needle, const char* filePath, deque_m
 	}
 
 	if (ferror(file)) {
-		cleanup(file, &fullMatches, &partialMatches);
-		return ERROR_IO;
+		cleanup_(file, &fullMatches, &partialMatches);
+		THROW(MemoryError, "can't read from input file");
 	}
 
 	*matches = fullMatches;
 	fclose(file);
 	deque_match_destroy(&partialMatches);
 
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
 error_t find_substring_in_files(const char* needle, int fileCnt, ...) {
+	error_t status;
+
 	va_list files;
 	va_start(files, fileCnt);
 
@@ -139,8 +141,9 @@ error_t find_substring_in_files(const char* needle, int fileCnt, ...) {
 		const char* path = va_arg(files, const char*);
 		deque_match_t matches;
 
-		error_t error = find_substring_in_file(needle, path, &matches);
-		if (error) return error;
+		if (FAILED((status = find_substring_in_file(needle, path, &matches)))) {
+			PASS(status);
+		}
 
 		if (deque_match_is_empty(&matches)) {
 			printf("No matches in %s\n", path);
@@ -149,8 +152,8 @@ error_t find_substring_in_files(const char* needle, int fileCnt, ...) {
 			while (!deque_match_is_empty(&matches)) {
 				match_t match;
 				if (!deque_match_pop_front(&matches, &match)) {
-					fprintf(stderr, "Can't read match from `matches`.\n");
-					return ERROR_HEAP_ALLOCATION;
+					deque_match_destroy(&matches);
+					THROW(MemoryError, "can't read match");
 				}
 				printf("  at %d:%d\n", match.line, match.column);
 			}
@@ -160,5 +163,5 @@ error_t find_substring_in_files(const char* needle, int fileCnt, ...) {
 	}
 
 	va_end(files);
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }

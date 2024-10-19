@@ -15,7 +15,7 @@ typedef struct opt {
 
 error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
 	if (flag[0] != '-' && flag[0] != '/') {
-		return ERROR_INVALID_PARAMETER;
+		THROW(IllegalArgumentException, "flag starts with an invalid character");
 	}
 
 	++flag;
@@ -23,11 +23,11 @@ error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
 	for (int i = 0; i != nOpts; ++i) {
 		if (strncmp(opts[i].name, flag, 16) == 0) {
 			*outOpt = opts[i];
-			return ERROR_SUCCESS;
+			return NO_EXCEPTION;
 		}
 	}
 
-	return ERROR_INVALID_PARAMETER;
+	THROWF(IllegalArgumentException, "unrecognized option: %c", flag[0]);
 }
 
 void print_opts(opt_t opts[], int nOpts) {
@@ -37,7 +37,7 @@ void print_opts(opt_t opts[], int nOpts) {
 	}
 }
 
-int main(int argc, char** argv) {
+error_t main_(int argc, char** argv) {
 	error_t error;
 
 	opt_t opts[] = {{"h", "prints the first 100 numbers divisible by 'x'", &print_divisible},
@@ -51,26 +51,28 @@ int main(int argc, char** argv) {
 	if (argc != 3) {
 		printf("Usage: %s <flag> <x>\nFlags:\n", argv[0]);
 		print_opts(opts, nOpts);
-		return -ERROR_INVALID_PARAMETER;
+		return NO_EXCEPTION;
 	}
 
 	opt_t opt;
-	error = parse_opt(argv[1], opts, nOpts, &opt);
-	if (error != ERROR_SUCCESS) {
-		fprintf(stderr, "Invalid option. See usage for more details.\n");
-		return -ERROR_INVALID_PARAMETER;
+	if (FAILED((error = parse_opt(argv[1], opts, nOpts, &opt)))) {
+		fprintf(stderr, "Invalid arguments: %s.", error.message);
+		return NO_EXCEPTION;
 	}
 
 	long x;
-	error = str_to_long(argv[2], &x);
-	if (error != ERROR_SUCCESS) {
-		fprintf(stderr, "Invalid 'x': %s; malformed number or out of range\n", argv[2]);
-		return -ERROR_INVALID_PARAMETER;
+	if (FAILED((error = str_to_long(argv[2], &x)))) {
+		fprintf(stderr, "Invalid 'x': %s.\n", error.message);
+		return NO_EXCEPTION;
 	}
 
-	error = opt.handler(x);
-	if (error != ERROR_SUCCESS) {
+	return opt.handler(x);
+}
+
+int main(int argc, char** argv) {
+	error_t error;
+	if (FAILED((error = main_(argc, argv)))) {
 		error_print(error);
-		return -(int)error;
+		return (int)error.code;
 	}
 }

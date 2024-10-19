@@ -7,37 +7,40 @@
 
 typedef bool (*line_count_predicate_t)(char ch);
 
-bool predicate_is_letter(char ch) { return chars_is_alpha(ch); }
+bool predicate_is_letter_(char ch) { return chars_is_alpha(ch); }
 
-bool predicate_is_special(char ch) { return !chars_is_alpha(ch) && !chars_is_digit(ch) && ch != ' '; }
+bool predicate_is_special_(char ch) { return !chars_is_alpha(ch) && !chars_is_digit(ch) && ch != ' '; }
 
-error_t remove_digits(FILE* in, FILE* out) {
-	error_t error = ERROR_SUCCESS;
+void remove_digits_cleanup_(char* line, char* modified) {
+	free(line);
+	free(modified);
+}
 
-	char *line = NULL, *modified = NULL;
-	size_t lineCap, modifiedCap = 0;
+error_t task_remove_digits(FILE* in, FILE* out) {
+	char* line = NULL;
+	char* modified = NULL;
+	size_t lineCap;
+	size_t modifiedCap = 0;
 
 	while (getline(&line, &lineCap, in) > 0) {
 		if (lineCap == 0) {
-			error = error_oops("`getline` returned `lineCap` as zero");
-			goto cleanup;
+			remove_digits_cleanup_(line, modified);
+			THROW(AssertionError, "`getline` returned `lineCap` as zero");
 		}
 
 		if (lineCap > modifiedCap) {
-			char* newBuffer = realloc(modified, lineCap);
-
+			char* newBuffer = (char*)realloc(modified, lineCap);
 			if (newBuffer == NULL) {
-				error = ERROR_HEAP_ALLOCATION;
-				goto cleanup;
+				remove_digits_cleanup_(line, modified);
+				THROW(MemoryError, "can't resize modified buffer");
 			}
-
 			modified = newBuffer;
 			modifiedCap = lineCap;
 		}
 
 		if (modified == NULL) {
-			error = error_oops("`modified` buffer is null");
-			goto cleanup;
+			remove_digits_cleanup_(line, modified);
+			THROW(AssertionError, "`modified` buffer is NULL");
 		}
 
 		int i = 0;
@@ -51,27 +54,23 @@ error_t remove_digits(FILE* in, FILE* out) {
 		fprintf(out, "%s", modified);
 
 		if (ferror(out)) {
-			error = ERROR_IO;
-			goto cleanup;
+			remove_digits_cleanup_(line, modified);
+			THROW(IOException, "can't write to output file");
 		}
 	}
 
-cleanup:
-	free(line);
-	free(modified);
-	return error;
+	remove_digits_cleanup_(line, modified);
+	return NO_EXCEPTION;
 }
 
 error_t count_lines_predicate(FILE* in, FILE* out, line_count_predicate_t predicate) {
-	error_t error = ERROR_SUCCESS;
-
 	char* line = NULL;
 	size_t lineCap;
 
 	while (getline(&line, &lineCap, in) > 0) {
 		if (ferror(in)) {
-			error = ERROR_IO;
-			goto cleanup;
+			free(line);
+			THROW(IOException, "can't read from input file");
 		}
 
 		int count = 0;
@@ -89,35 +88,41 @@ error_t count_lines_predicate(FILE* in, FILE* out, line_count_predicate_t predic
 		fprintf(out, "%s %d%s", line, count, separator);
 
 		if (ferror(out)) {
-			error = ERROR_IO;
-			goto cleanup;
+			free(line);
+			THROW(IOException, "can't write to output file");
 		}
 	}
 
-cleanup:
 	free(line);
-	return error;
+	return NO_EXCEPTION;
 }
 
-error_t count_letters(FILE* in, FILE* out) { return count_lines_predicate(in, out, &predicate_is_letter); }
+error_t task_count_letters(FILE* in, FILE* out) { return count_lines_predicate(in, out, &predicate_is_letter_); }
 
-error_t count_special_characters(FILE* in, FILE* out) { return count_lines_predicate(in, out, &predicate_is_special); }
+error_t task_count_special_characters(FILE* in, FILE* out) {
+	return count_lines_predicate(in, out, &predicate_is_special_);
+}
 
-inline static char to_hex(int n) {
+inline static char to_hex_(int n) {
 	if (n >= 16) return '\0';
 	return (char)(n < 10 ? ('0' + n) : ('a' + n - 10));
 }
 
-error_t encode_non_digits(FILE* in, FILE* out) {
-	error_t error = ERROR_SUCCESS;
+void encode_non_digits_cleanup_(char* line, char* modified) {
+	free(line);
+	free(modified);
+}
 
-	char *line = NULL, *modified = NULL;
-	size_t lineCap, modifiedCap;
+error_t task_encode_non_digits(FILE* in, FILE* out) {
+	char* line = NULL;
+	char* modified = NULL;
+	size_t lineCap;
+	size_t modifiedCap;
 
 	while (getline(&line, &lineCap, in) > 0) {
 		if (ferror(in)) {
-			error = ERROR_IO;
-			goto cleanup;
+			encode_non_digits_cleanup_(line, modified);
+			THROW(IOException, "can't read from input file");
 		}
 
 		// Allocate for the modified line buffer.
@@ -125,21 +130,18 @@ error_t encode_non_digits(FILE* in, FILE* out) {
 		if (modified == NULL) {
 			modifiedCap = lineCap * 4;
 			modified = malloc(modifiedCap);
-
 			if (modified == NULL) {
-				error = ERROR_HEAP_ALLOCATION;
-				goto cleanup;
+				encode_non_digits_cleanup_(line, modified);
+				THROW(MemoryError, "can't allocate `modified` buffer");
 			}
 		} else if (lineCap * 4 > modifiedCap) {
-			modifiedCap = lineCap * 4;
-			char* newBuffer = realloc(modified, modifiedCap);
-
+			char* newBuffer = realloc(modified, lineCap * 4);
 			if (newBuffer == NULL) {
-				error = ERROR_HEAP_ALLOCATION;
-				goto cleanup;
+				encode_non_digits_cleanup_(line, modified);
+				THROW(MemoryError, "can't resize `modified` buffer");
 			}
-
 			modified = newBuffer;
+			modifiedCap = lineCap * 4;
 		}
 
 		int lIdx, rIdx;
@@ -155,8 +157,8 @@ error_t encode_non_digits(FILE* in, FILE* out) {
 
 				modified[lIdx + 0] = '0';
 				modified[lIdx + 1] = 'x';
-				modified[lIdx + 2] = to_hex(hi);
-				modified[lIdx + 3] = to_hex(lo);
+				modified[lIdx + 2] = to_hex_(hi);
+				modified[lIdx + 3] = to_hex_(lo);
 
 				lIdx += 4;
 			} else {
@@ -167,10 +169,13 @@ error_t encode_non_digits(FILE* in, FILE* out) {
 
 		modified[lIdx] = '\0';
 		fprintf(out, "%s", modified);
+
+		if (ferror(out)) {
+			encode_non_digits_cleanup_(line, modified);
+			THROW(IOException, "can't write to output file");
+		}
 	}
 
-cleanup:
-	free(line);
-	free(modified);
-	return error;
+	encode_non_digits_cleanup_(line, modified);
+	return NO_EXCEPTION;
 }

@@ -5,6 +5,12 @@
 
 #include "error.h"
 
+#define IntegralException 0x00010001
+#define DivergingException 0x00010002
+
+/** Converts a Math error to string. */
+const char* mth_error_to_string(error_code_t error);
+
 /**
  * Computes n^power using binary exponentiation.
  *
@@ -64,20 +70,20 @@ error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes);
  * @param eps error margin
  * @param out approximate integral value
  *
- * @return error code; `ERROR_SUCCESS` if the computation succeeded
+ * @return error code; `NO_EXCEPTION` if the computation succeeded
  */
 error_t mth_integral(double f(double x), double a, double b, double eps, double* out);
 
-/** Finds a maximum value between two numbers. */
+/** Finds a maximum value between multiple numbers. */
 inline static int mth_int_max(int a, int b) { return a > b ? a : b; }
 
-/** Finds a minimum value between two numbers. */
+/** Finds a minimum value between multiple numbers. */
 inline static int mth_int_min(int a, int b) { return a < b ? a : b; }
 
-/** Finds a maximum value between two numbers. */
+/** Finds a maximum value between multiple numbers. */
 inline static long mth_long_max(long a, long b) { return a > b ? a : b; }
 
-/** Finds a maximum value between two numbers. */
+/** Finds a maximum value between multiple numbers. */
 inline static long mth_long_min(long a, long b) { return a < b ? a : b; }
 
 /**

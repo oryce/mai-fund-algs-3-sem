@@ -4,10 +4,9 @@
 
 #include "lib/error.h"
 
-error_t geometric_mean(double* result, int n, ...) {
-	if (result == NULL || n < 1) {
-		return ERROR_INVALID_PARAMETER;
-	}
+error_t task_geometric_mean(double* result, int n, ...) {
+	if (result == NULL) THROW(IllegalArgumentException, "`result` may not be null");
+	if (n < 1) THROW(IllegalArgumentException, "at least one number must be provided");
 
 	va_list args;
 	va_start(args, n);
@@ -20,36 +19,50 @@ error_t geometric_mean(double* result, int n, ...) {
 	va_end(args);
 
 	if (isinf(product)) {
-		return ERROR_OVERFLOW;
+		THROW(OverflowException, "double overflow in number product");
 	}
 
 	*result = pow(product, 1.0 / n);
-	return isnan(*result) ? ERROR_OVERFLOW : ERROR_SUCCESS;
+	if (isnan(*result)) {
+		THROW(UnderflowException, "double underflow in geometric mean");
+	}
+
+	return NO_EXCEPTION;
 }
 
-error_t bin_exp(double* out, double number, int power) {
-	error_t error;
+error_t task_bin_exp(double* out, double number, int power) {
+	error_t status;
 
 	if (power < 0) {
-		double res;
-		error = bin_exp(&res, number, -power);
-		if (error) return error;
+		double result;
+		if (FAILED((status = task_bin_exp(&result, number, -power)))) {
+			PASS(status);
+		}
 
-		*out = 1.0 / res;
-		return isnan(*out) ? ERROR_UNDERFLOW : ERROR_SUCCESS;
+		*out = 1.0 / result;
+		if (isnan(*out)) {
+			THROW(OverflowException, "double underflow in negative exponent");
+		}
+
+		return NO_EXCEPTION;
 	} else if (power == 0) {
 		*out = 1;
-		return ERROR_SUCCESS;
+		return NO_EXCEPTION;
 	}
 
-	double res;
-	error = bin_exp(&res, number, power / 2);
-	if (error) return error;
+	double result;
+	if (FAILED((status = task_bin_exp(&result, number, power / 2)))) {
+		PASS(status);
+	}
 
 	if (power % 2) {
-		*out = res * res * number;
+		*out = result * result * number;
 	} else {
-		*out = res * res;
+		*out = result * result;
 	}
-	return isinf(*out) ? ERROR_OVERFLOW : ERROR_SUCCESS;
+	if (isinf(*out)) {
+		THROW(OverflowException, "double overflow in exponent");
+	}
+
+	return NO_EXCEPTION;
 }

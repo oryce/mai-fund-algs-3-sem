@@ -21,14 +21,14 @@ int main(int argc, char** argv) {
 		    "Usage: %s <epsilon>\n"
 		    "Computes various constants using different methods with accuracy of 'epsilon'.\n ",
 		    argv[0]);
-		return -ERROR_INVALID_PARAMETER;
+		return 0;
 	}
 
 	double epsilon;
 	error = str_to_double(argv[1], &epsilon);
-	if (error != ERROR_SUCCESS || epsilon <= 0) {
+	if (FAILED(error) || epsilon <= 0) {
 		fprintf(stderr, "Invalid 'epsilon': malformed number or out of range.\n");
-		return -ERROR_INVALID_PARAMETER;
+		return 1;
 	}
 
 	compute_entry_t entries[] = {

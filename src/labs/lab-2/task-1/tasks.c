@@ -7,35 +7,31 @@
 #include "lib/collections/string.h"
 #include "lib/convert.h"
 
-size_t my_strlen(const char* str) {
-	if (str == NULL) return 0;
-	size_t length = 0;
+error_t task_string_length(const char* str, size_t* length) {
+	if (str == NULL) THROW(IllegalArgumentException, "`str` may not be null");
+	if (length == NULL) THROW(IllegalArgumentException, "`*length` may not be null");
 
 	while (*str != '\0') {
 		++str;
-		++length;
+		++(*length);
 	}
 
-	return length;
+	return NO_EXCEPTION;
 }
 
-error_t print_length(int argc, char** argv) {
-	if (argc != 3 || argv == NULL) {
-		return ERROR_INVALID_PARAMETER;
-	}
+error_t task_reverse_string(const char* str, char** out) {
+	if (str == NULL) THROW(IllegalArgumentException, "`str` may not be null");
+	if (out == NULL) THROW(IllegalArgumentException, "`out` may not be null");
 
-	printf("String length: %zu\n", my_strlen(argv[2]));
-	return ERROR_SUCCESS;
-}
+	error_t status;
 
-error_t reverse_string_s(const char* str, char** out) {
-	if (str == NULL || out == NULL) {
-		return ERROR_INVALID_PARAMETER;
+	size_t length;
+	if (FAILED((status = task_string_length(str, &length)))) {
+		PASS(status);
 	}
-	size_t length = my_strlen(str);
 
 	char* reversed = (char*)malloc(length + 1);
-	if (reversed == NULL) return ERROR_HEAP_ALLOCATION;
+	if (reversed == NULL) THROW(MemoryError, "can't allocated memory for `reserved`");
 
 	for (size_t i = 0; i != length; ++i) {
 		reversed[i] = str[length - i - 1];
@@ -43,65 +39,32 @@ error_t reverse_string_s(const char* str, char** out) {
 
 	reversed[length] = '\0';
 	*out = reversed;
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
-error_t reverse_string(int argc, char** argv) {
-	if (argc != 3 || argv == NULL) {
-		return ERROR_INVALID_PARAMETER;
+error_t task_uppercase_odd_chars(const char* str, char** out) {
+	if (str == NULL) THROW(IllegalArgumentException, "`str` may not be null");
+	if (out == NULL) THROW(IllegalArgumentException, "`out` may not be null");
+
+	error_t status;
+
+	size_t length;
+	if (FAILED((status = task_string_length(str, &length)))) {
+		PASS(status);
 	}
 
-	char* reversed;
-	error_t error = reverse_string_s(argv[2], &reversed);
-	if (error) {
-		return error;
-	}
+	char* modified = (char*)malloc(length + 1);
+	if (modified == NULL) THROW(MemoryError, "can't allocated memory for `reversed`");
 
-	printf("Reversed string: %s\n", reversed);
-	free(reversed);
-	return ERROR_SUCCESS;
-}
-
-error_t uppercase_odd_chars_s(const char* str, string_t* out) {
-	if (str == NULL || out == NULL) {
-		return ERROR_INVALID_PARAMETER;
-	}
-
-	string_t modified = string_create();
-	if (!string_created(&modified)) {
-		string_destroy(&modified);
-		return ERROR_HEAP_ALLOCATION;
-	}
-
-	for (size_t i = 0; str[i] != '\0'; ++i) {
-		char ch = (char)(i % 2 != 0 ? chars_upper(str[i]) : str[i]);
-		if (!string_append_char(&modified, ch)) {
-			string_destroy(&modified);
-			return ERROR_HEAP_ALLOCATION;
-		}
+	for (size_t i = 0; i != length; ++i) {
+		modified[i] = (char)(i % 2 ? chars_upper(str[i]) : str[i]);
 	}
 
 	*out = modified;
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
-error_t uppercase_odd_chars(int argc, char** argv) {
-	if (argc != 3 || argv == NULL) {
-		return ERROR_INVALID_PARAMETER;
-	}
-
-	string_t result;
-	error_t error = uppercase_odd_chars_s(argv[2], &result);
-	if (error) {
-		return error;
-	}
-
-	printf("Modified string: %s\n", string_to_c_str(&result));
-	string_destroy(&result);
-	return ERROR_SUCCESS;
-}
-
-void rearrange_chars_cleanup(int n, ...) {
+void rearrange_chars_cleanup_(int n, ...) {
 	va_list args;
 	va_start(args, n);
 
@@ -113,21 +76,23 @@ void rearrange_chars_cleanup(int n, ...) {
 	va_end(args);
 }
 
-error_t rearrange_chars_str(const char* str, string_t* out) {
-	if (str == NULL || out == NULL) {
-		return ERROR_INVALID_PARAMETER;
-	}
+error_t task_rearrange_chars(const char* str, char** out) {
+	if (str == NULL) THROW(IllegalArgumentException, "`str` may not be null");
+	if (out == NULL) THROW(IllegalArgumentException, "`out` may not be null");
 
+	bool error = false;
 	string_t numbers = string_create();
 	string_t letters = string_create();
 	string_t other = string_create();
 	string_t result = string_create();
 
-	bool error =
-	    !string_created(&numbers) || !string_created(&letters) || !string_created(&other) || !string_created(&result);
-	if (error) {
-		rearrange_chars_cleanup(4, numbers, letters, other, result);
-		return ERROR_HEAP_ALLOCATION;
+	error |= !string_created(&numbers);
+	error |= !string_created(&letters);
+	error |= !string_created(&other);
+	error |= !string_created(&result);
+	if (!error) {
+		rearrange_chars_cleanup_(4, numbers, letters, other, result);
+		THROW(MemoryError, "can't create string buffers");
 	}
 
 	while (*str != '\0') {
@@ -138,9 +103,9 @@ error_t rearrange_chars_str(const char* str, string_t* out) {
 		} else {
 			error = !string_append_char(&other, *str);
 		}
-		if (error) {
-			rearrange_chars_cleanup(4, numbers, letters, other, result);
-			return ERROR_HEAP_ALLOCATION;
+		if (!error) {
+			rearrange_chars_cleanup_(4, numbers, letters, other, result);
+			THROW(MemoryError, "can't append char into string buffer");
 		}
 
 		++str;
@@ -149,40 +114,23 @@ error_t rearrange_chars_str(const char* str, string_t* out) {
 	error |= !string_append(&result, &numbers);
 	error |= !string_append(&result, &letters);
 	error |= !string_append(&result, &other);
-	if (error) {
-		rearrange_chars_cleanup(4, numbers, letters, other, result);
-		return ERROR_HEAP_ALLOCATION;
+	if (!error) {
+		rearrange_chars_cleanup_(4, numbers, letters, other, result);
+		THROW(MemoryError, "can't concat resulting strings");
 	}
 
-	*out = result;
+	*out = (char*)string_to_c_str(&result);
 	string_destroy(&numbers);
 	string_destroy(&letters);
 	string_destroy(&other);
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
-error_t rearrange_chars(int argc, char** argv) {
-	if (argc != 3 || argv == NULL) {
-		return ERROR_INVALID_PARAMETER;
-	}
+error_t task_concat_randomly(const char** strings, size_t n, char** out) {
+	if (strings == NULL) THROW(IllegalArgumentException, "`strings` may not be null");
+	if (out == NULL) THROW(IllegalArgumentException, "`out` may not be null");
 
-	string_t result;
-	error_t error = rearrange_chars_str(argv[2], &result);
-	if (error) {
-		return error;
-	}
-
-	printf("Modified string: %s\n", string_to_c_str(&result));
-	string_destroy(&result);
-	return ERROR_SUCCESS;
-}
-
-error_t concat_randomly_s(const char** strings, size_t nStrings, string_t* out) {
-	if (strings == NULL || out == NULL) {
-		return ERROR_INVALID_PARAMETER;
-	}
-
-	for (size_t i = nStrings - 1; i > 0; --i) {
+	for (size_t i = n - 1; i > 0; --i) {
 		size_t j = rand() % (i + 1);  // NOLINT(*-msc50-cpp)
 
 		const char* temp = strings[i];
@@ -193,44 +141,20 @@ error_t concat_randomly_s(const char** strings, size_t nStrings, string_t* out) 
 	string_t result = string_create();
 	if (!string_created(&result)) {
 		string_destroy(&result);
-		return ERROR_HEAP_ALLOCATION;
+		THROW(MemoryError, "can't create resulting string");
 	}
 
-	for (int i = 0; i != nStrings; ++i) {
+	for (int i = 0; i != n; ++i) {
 		bool success = true;
 		success &= string_append_c_str(&result, strings[i]);
 		success &= string_append_char(&result, ' ');
 		if (!success) {
 			string_destroy(&result);
-			return ERROR_HEAP_ALLOCATION;
+			THROW(MemoryError, "can't append string");
 		}
 	}
 
-	*out = result;
-	return ERROR_SUCCESS;
+	*out = (char*)string_to_c_str(&result);
+	return NO_EXCEPTION;
 }
 
-error_t concat_randomly(int argc, char** argv) {
-	if (argc < 4 || argv == NULL) {
-		return ERROR_INVALID_PARAMETER;
-	}
-
-	long seed;
-	if (str_to_long(argv[2], &seed) != ERROR_SUCCESS) {
-		return ERROR_INVALID_PARAMETER;
-	}
-	srand(seed);
-
-	const char* strings[argc - 3];
-	memcpy(strings, &argv[3], (argc - 3) * sizeof(char*));
-
-	string_t result;
-	error_t error = concat_randomly_s(strings, argc - 3, &result);
-	if (error) {
-		return error;
-	}
-
-	printf("Shuffled strings: %s\n", string_to_c_str(&result));
-	string_destroy(&result);
-	return ERROR_SUCCESS;
-}

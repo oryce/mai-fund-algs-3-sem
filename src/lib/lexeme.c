@@ -15,18 +15,18 @@ void lexeme_destroy(vector_str_t* lexemes) {
 	vector_str_destroy(lexemes);
 }
 
-error_t lexeme_finalize(vector_str_t* lexemes, string_t lexeme_value) {
-	return vector_str_push_back(lexemes, lexeme_value) ? ERROR_SUCCESS : ERROR_HEAP_ALLOCATION;
+void lexeme_read_cleanup_(vector_str_t* lexemes, string_t* lexeme) {
+	vector_str_destroy(lexemes);
+	string_destroy(lexeme);
 }
 
 error_t lexeme_read(FILE* file, vector_str_t* out) {
-	error_t error;
 	vector_str_t lexemes = vector_str_create();
+	string_t lexeme = string_create();
 
-	string_t lexeme_value = string_create();
-	if (!lexeme_value.initialized) {
-		error = ERROR_HEAP_ALLOCATION;
-		goto cleanup;
+	if (!string_created(&lexeme)) {
+		lexeme_read_cleanup_(&lexemes, &lexeme);
+		THROW(MemoryError, "can't create lexeme buffer");
 	}
 
 	bool in_lexeme = false;
@@ -34,19 +34,21 @@ error_t lexeme_read(FILE* file, vector_str_t* out) {
 	int ch;
 	while ((ch = fgetc(file)) != EOF) {
 		if (ferror(file)) {
-			error = ERROR_IO;
-			goto cleanup;
+			lexeme_read_cleanup_(&lexemes, &lexeme);
+			THROW(IOException, "can't read from input file");
 		}
 
 		if (ch == '\t' || ch == '\n' || ch == '\r' || ch == ' ') {
 			if (in_lexeme) {
-				error = lexeme_finalize(&lexemes, lexeme_value);
-				if (error) goto cleanup;
+				if (!vector_str_push_back(&lexemes, lexeme)) {
+					lexeme_read_cleanup_(&lexemes, &lexeme);
+					THROW(MemoryError, "can't insert lexeme");
+				}
 
-				lexeme_value = string_create();
-				if (!lexeme_value.initialized) {
-					error = ERROR_HEAP_ALLOCATION;
-					goto cleanup;
+				lexeme = string_create();
+				if (!string_created(&lexeme)) {
+					lexeme_read_cleanup_(&lexemes, &lexeme);
+					THROW(MemoryError, "can't create new lexeme");
 				}
 
 				in_lexeme = false;
@@ -57,35 +59,32 @@ error_t lexeme_read(FILE* file, vector_str_t* out) {
 
 		in_lexeme = true;
 
-		if (!string_append_char(&lexeme_value, (char)ch)) {
-			error = ERROR_HEAP_ALLOCATION;
-			goto cleanup;
+		if (!string_append_char(&lexeme, (char)ch)) {
+			lexeme_read_cleanup_(&lexemes, &lexeme);
+			THROW(MemoryError, "can't append char to lexeme");
 		}
 	}
 
 	if (in_lexeme) {
-		error = lexeme_finalize(&lexemes, lexeme_value);
-		if (error) goto cleanup;
+		if (!vector_str_push_back(&lexemes, lexeme)) {
+			lexeme_read_cleanup_(&lexemes, &lexeme);
+			THROW(MemoryError, "can't insert lexeme");
+		}
 	} else {
-		string_destroy(&lexeme_value);
+		string_destroy(&lexeme);
 	}
 
 	*out = lexemes;
-	return ERROR_SUCCESS;
-
-cleanup:
-	string_destroy(&lexeme_value);
-	lexeme_destroy(&lexemes);
-	return error;
+	return NO_EXCEPTION;
 }
 
 error_t lexeme_write(FILE* file, vector_str_t* lexemes, char sep) {
 	for (int i = 0; i != vector_str_size(lexemes); ++i) {
 		string_t lexeme = vector_str_get(lexemes, i);
-		fprintf(file, "%s%c", string_to_c_str(&lexeme), sep);
 
-		if (ferror(file)) return ERROR_IO;
+		fprintf(file, "%s%c", string_to_c_str(&lexeme), sep);
+		if (ferror(file)) THROW(IOException, "can't write lexeme to file");
 	}
 
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }

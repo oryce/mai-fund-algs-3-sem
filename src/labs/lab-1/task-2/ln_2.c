@@ -26,7 +26,7 @@ double compute_ln_2_eq(double eps) {
 	double value;
 
 	error_t error = mth_dichotomy(&ln_2_equation, 0.5, 1.0, eps, &value);
-	if (error != ERROR_SUCCESS) return DBL_MIN;
+	if (FAILED(error)) return DBL_MIN;
 
 	return value;
 }

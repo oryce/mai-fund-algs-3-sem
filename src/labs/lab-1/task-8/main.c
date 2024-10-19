@@ -4,9 +4,13 @@
 #include "lib/paths.h"
 #include "tasks.h"
 
-int main(int argc, char** argv) {
-	error_t error = ERROR_SUCCESS;
+void cleanup(FILE* inputFile, FILE* outputFile) {
+	fclose(inputFile);
+	fclose(outputFile);
+}
 
+error_t main_(int argc, char** argv) {
+	error_t error;
 	FILE* inputFile = NULL;
 	FILE* outputFile = NULL;
 
@@ -15,45 +19,40 @@ int main(int argc, char** argv) {
 		    "Usage: %s <input file> <output file>\n"
 		    "Determines the minimum base for each number in the input file.\n",
 		    argv[0]);
-		return -ERROR_INVALID_PARAMETER;
+		return NO_EXCEPTION;
 	}
 
 	bool samePaths;
-
-	error = paths_same(argv[1], argv[2], &samePaths);
-	if (error) goto cleanup;
-
+	if (FAILED((error = paths_same(argv[1], argv[2], &samePaths)))) {
+		fprintf(stderr, "Invalid arguments: paths don't exist or are malformed.\n");
+		return NO_EXCEPTION;
+	}
 	if (samePaths) {
-		fprintf(stderr, "Input and output files may not be the same.\n");
-
-		error = ERROR_INVALID_PARAMETER;
-		goto cleanup;
+		fprintf(stderr, "Invalid arguments: input and output paths may not be the same.\n");
+		return NO_EXCEPTION;
 	}
 
 	inputFile = fopen(argv[1], "r");
 	if (inputFile == NULL) {
-		fprintf(stderr, "Unable to open the input file for reading.\n");
-
-		error = ERROR_IO;
-		goto cleanup;
+		cleanup(inputFile, outputFile);
+		fprintf(stderr, "Can't open input file for reading.\n");
+		return NO_EXCEPTION;
 	}
 
 	outputFile = fopen(argv[2], "w");
 	if (outputFile == NULL) {
-		fprintf(stderr, "Unable to open the output file for writing.\n");
-
-		error = ERROR_IO;
-		goto cleanup;
+		cleanup(inputFile, outputFile);
+		fprintf(stderr, "Can't open output file for writing.\n");
+		return NO_EXCEPTION;
 	}
 
-	error = determine_min_number_bases(inputFile, outputFile);
+	return determine_min_number_bases(inputFile, outputFile);
+}
 
-cleanup:
-	fclose(inputFile);
-	fclose(outputFile);
-
-	if (error) {
+int main(int argc, char** argv) {
+	error_t error;
+	if (FAILED((error = main_(argc, argv)))) {
 		error_print(error);
-		return (int) -error;
+		return (int)error.code;
 	}
 }

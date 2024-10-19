@@ -39,7 +39,7 @@ double compute_gamma_series(double eps) {
 
 	for (int k = 3; term == 0 || fabs(term) > eps; ++k) {
 		error = mth_double_pow(floor(sqrt(k)), 2, &floor_sqrt_sq);
-		if (error != ERROR_SUCCESS) return DBL_MIN;
+		if (FAILED(error)) return DBL_MIN;
 
 		term = 1.0 / floor_sqrt_sq - 1.0 / k;
 		sum += term;
@@ -55,7 +55,7 @@ double compute_gamma_eq(double eps) {
 	if (isPrime == NULL) return DBL_MIN;
 
 	error_t error = mth_prime_sieve(isPrime, primes, true);
-	if (error != ERROR_SUCCESS) {
+	if (FAILED(error)) {
 		free(isPrime);
 		return DBL_MIN;
 	}
@@ -84,7 +84,7 @@ double compute_gamma_eq(double eps) {
 			}
 
 			error = mth_prime_sieve(isPrime, primes, false);
-			if (error != ERROR_SUCCESS) {
+			if (FAILED(error)) {
 				free(isPrime);
 				return DBL_MIN;
 			}

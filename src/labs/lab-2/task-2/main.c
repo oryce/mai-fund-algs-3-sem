@@ -1,29 +1,33 @@
 #include "tasks.h"
 
-int main(void) {
+error_t main_(void) {
 	error_t error;
 
 	double mean;
-	error = geometric_mean(&mean, 5, 1.0, 2.0, 3.0, 4.0, 5.0);
-	if (error) {
-		error_print(error);
-		return (int)-error;
+	if (FAILED((error = task_geometric_mean(&mean, 0)))) {
+		PASS(error);
 	}
 
 	printf("Mean: %lf\n", mean);
 
 	double a, b;
-	error = bin_exp(&a, 5, 10);
-	if (error) {
-		error_print(error);
-		return (int)-error;
+	if (FAILED((error = task_bin_exp(&a, 5, 10)))) {
+		PASS(error);
 	}
-	error = bin_exp(&b, 0.5, -10);
-	if (error) {
-		error_print(error);
-		return (int)-error;
+	if (FAILED((error = task_bin_exp(&b, 0.5, -10)))) {
+		PASS(error);
 	}
 
 	printf("5^10 = %lf\n", a);
 	printf("0.5^(-10) = %lf\n", b);
+
+	return NO_EXCEPTION;
+}
+
+int main(void) {
+	error_t error = main_();
+	if (FAILED(error)) {
+		error_print(error);
+		return (int)error.code;
+	}
 }

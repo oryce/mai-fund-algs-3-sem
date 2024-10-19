@@ -16,8 +16,7 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 
 	for (ptr = (char*)start; *ptr != '\0'; ++ptr) {
 		if (!chars_is_alpha(*ptr) && !chars_is_digit(*ptr)) {
-			fprintf(stderr, "Malformed lexeme: %s\n", lexeme);
-			return ERROR_INVALID_PARAMETER;
+			THROWF(UnexpectedTokenException, "unexpected char in lexeme: %c", *ptr);
 		}
 
 		int ord = chars_is_alpha(*ptr) ? 10 + (chars_lower(*ptr) - 'a') : *ptr - '0';
@@ -33,7 +32,9 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 		int ord = chars_is_alpha(*ptr) ? 10 + (chars_lower(*ptr) - 'a') : *ptr - '0';
 
 		base10 += ord * multiplier;
-		if (base10 < 0) return ERROR_OVERFLOW;
+		if (base10 < 0) {
+			THROW(OverflowException, "input number is too large");
+		}
 
 		multiplier *= base;
 	}
@@ -51,27 +52,35 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 	} else {
 		fprintf(out, "%s %d %ld\n", ptr, base, base10);
 	}
-	if (ferror(out)) return ERROR_IO;
+	if (ferror(out)) {
+		THROW(IOException, "can't write to output file");
+	}
 
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
+}
+
+void cleanup_(vector_str_t* lexemes) {
+	if (vector_str_size(lexemes) != -1) {
+		lexeme_destroy(lexemes);
+	}
 }
 
 error_t determine_min_number_bases(FILE* in, FILE* out) {
-	error_t error = ERROR_SUCCESS;
+	error_t error;
 	vector_str_t lexemes = {.size = -1};
 
-	error = lexeme_read(in, &lexemes);
-	if (error) goto cleanup;
+	if (FAILED((error = lexeme_read(in, &lexemes)))) {
+		cleanup_(&lexemes);
+		PASS(error);
+	}
 
 	for (int k = 0; k != vector_str_size(&lexemes); ++k) {
 		string_t lexeme = vector_str_get(&lexemes, k);
-		error = process_lexeme(string_to_c_str(&lexeme), out);
-		if (error) goto cleanup;
+		if (FAILED((error = process_lexeme(string_to_c_str(&lexeme), out)))) {
+			cleanup_(&lexemes);
+			PASS(error);
+		}
 	}
 
-cleanup:
-	if (vector_str_size(&lexemes) != -1) {
-		lexeme_destroy(&lexemes);
-	}
-	return error;
+	return NO_EXCEPTION;
 }

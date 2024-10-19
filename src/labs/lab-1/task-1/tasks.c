@@ -5,48 +5,53 @@
 #include "lib/mth.h"
 
 error_t print_divisible(long x) {
-	if (x <= 0) return ERROR_INVALID_PARAMETER;
+	if (x <= 0) THROW(IllegalArgumentException, "`x` must be a natural number");
 
 	if (x > 100) {
 		fprintf(stdout, "No numbers in [1; 100] are divisible by %ld.\n", x);
-		return ERROR_SUCCESS;
+		return NO_EXCEPTION;
 	}
 
 	for (long i = x; i <= 100; i += x) {
 		fprintf(stdout, "%ld is divisible by %ld\n", i, x);
 	}
 
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
-error_t print_is_prime(long x) {
-	if (x == 0) return ERROR_INVALID_PARAMETER;
+error_t is_prime_(long x, bool* result) {
+	if (x <= 0) THROW(IllegalArgumentException, "`x` must be a natural number");
 
-	long n = x;
-	if (n < 0) n = -n;
-
-	if (n == 1) {
-		fprintf(stdout, "%ld is neither a prime nor a composite number\n", x);
-		return ERROR_SUCCESS;
+	if (x == 2 || x == 3) {
+		*result = true;
+		return NO_EXCEPTION;
+	} else if (x == 1 || x % 2 == 0 || x % 3 == 0) {
+		*result = false;
+		return NO_EXCEPTION;
 	}
 
-	if (n == 2 || n == 3) {
-		fprintf(stdout, "%ld is a prime number\n", x);
-		return ERROR_SUCCESS;
-	} else if (n % 2 == 0 || n % 3 == 0) {
-		fprintf(stdout, "%ld is a composite number\n", x);
-		return ERROR_SUCCESS;
-	}
-
-	for (long i = 5; i * i <= n; i += 6) {
-		if (n % i == 0 || n % (i + 2) == 0) {
-			fprintf(stdout, "%ld is a composite number\n", x);
-			return ERROR_SUCCESS;
+	for (long i = 5; i * i <= x; i += 6) {
+		if (x % i == 0 || x % (i + 2) == 0) {
+			*result = false;
+			return NO_EXCEPTION;
 		}
 	}
 
-	fprintf(stdout, "%ld is a prime number\n", x);
-	return ERROR_SUCCESS;
+	*result = true;
+	return NO_EXCEPTION;
+}
+
+error_t print_is_prime(long x) {
+	error_t status;
+	bool result;
+
+	if (FAILED((status = is_prime_(x, &result)))) {
+		fprintf(stdout, "%s", status.message);
+		return NO_EXCEPTION;
+	}
+
+	fprintf(stdout, "%ld is a %s number", x, result ? "prime" : "composite");
+	return NO_EXCEPTION;
 }
 
 error_t print_hex(long x) {
@@ -68,11 +73,14 @@ error_t print_hex(long x) {
 	}
 
 	fprintf(stdout, "\n");
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
 error_t print_powers(long x) {
-	if (x < 1 || x > 10) return ERROR_INVALID_PARAMETER;
+	if (x < 1 || x > 10) {
+		fprintf(stderr, "Invalid `x`: must be in [1; 10].\n");
+		return NO_EXCEPTION;
+	}
 
 	fprintf(stdout, "Base  | Power | Base^Power\n");
 
@@ -84,29 +92,51 @@ error_t print_powers(long x) {
 		}
 	}
 
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
 // sqrt(LONG_MAX) * sqrt(2)
 const long SUM_LIMIT = 4294967296;
 
-error_t print_sums(long x) {
-	if (x < 1) return ERROR_INVALID_PARAMETER;
+error_t arithmetic_progression_(long n, long* result) {
+	if (n < 1) THROW(IllegalArgumentException, "`n` must be a natural number");
 	// NB: simplified to sqrt((1 + x) * x) = x
-	if (x >= SUM_LIMIT) return ERROR_OVERFLOW;
+	if (n >= SUM_LIMIT) THROW(OverflowException, "`n` is too large");
 
-	long sum = (long)((long double)(1 + x) / 2 * (long double)x);
-	fprintf(stdout, "Sum of numbers from 1 to %ld: %ld\n", x, sum);
+	*result = (long)((long double)(1 + n) / 2 * (long double)n);
+	return NO_EXCEPTION;
+}
 
-	return ERROR_SUCCESS;
+error_t print_sums(long x) {
+	error_t error;
+	long result;
+
+	if (FAILED((error = arithmetic_progression_(x, &result)))) {
+		if (error.code == IllegalArgumentException) {
+			fprintf(stderr, "Invalid input: %s\n", error.message);
+		} else if (error.code == OverflowException) {
+			fprintf(stderr, "Can't compute. `x` is too large.\n");
+		}
+		return NO_EXCEPTION;
+	}
+
+	fprintf(stdout, "Sum of numbers from 1 to %ld: %ld\n", x, result);
+	return NO_EXCEPTION;
 }
 
 error_t print_factorial(long x) {
+	error_t error;
 	long result;
 
-	error_t error = mth_factorial((int)x, &result);
-	if (error != ERROR_SUCCESS) return error;
+	if (FAILED((error = mth_factorial((int)x, &result)))) {
+		if (error.code == OverflowException) {
+			fprintf(stderr, "Can't compute factorial. Number is too large.\n");
+		} else if (error.code == IllegalArgumentException) {
+			fprintf(stderr, "Invalid input: %s\n", error.message);
+		}
+		return NO_EXCEPTION;
+	}
 
 	fprintf(stdout, "Factorial of %ld is %ld\n", x, result);
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }

@@ -83,7 +83,7 @@ char string_char_at(string_t* string, size_t index);
 void string_reverse(string_t* string);
 
 /**
- * Compares two strings.
+ * Compares multiple strings.
  *
  * @param s1 first string
  * @param s2 second string

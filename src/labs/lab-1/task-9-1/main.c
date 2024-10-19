@@ -6,11 +6,8 @@
 #include "lib/convert.h"
 #include "lib/error.h"
 
-void array_min_max(long array[], size_t nItems, long a, long b) {
-	if (nItems == 0) {
-		fprintf(stderr, "Error: no items supplied.\n");
-		return;
-	}
+error_t task(long array[], size_t nItems, long a, long b) {
+	if (nItems == 0) THROW(IllegalArgumentException, "no items supplied");
 
 	long* min = NULL;
 	long* max = NULL;
@@ -30,8 +27,7 @@ void array_min_max(long array[], size_t nItems, long a, long b) {
 	}
 
 	if (min == NULL || max == NULL) {
-		fprintf(stderr, "Catastrophic failure: no min/max found.\n");
-		return;
+		THROW(AssertionError, "no min/max found");
 	}
 
 	printf("min: %ld, max: %ld\n", *min, *max);
@@ -43,35 +39,41 @@ void array_min_max(long array[], size_t nItems, long a, long b) {
 	for (size_t i = 0; i != nItems; ++i) {
 		printf("[%zu] %ld\n", i, array[i]);
 	}
+
+	return NO_EXCEPTION;
 }
 
-int main(int argc, char** argv) {
-	srand(time(NULL));  // NOLINT(*-msc51-cpp)
+error_t main_(int argc, char** argv) {
+	error_t status;
 
-	error_t error;
+	srand(time(NULL));  // NOLINT(*-msc51-cpp)
 
 	if (argc != 3) {
 		fprintf(stderr,
 		        "Usage: %s <a> <b>\n"
 		        "Finds the min and max values in an array of random elements in [a; b]\n",
 		        argv[0]);
-		return -ERROR_INVALID_PARAMETER;
+		return NO_EXCEPTION;
 	}
 
 	long a, b;
-
-	error = str_to_long(argv[1], &a);
-	if (error) {
-		fprintf(stderr, "Invalid 'a': malformed number or out of range.\n");
-		return -ERROR_INVALID_PARAMETER;
+	if (FAILED((status = str_to_long(argv[1], &a)))) {
+		fprintf(stderr, "Invalid arguments: malformed 'a'\n");
+		return NO_EXCEPTION;
 	}
-
-	error = str_to_long(argv[2], &b);
-	if (error) {
-		fprintf(stderr, "Invalid 'b': malformed number or out of range.\n");
-		return -ERROR_INVALID_PARAMETER;
+	if (FAILED((status = str_to_long(argv[2], &b)))) {
+		fprintf(stderr, "Invalid arguments: malformed 'b'\n");
+		return NO_EXCEPTION;
 	}
 
 	long array[100];
-	array_min_max(array, 100, a, b);
+	return task(array, 100, a, b);
+}
+
+int main(int argc, char** argv) {
+	error_t status;
+	if (FAILED((status = main_(argc, argv)))) {
+		error_print(status);
+		return (int)status.code;
+	}
 }

@@ -13,11 +13,11 @@ error_t random_vec(vector_i64_t* vec) {
 	for (int i = 0; i != size; ++i) {
 		long value = mth_rand(-1000, 1000);
 		if (!vector_i64_push_back(vec, value)) {
-			return ERROR_HEAP_ALLOCATION;
+			THROW(MemoryError, "can't insert random value");
 		}
 	}
 
-	return ERROR_SUCCESS;
+	return NO_EXCEPTION;
 }
 
 int64_t find_closest(int64_t value, vector_i64_t* others) {
@@ -53,8 +53,14 @@ int64_t find_closest(int64_t value, vector_i64_t* others) {
 	}
 }
 
-int main(void) {
-	error_t error;
+void cleanup(vector_i64_t* a, vector_i64_t* b, vector_i64_t* c) {
+	if (vector_i64_size(a) != -1) vector_i64_destroy(a);
+	if (vector_i64_size(b) != -1) vector_i64_destroy(b);
+	if (vector_i64_size(c) != -1) vector_i64_destroy(c);
+}
+
+error_t main_(void) {
+	error_t status;
 
 	srand(time(NULL));  // NOLINT(*-msc51-cpp)
 
@@ -62,16 +68,13 @@ int main(void) {
 	vector_i64_t b = {.size = -1};
 	vector_i64_t c = {.size = -1};
 
-	error = random_vec(&a);
-	if (error) {
-		fprintf(stderr, "Failed to fill vector A.\n");
-		goto cleanup;
+	if (FAILED((status = random_vec(&a)))) {
+		cleanup(&a, &b, &c);
+		RETHROW(status, "can't fill vector A");
 	}
-
-	error = random_vec(&b);
-	if (error) {
-		fprintf(stderr, "Failed to fill vector B.\n");
-		goto cleanup;
+	if (FAILED((status = random_vec(&b)))) {
+		cleanup(&a, &b, &c);
+		RETHROW(status, "can't fill vector B");
 	}
 
 	printf("Array A:\n");
@@ -85,8 +88,8 @@ int main(void) {
 	}
 
 	if (!vector_i64_sort(&b)) {
-		error = error_oops("failed to sort vector B");
-		goto cleanup;
+		cleanup(&a, &b, &c);
+		THROW(AssertionError, "can't sort vector B");
 	}
 
 	c = vector_i64_create_with_capacity(vector_i64_size(&a));
@@ -96,8 +99,8 @@ int main(void) {
 		int64_t closest = find_closest(value, &b);
 
 		if (!vector_i64_push_back(&c, value + closest)) {
-			error = ERROR_HEAP_ALLOCATION;
-			goto cleanup;
+			cleanup(&a, &b, &c);
+			THROW(MemoryError, "can't push into vector C");
 		}
 	}
 
@@ -106,13 +109,13 @@ int main(void) {
 		printf("%lld ", vector_i64_get(&c, i));
 	}
 
-cleanup:
-	if (vector_i64_size(&a) != -1) vector_i64_destroy(&a);
-	if (vector_i64_size(&b) != -1) vector_i64_destroy(&b);
-	if (vector_i64_size(&c) != -1) vector_i64_destroy(&c);
+	return NO_EXCEPTION;
+}
 
-	if (error) {
+int main(void) {
+	error_t error;
+	if (FAILED((error = main_()))) {
 		error_print(error);
-		return (int)-error;
+		return (int)error.code;
 	}
 }

@@ -2,6 +2,6 @@
 
 #include "lib/error.h"
 
-error_t geometric_mean(double* result, int n, ...);
+error_t task_geometric_mean(double* result, int n, ...);
 
-error_t bin_exp(double* out, double number, int power);
+error_t task_bin_exp(double* out, double number, int power);

@@ -1,7 +1,20 @@
 #include "lib/error.h"
 
-error_t solve_quadratic_equation(int argc, char** argv);
+typedef enum quad_sol_type {
+	QUAD_INFINITE_SOLUTIONS,
+	QUAD_NO_SOLUTIONS,
+	QUAD_SINGLE_SOLUTION,
+	QUAD_MULTIPLE_SOLUTIONS
+} quad_sol_type_t;
 
-error_t check_is_divisible(int argc, char** argv);
+typedef struct quad_sol {
+	quad_sol_type_t type;
+	union {
+		double single;
+		double multiple[2];
+	} solution;
+} quad_sol_t;
 
-error_t check_is_right_triangle(int argc, char** argv);
+quad_sol_t task_quad_eq(double a, double b, double c, double eps);
+
+bool task_right_triangle(double a, double b, double c, double eps);
