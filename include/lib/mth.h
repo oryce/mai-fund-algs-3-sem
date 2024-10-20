@@ -94,3 +94,13 @@ inline static long mth_long_min(long a, long b) { return a < b ? a : b; }
 inline static long mth_rand(long min, long max) {
 	return rand() % (max - min) + min;  // NOLINT(*-msc50-cpp)
 }
+
+/** Returns the result of signum(a), where a is a long number. */
+inline static int mth_sign(long a) {
+	if (a > 0)
+		return 1;
+	else if (a == 0)
+		return 0;
+	else
+		return -1;
+}

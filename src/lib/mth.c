@@ -24,6 +24,17 @@
 MTH_BIN_POW(long, mth_long_bin_pow_)
 MTH_BIN_POW(double, mth_double_bin_pow_)
 
+inline const char* mth_error_to_string(error_code_t error) {
+	switch (error) {
+		case IntegralException:
+			return "IntegralException";
+		case DivergingException:
+			return "DivergingException";
+		default:
+			return NULL;
+	}
+}
+
 error_t mth_long_pow(long n, int power, long* out) {
 	if (power < 0) {
 		THROW(IllegalArgumentException, "negative power is invalid for `long`");
@@ -41,17 +52,6 @@ error_t mth_double_pow(double n, int power, double* out) {
 	if (isnan(*out)) THROW(UnderflowException, "underflow in power result");
 
 	return NO_EXCEPTION;
-}
-
-const char* mth_error_to_string(error_code_t error) {
-	switch (error) {
-		case IntegralException:
-			return "IntegralException";
-		case DivergingException:
-			return "DivergingException";
-		default:
-			return NULL;
-	}
 }
 
 double mth_sequence_limit(double f(int), double eps) {
