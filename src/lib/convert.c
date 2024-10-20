@@ -136,12 +136,19 @@ error_t long_to_base(long in, int base, char* out, int outSize) {
 }
 
 error_t long_from_base(const char* n, size_t length, int base, long* out) {
+	if (n == NULL) THROW(IllegalArgumentException, "`n` may not be null");
+	if (out == NULL) THROW(IllegalArgumentException, "`out` may not be null");
+
 	long base10 = 0;
 	long multiplier = 1;
 
 	// Skip the first char (minus sign).
 	int sign = *n == '-' ? -1 : 1;
 	const char* start = sign == -1 ? n + 1 : n;
+
+	if (*start == '\0') {
+		THROW(IllegalArgumentException, "input number may not be empty");
+	}
 
 	// Traverse from the back of the number and assemble the base-10 number.
 	for (char* ptr = (char*)(n + length - 1); ptr >= start; --ptr) {

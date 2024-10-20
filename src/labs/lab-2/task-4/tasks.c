@@ -2,7 +2,6 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include <stdlib.h>
 
 #include "lib/convert.h"
 #include "lib/mth.h"
