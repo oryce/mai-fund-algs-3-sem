@@ -10,73 +10,70 @@ typedef enum sink_source { SINK_FILE, SINK_STRING } sink_source_t;
 
 typedef struct sink {
 	sink_source_t type;
+	size_t written;
 	union {
 		FILE* file;
 		char* string;
 	} source;
 } sink_t;
 
-typedef error_t (*printf_specifier_t)(sink_t* sink, va_list* args);
+typedef bool (*printf_specifier_t)(sink_t* sink, va_list* args);
 
-error_t sink_put_string_(sink_t* sink, const char* string) {
+bool sink_put_string_(sink_t* sink, const char* string) {
 	switch (sink->type) {
 		case SINK_FILE:
 			fputs(string, sink->source.file);
-			if (ferror(sink->source.file)) {
-				THROW(IOException, "can't write to file sink");
-			}
+			if (ferror(sink->source.file)) return false;
 			break;
 		case SINK_STRING:
 			strcat(sink->source.string, string);
 			break;
 	}
 
-	return NO_EXCEPTION;
+	sink->written += strlen(string);
+	return true;
 }
 
-error_t sink_put_char_(sink_t* sink, char ch) {
+bool sink_put_char_(sink_t* sink, char ch) {
 	switch (sink->type) {
 		case SINK_FILE:
 			fputc(ch, sink->source.file);
-			if (ferror(sink->source.file)) {
-				THROW(IOException, "can't write to file sink");
-			}
+			if (ferror(sink->source.file)) return false;
 			break;
 		case SINK_STRING:
 			strcat(sink->source.string, (char[]){ch, '\0'});
 			break;
 	}
 
-	return NO_EXCEPTION;
+	++sink->written;
+	return true;
 }
 
-error_t sink_vprintf_(sink_t* sink, const char* fmt, va_list args) {
+bool sink_vprintf_(sink_t* sink, const char* fmt, va_list args) {
 	switch (sink->type) {
 		case SINK_FILE:
-			vfprintf(sink->source.file, fmt, args);
-			if (ferror(sink->source.file)) {
-				THROW(IOException, "can't write to file sink");
-			}
+			sink->written += vfprintf(sink->source.file, fmt, args);
+			if (ferror(sink->source.file)) return false;
 			break;
 		case SINK_STRING:
-			vsprintf(sink->source.string, fmt, args);
+			sink->written += vsprintf(sink->source.string, fmt, args);
 			break;
 	}
 
-	return NO_EXCEPTION;
+	return true;
 }
 
-error_t sink_printf_(sink_t* sink, const char* fmt, ...) {
+bool sink_printf_(sink_t* sink, const char* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 
-	error_t status = sink_vprintf_(sink, fmt, args);
+	bool status = sink_vprintf_(sink, fmt, args);
 	va_end(args);
 
 	return status;
 }
 
-error_t roman_specifier_(sink_t* sink, va_list* args) {
+bool roman_specifier_(sink_t* sink, va_list* args) {
 	int number = va_arg(*args, int);
 
 	const char* letters[] = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
@@ -87,17 +84,15 @@ error_t roman_specifier_(sink_t* sink, va_list* args) {
 	for (size_t i = 0; number != 0; ++i) {
 		while (number >= values[i]) {
 			number -= values[i];
+
 			size_t nWritten = strlcat(roman, letters[i], sizeof(roman));
 			if (nWritten == sizeof(roman) - 1 && number != 0) {
-				THROW(IllegalArgumentException, "number is too large");
+				return false;  // Number is too large
 			}
 		}
 	}
 
-	error_t status = sink_put_string_(sink, roman);
-	if (FAILED(status)) PASS(status);
-
-	return NO_EXCEPTION;
+	return sink_put_string_(sink, roman);
 }
 
 const unsigned int FIB[] = {1,         2,         3,         5,          8,          13,        21,        34,
@@ -107,14 +102,13 @@ const unsigned int FIB[] = {1,         2,         3,         5,          8,     
                             5702887,   9227465,   14930352,  24157817,   39088169,   63245986,  102334155, 165580141,
                             267914296, 433494437, 701408733, 1134903170, 1836311903, 2971215073};
 
-error_t zeckendorf_specifier_(sink_t* sink, va_list* args) {
-	error_t status;
+const int N_FIBS = sizeof(FIB) / sizeof(FIB[0]);
 
+bool zeckendorf_specifier_(sink_t* sink, va_list* args) {
 	unsigned int number = va_arg(*args, unsigned int);
 	uint64_t zeckendorf = 0;
-	const int nFibs = sizeof(FIB) / sizeof(FIB[0]);
 
-	for (size_t i = nFibs - 1; i--;) {
+	for (size_t i = N_FIBS - 1; i--;) {
 		if (FIB[i] <= number) {
 			zeckendorf |= (1ULL << i);
 			number -= FIB[i];
@@ -122,49 +116,41 @@ error_t zeckendorf_specifier_(sink_t* sink, va_list* args) {
 	}
 
 	while (zeckendorf) {
-		status = sink_put_char_(sink, zeckendorf & 1 ? '1' : '0');
-		if (FAILED(status)) PASS(status);
+		bool status = sink_put_char_(sink, zeckendorf & 1 ? '1' : '0');
+		if (!status) return status;
 
 		zeckendorf >>= 1;
 	}
 
-	status = sink_put_char_(sink, '1');
-	if (FAILED(status)) PASS(status);
-
-	return NO_EXCEPTION;
+	return sink_put_char_(sink, '1');
 }
 
-error_t to_base_specifier_(sink_t* sink, va_list* args, bool uppercase) {
-	error_t status;
-
+bool to_base_specifier_(sink_t* sink, va_list* args, bool uppercase) {
 	int n = va_arg(*args, int);
 	int base = va_arg(*args, int);
 	if (base < 2 || base > 36) base = 10;
 
 	char nInBase[65];
-	if (FAILED((status = long_to_base((long)n, base, nInBase, sizeof(nInBase))))) {
-		PASS(status);
+	if (FAILED(long_to_base((long)n, base, nInBase, sizeof(nInBase)))) {
+		return false;
 	}
 
 	if (uppercase) {
 		for (size_t i = 0; nInBase[i] != '\0'; ++i) {
-			status = sink_put_char_(sink, chars_upper(nInBase[i]));
-			if (FAILED(status)) PASS(status);
+			bool status = sink_put_char_(sink, chars_upper(nInBase[i]));
+			if (!status) return false;
 		}
 	} else {
-		status = sink_put_string_(sink, nInBase);
-		if (FAILED(status)) PASS(status);
+		return sink_put_string_(sink, nInBase);
 	}
-	return NO_EXCEPTION;
+	return true;
 }
 
-error_t to_base_lowercase_specifier_(sink_t* sink, va_list* args) { return to_base_specifier_(sink, args, false); }
+bool to_base_lowercase_specifier_(sink_t* sink, va_list* args) { return to_base_specifier_(sink, args, false); }
 
-error_t to_base_uppercase_specifier_(sink_t* sink, va_list* args) { return to_base_specifier_(sink, args, true); }
+bool to_base_uppercase_specifier_(sink_t* sink, va_list* args) { return to_base_specifier_(sink, args, true); }
 
-error_t from_base_specifier_(sink_t* sink, va_list* args, bool uppercase) {
-	error_t status;
-
+bool from_base_specifier_(sink_t* sink, va_list* args, bool uppercase) {
 	const char* number = va_arg(*args, const char*);
 	int base = va_arg(*args, int);
 	if (base < 2 || base > 36) base = 10;
@@ -175,7 +161,7 @@ error_t from_base_specifier_(sink_t* sink, va_list* args, bool uppercase) {
 		// (not required by long_from_base, but required by the task)
 		for (size_t i = 0; number[i] != '\0'; ++i) {
 			if (number[i] >= 'a' && number[i] <= 'z') {
-				THROW(IllegalArgumentException, "unexpected lowercase letter")
+				return false;  // Unexpected lowercase letter
 			}
 			++length;
 		}
@@ -184,21 +170,18 @@ error_t from_base_specifier_(sink_t* sink, va_list* args, bool uppercase) {
 	}
 
 	long base10;
-	if (FAILED((status = long_from_base(number, length, base, &base10)))) {
-		PASS(status);
+	if (FAILED(long_from_base(number, length, base, &base10))) {
+		return false;
 	}
 
-	status = sink_printf_(sink, "%ld", base10);
-	if (FAILED(status)) PASS(status);
-
-	return NO_EXCEPTION;
+	return sink_printf_(sink, "%ld", base10);
 }
 
-error_t from_base_lowercase_specifier_(sink_t* sink, va_list* args) { return from_base_specifier_(sink, args, false); }
+bool from_base_lowercase_specifier_(sink_t* sink, va_list* args) { return from_base_specifier_(sink, args, false); }
 
-error_t from_base_uppercase_specifier_(sink_t* sink, va_list* args) { return from_base_specifier_(sink, args, true); }
+bool from_base_uppercase_specifier_(sink_t* sink, va_list* args) { return from_base_specifier_(sink, args, true); }
 
-error_t repr_32_(sink_t* sink, uint32_t value) {
+bool repr_32_(sink_t* sink, uint32_t value) {
 	const int size = sizeof(value) * 8;
 	char repr[size + 1];
 
@@ -208,14 +191,10 @@ error_t repr_32_(sink_t* sink, uint32_t value) {
 	}
 
 	repr[size] = '\0';
-
-	error_t status = sink_put_string_(sink, repr);
-	if (FAILED(status)) PASS(status);
-
-	return NO_EXCEPTION;
+	return sink_put_string_(sink, repr);
 }
 
-error_t repr_64_(sink_t* sink, uint64_t value) {
+bool repr_64_(sink_t* sink, uint64_t value) {
 	const int size = sizeof(value) * 8;
 	char repr[size + 1];
 
@@ -225,29 +204,25 @@ error_t repr_64_(sink_t* sink, uint64_t value) {
 	}
 
 	repr[size] = '\0';
-
-	error_t status = sink_put_string_(sink, repr);
-	if (FAILED(status)) PASS(status);
-
-	return NO_EXCEPTION;
+	return sink_put_string_(sink, repr);
 }
 
-error_t memory_int_specifier_(sink_t* sink, va_list* args) {
+bool memory_int_specifier_(sink_t* sink, va_list* args) {
 	int32_t number = va_arg(*args, int32_t);
 	return repr_32_(sink, *(uint32_t*)(&number));
 }
 
-error_t memory_uint_specifier(sink_t* sink, va_list* args) {
+bool memory_uint_specifier(sink_t* sink, va_list* args) {
 	uint32_t number = va_arg(*args, uint32_t);
 	return repr_32_(sink, number);
 }
 
-error_t memory_double_specifier(sink_t* sink, va_list* args) {
+bool memory_double_specifier(sink_t* sink, va_list* args) {
 	double number = va_arg(*args, double);
 	return repr_64_(sink, *(uint64_t*)(&number));
 }
 
-error_t memory_float_specifier(sink_t* sink, va_list* args) {
+bool memory_float_specifier(sink_t* sink, va_list* args) {
 	float number = va_arg(*args, double);  // Use `double` because of type promotion
 	return repr_32_(sink, *(uint32_t*)(&number));
 }
@@ -295,90 +270,100 @@ bool is_builtin_specifier_(char last) {
 	}
 }
 
-error_t sink_overfprintf_(sink_t* sink, const char* fmt, va_list args) {
-	if (sink == NULL) THROW(IllegalArgumentException, "`sink` may not be null");
-	if (fmt == NULL) THROW(IllegalArgumentException, "`fmt` may not be null");
+int sink_overfprintf_(sink_t* sink, const char* fmt, va_list args) {
+	if (sink == NULL || fmt == NULL) return 0;
 
-	error_t status;
-
-	char spec[16];  // Should be enough for printf() specifiers.
+	char spec[64];  // Should be enough for printf() specifiers.
 	                // Our specifiers are 2 chars long each.
-	ssize_t specCursor = 0;
+	ssize_t cursor = 0;
+	bool extraArgument = false;
 
 	while (*fmt != '\0') {
-		if (specCursor) {
-			if (*fmt == '%') {  // Escaped spec
-				if (FAILED((status = sink_put_char_(sink, '%')))) {
-					PASS(status);
+		if (cursor) {
+			if (*fmt == '%') {  // Escaped specifier
+				if (!sink_put_char_(sink, '%')) {
+					return (int)sink->written;
 				}
-				specCursor = 0;
+				cursor = 0;
 			} else {
 				const size_t maxLength = sizeof(spec) / sizeof(spec[0]) - 1;
+				// Format spec is too long.
+				if (cursor == maxLength - 1) return (int)sink->written;
 
-				if (specCursor == maxLength - 1) {  // Format spec is too long.
-					THROW(IllegalArgumentException, "invalid format spec");
+				if (*fmt == '*') {
+					// `printf` spec allows to specify the width or precision of a number
+					// by including a '*' or '.*' in the format specifier and passing them
+					// before the number.
+					extraArgument = true;
 				}
 
-				spec[specCursor++] = *fmt;
-				spec[specCursor] = '\0';
+				spec[cursor++] = *fmt;
+				spec[cursor] = '\0';
 
 				// Try to resolve a custom spec. If it fails, check if it's a
 				// printf spec and delegate there.
 				printf_specifier_t customSpecifier = get_custom_specifier_(spec);
 
 				if (customSpecifier) {
-					if (FAILED((status = customSpecifier(sink, &args)))) {
-						RETHROW(status, "can't execute format spec");
+					if (!customSpecifier(sink, &args)) {
+						return (int)sink->written;
 					}
-					specCursor = 0;
+					cursor = 0;
+				} else if (strcmp("%n", spec) == 0) {
+					if (!sink_printf_(sink, "%zu", sink->written)) {
+						return (int)sink->written;
+					}
+					cursor = 0;
 				} else if (is_builtin_specifier_(*fmt)) {
-					if (FAILED((status = sink_vprintf_(sink, spec, args)))) {
-						PASS(status);
+					if (!sink_vprintf_(sink, spec, args)) {
+						return (int)sink->written;
 					}
-					va_arg(args, void*);  // Advance `args` because we provide an argument to vprintf
-					specCursor = 0;
+
+					if (extraArgument) {
+						// The extra argument is always an integer.
+						va_arg(args, int);
+					}
+					// Advance `args` because we provide an argument to vprintf.
+					va_arg(args, void*);
+
+					cursor = 0;
 				}
 			}
 		} else if (*fmt == '%') {
 			// Start reading the format specifier.
-			spec[specCursor++] = '%';
-		} else {
-			if (FAILED((status = sink_put_char_(sink, *fmt)))) {
-				PASS(status);
-			}
+			spec[cursor++] = '%';
+			extraArgument = false;
+		} else if (!sink_put_char_(sink, *fmt)) {
+			return (int)sink->written;
 		}
 
 		++fmt;
 	}
 
-	return NO_EXCEPTION;
+	return (int)sink->written;
 }
 
-error_t overfprintf(FILE* output, const char* fmt, ...) {
+int overfprintf(FILE* output, const char* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 
-	sink_t sink = {.type = SINK_FILE, .source = {.file = output}};
-	error_t status = sink_overfprintf_(&sink, fmt, args);
+	sink_t sink = {.type = SINK_FILE, .source = {.file = output}, .written = 0};
+	int written = sink_overfprintf_(&sink, fmt, args);
 
 	va_end(args);
-	if (FAILED(status)) PASS(status);
-
-	return NO_EXCEPTION;
+	return written;
 }
 
-error_t oversprintf(char* output, const char* fmt, ...) {
+int oversprintf(char* output, const char* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 
 	// Null-terminate `output`. Required for `strcat`.
 	output[0] = '\0';
 
-	sink_t sink = {.type = SINK_STRING, .source = {.string = output}};
-	error_t status = sink_overfprintf_(&sink, fmt, args);
+	sink_t sink = {.type = SINK_STRING, .source = {.string = output}, .written = 0};
+	int written = sink_overfprintf_(&sink, fmt, args);
 
 	va_end(args);
-	if (FAILED(status)) PASS(status);
-
-	return NO_EXCEPTION;
+	return written;
 }
