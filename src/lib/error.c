@@ -12,7 +12,7 @@ void error_print_(error_t error, const char* exceptionName) {
 
 	for (size_t i = 0; i != error.stack_trace_length; ++i) {
 		error_ste_t ste = error.stack_trace[i];
-		fprintf(stderr, "  at %s:%d\n", ste.function, ste.line);
+		fprintf(stderr, "  at %s() (%s:%d)\n", ste.function, ste.filename, ste.line);
 	}
 
 	if (error.stack_trace_extra_frames != 0) {
@@ -56,7 +56,7 @@ void error_print_ex(error_t error, error_fmt_t fmt[], size_t nFmt) {
 	error_print(error);  // Fall back to default exception message
 }
 
-void append_ste_(error_t* error, const char* function, int line) {
+void append_ste_(error_t* error, const char* function, const char* filename, int line) {
 	const size_t maxFrames = sizeof(error->stack_trace) / sizeof(error->stack_trace[0]);
 
 	if (error->stack_trace_length == maxFrames) {
@@ -65,6 +65,7 @@ void append_ste_(error_t* error, const char* function, int line) {
 		error_ste_t* ste = &error->stack_trace[error->stack_trace_length];
 
 		strncpy(ste->function, function, sizeof(ste->function));
+		strncpy(ste->filename, filename, sizeof(ste->filename));
 		ste->line = line;
 
 		++error->stack_trace_length;
@@ -77,16 +78,17 @@ void copy_ste_(error_t* srcError, error_t* dstError) {
 	dstError->stack_trace_extra_frames = srcError->stack_trace_extra_frames;
 }
 
-error_t error_throw(error_code_t code, const char* message, const char* function, int line) {
+error_t error_throw(error_code_t code, const char* message, const char* function, const char* filename, int line) {
 	error_t error = {.code = code};
 
 	strncpy(error.message, message, sizeof(error.message));
-	append_ste_(&error, function, line);
+	append_ste_(&error, function, filename, line);
 
 	return error;
 }
 
-error_t error_throwf(error_code_t code, const char* message, const char* function, int line, ...) {
+error_t error_throwf(error_code_t code, const char* message, const char* function, const char* filename, int line,
+                     ...) {
 	va_list args;
 	va_start(args, line);
 
@@ -94,10 +96,10 @@ error_t error_throwf(error_code_t code, const char* message, const char* functio
 	vsnprintf(newMessage, sizeof(newMessage), message, args);
 
 	va_end(args);
-	return error_throw(code, newMessage, function, line);
+	return error_throw(code, newMessage, function, filename, line);
 }
 
-error_t error_rethrow(const char* message, const char* function, int line, error_t error) {
+error_t error_rethrow(const char* message, const char* function, const char* filename, int line, error_t error) {
 	char newMessage[sizeof(error.message)];
 	snprintf(newMessage, sizeof(newMessage), "%s: %s", message, error.message);
 
@@ -105,17 +107,17 @@ error_t error_rethrow(const char* message, const char* function, int line, error
 
 	strcpy(newError.message, newMessage);
 	copy_ste_(&error, &newError);
-	append_ste_(&newError, function, line);
+	append_ste_(&newError, function, filename, line);
 
 	return newError;
 }
 
-error_t error_pass(error_t error, const char* function, int line) {
+error_t error_pass(error_t error, const char* function, const char* filename, int line) {
 	error_t newError = {.code = error.code};
 
 	strcpy(newError.message, error.message);
 	copy_ste_(&error, &newError);
-	append_ste_(&newError, function, line);
+	append_ste_(&newError, function, filename, line);
 
 	return newError;
 }

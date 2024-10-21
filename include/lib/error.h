@@ -11,6 +11,7 @@ typedef const char* (*error_fmt_t)(error_code_t code);
 
 typedef struct error_ste {
 	char function[64];
+	char filename[64];
 	uint16_t line;
 } error_ste_t;
 
@@ -27,28 +28,31 @@ typedef struct error {
 	uint16_t stack_trace_extra_frames;
 } error_t;
 
+#define E_FUNCTION __func__
+#define E_FILENAME (strrchr("/" __FILE__, '/') + 1)
+
 /** Throws an exception. */
-#define THROW(code, message)                                   \
-	do {                                                       \
-		return error_throw(code, message, __func__, __LINE__); \
+#define THROW(code, message)                                                 \
+	do {                                                                     \
+		return error_throw(code, message, E_FUNCTION, E_FILENAME, __LINE__); \
 	} while (0);
 
 /** Throws a formatted exception. */
-#define THROWF(code, message, ...)                                           \
-	do {                                                                     \
-		return error_throwf(code, message, __func__, __LINE__, __VA_ARGS__); \
+#define THROWF(code, message, ...)                                                         \
+	do {                                                                                   \
+		return error_throwf(code, message, E_FUNCTION, E_FILENAME, __LINE__, __VA_ARGS__); \
 	} while (0);
 
 /** Re-throws an exception, adding a message before the original. */
-#define RETHROW(error, message)                                   \
-	do {                                                          \
-		return error_rethrow(message, __func__, __LINE__, error); \
+#define RETHROW(error, message)                                                 \
+	do {                                                                        \
+		return error_rethrow(message, E_FUNCTION, E_FILENAME, __LINE__, error); \
 	} while (0);
 
 /** Passes the exception to the caller. */
-#define PASS(error)                                   \
-	do {                                              \
-		return error_pass(error, __func__, __LINE__); \
+#define PASS(error)                                                 \
+	do {                                                            \
+		return error_pass(error, E_FUNCTION, E_FILENAME, __LINE__); \
 	} while (0);
 
 #define FAILED(error) error.code != 0
@@ -74,10 +78,10 @@ void error_print(error_t error);
  */
 void error_print_ex(error_t error, error_fmt_t fmt[], size_t nFmt);
 
-error_t error_throw(error_code_t code, const char* message, const char* function, int line);
+error_t error_throw(error_code_t code, const char* message, const char* function, const char* filename, int line);
 
-error_t error_throwf(error_code_t code, const char* message, const char* function, int line, ...);
+error_t error_throwf(error_code_t code, const char* message, const char* function, const char* filename, int line, ...);
 
-error_t error_rethrow(const char* message, const char* function, int line, error_t error);
+error_t error_rethrow(const char* message, const char* function, const char* filename, int line, error_t error);
 
-error_t error_pass(error_t error, const char* function, int line);
+error_t error_pass(error_t error, const char* function, const char* filename, int line);
