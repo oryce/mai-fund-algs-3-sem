@@ -171,3 +171,23 @@ error_t mth_integral(double f(double x), double a, double b, double eps, double*
 	*out = next;
 	return NO_EXCEPTION;
 }
+
+unsigned long mth_gcd(unsigned long a, unsigned long b) {
+	/* https://en.wikipedia.org/wiki/Binary_GCD_algorithm */
+
+	unsigned long t = a | b;
+	if (a == 0 || b == 0) return t;
+
+	int g = __builtin_ctz(t);
+
+	while (a != 0) {
+		a >>= __builtin_ctz(a);
+		b >>= __builtin_ctz(b);
+		if (a >= b)
+			a = (a - b) / 2;
+		else
+			b = (b - a) / 2;
+	}
+
+	return (b << g);
+}

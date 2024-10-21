@@ -104,3 +104,6 @@ inline static int mth_sign(long a) {
 	else
 		return -1;
 }
+
+/** Returns the greatest common divisor of `a` and `b`. */
+unsigned long mth_gcd (unsigned long a, unsigned long b);
