@@ -1,3 +1,5 @@
+#pragma once
+
 #include "lib/error.h"
 
 #include <stdio.h>

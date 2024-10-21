@@ -158,7 +158,7 @@ error_t long_from_base(const char* n, size_t length, int base, long* out) {
 		}
 
 		int ord = chars_is_digit(*ptr) ? (*ptr - '0') : (10 + chars_lower(*ptr) - 'a');
-		if (ord >= base) {
+		if (ord >= base || ord < 0) {
 			THROWF(UnexpectedTokenException, "invalid character %c for base %d", *ptr, base);
 		}
 

@@ -162,7 +162,7 @@ error_t to_base_lowercase_specifier_(sink_t* sink, va_list* args) { return to_ba
 
 error_t to_base_uppercase_specifier_(sink_t* sink, va_list* args) { return to_base_specifier_(sink, args, true); }
 
-error_t from_base_specifier_(sink_t* sink, va_list *args, bool uppercase) {
+error_t from_base_specifier_(sink_t* sink, va_list* args, bool uppercase) {
 	error_t status;
 
 	const char* number = va_arg(*args, const char*);
@@ -252,17 +252,17 @@ error_t memory_float_specifier(sink_t* sink, va_list* args) {
 	return repr_32_(sink, *(uint32_t*)(&number));
 }
 
-printf_specifier_t get_custom_specifier_(const char* modifier) {
-	if (strcmp(modifier, "%Ro") == 0) return &roman_specifier_;
-	if (strcmp(modifier, "%Zr") == 0) return &zeckendorf_specifier_;
-	if (strcmp(modifier, "%Cv") == 0) return &to_base_lowercase_specifier_;
-	if (strcmp(modifier, "%CV") == 0) return &to_base_uppercase_specifier_;
-	if (strcmp(modifier, "%to") == 0) return &from_base_lowercase_specifier_;
-	if (strcmp(modifier, "%TO") == 0) return &from_base_uppercase_specifier_;
-	if (strcmp(modifier, "%mi") == 0) return &memory_int_specifier_;
-	if (strcmp(modifier, "%mu") == 0) return &memory_uint_specifier;
-	if (strcmp(modifier, "%md") == 0) return &memory_double_specifier;
-	if (strcmp(modifier, "%mf") == 0) return &memory_float_specifier;
+printf_specifier_t get_custom_specifier_(const char* spec) {
+	if (strcmp(spec, "%Ro") == 0) return &roman_specifier_;
+	if (strcmp(spec, "%Zr") == 0) return &zeckendorf_specifier_;
+	if (strcmp(spec, "%Cv") == 0) return &to_base_lowercase_specifier_;
+	if (strcmp(spec, "%CV") == 0) return &to_base_uppercase_specifier_;
+	if (strcmp(spec, "%to") == 0) return &from_base_lowercase_specifier_;
+	if (strcmp(spec, "%TO") == 0) return &from_base_uppercase_specifier_;
+	if (strcmp(spec, "%mi") == 0) return &memory_int_specifier_;
+	if (strcmp(spec, "%mu") == 0) return &memory_uint_specifier;
+	if (strcmp(spec, "%md") == 0) return &memory_double_specifier;
+	if (strcmp(spec, "%mf") == 0) return &memory_float_specifier;
 
 	return NULL;
 }
@@ -301,46 +301,47 @@ error_t sink_overfprintf_(sink_t* sink, const char* fmt, va_list args) {
 
 	error_t status;
 
-	char specifier[16];
-	ssize_t specPos = 0;
+	char spec[16];  // Should be enough for printf() specifiers.
+	                // Our specifiers are 2 chars long each.
+	ssize_t specCursor = 0;
 
 	while (*fmt != '\0') {
-		if (specPos) {
-			if (*fmt == '%') {  // Escaped specifier
+		if (specCursor) {
+			if (*fmt == '%') {  // Escaped spec
 				if (FAILED((status = sink_put_char_(sink, '%')))) {
 					PASS(status);
 				}
-				specPos = 0;
+				specCursor = 0;
 			} else {
-				const size_t maxLength = sizeof(specifier) / sizeof(specifier[0]) - 1;
+				const size_t maxLength = sizeof(spec) / sizeof(spec[0]) - 1;
 
-				if (specPos == maxLength - 1) {
-					THROW(IllegalArgumentException, "invalid format specifier");
+				if (specCursor == maxLength - 1) {  // Format spec is too long.
+					THROW(IllegalArgumentException, "invalid format spec");
 				}
 
-				specifier[specPos++] = *fmt;
-				specifier[specPos] = '\0';
+				spec[specCursor++] = *fmt;
+				spec[specCursor] = '\0';
 
-				// Try to resolve a custom specifier. If it fails, check if it's a
-				// printf specifier and delegate there.
-				printf_specifier_t customSpecifier = get_custom_specifier_(specifier);
+				// Try to resolve a custom spec. If it fails, check if it's a
+				// printf spec and delegate there.
+				printf_specifier_t customSpecifier = get_custom_specifier_(spec);
 
 				if (customSpecifier) {
 					if (FAILED((status = customSpecifier(sink, &args)))) {
-						RETHROW(status, "can't execute format specifier");
+						RETHROW(status, "can't execute format spec");
 					}
-					specPos = 0;
+					specCursor = 0;
 				} else if (is_builtin_specifier_(*fmt)) {
-					if (FAILED((status = sink_vprintf_(sink, specifier, args)))) {
+					if (FAILED((status = sink_vprintf_(sink, spec, args)))) {
 						PASS(status);
 					}
 					va_arg(args, void*);  // Advance `args` because we provide an argument to vprintf
-					specPos = 0;
+					specCursor = 0;
 				}
 			}
 		} else if (*fmt == '%') {
 			// Start reading the format specifier.
-			specifier[specPos++] = '%';
+			spec[specCursor++] = '%';
 		} else {
 			if (FAILED((status = sink_put_char_(sink, *fmt)))) {
 				PASS(status);
