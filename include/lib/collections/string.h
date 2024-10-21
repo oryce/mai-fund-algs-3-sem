@@ -7,9 +7,6 @@ typedef struct string {
 	bool initialized;
 } string_t;
 
-/** Default value of |string_t| for |vector_string_t|. */
-extern const string_t STRING_DEF;
-
 DEFINE_VECTOR(vector_str_t, string_t, str)
 
 /** Creates a new string. */

@@ -35,8 +35,6 @@ extern const int DEQUE_MIN_CAPACITY;
                                                                              \
 	const TYPE_T* deque_##TYPE##_peek_back(DEQUE_T*);                        \
                                                                              \
-	const TYPE_T* deque_##TYPE##_get(DEQUE_T* d, size_t idx);                \
-                                                                             \
 	inline static size_t deque_##TYPE##_size(DEQUE_T* d) { return d->size; } \
                                                                              \
 	inline static bool deque_##TYPE##_is_empty(DEQUE_T* d) { return d->size == 0; }
@@ -195,11 +193,6 @@ extern const int DEQUE_MIN_CAPACITY;
 	const TYPE_T* deque_##TYPE##_peek_back(DEQUE_T* d) {                                                            \
 		if (d->size == 0) return (const TYPE_T*)NULL;                                                               \
 		return (const TYPE_T*)&d->buffer[d->tail];                                                                  \
-	}                                                                                                               \
-                                                                                                                    \
-	const TYPE_T* deque_##TYPE##_get(DEQUE_T* d, size_t idx) {                                                      \
-		if (idx >= d->size) return (const TYPE_T*)NULL;                                                             \
-		return (const TYPE_T*)&d->buffer[(d->head + idx) % d->capacity];                                            \
 	}
 
 DEFINE_DEQUE(deque_i64_t, int64_t, i64)

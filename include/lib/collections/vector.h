@@ -54,7 +54,7 @@ struct vector_helpers {
                                                                       \
 	bool vector_##TYPE##_sort(VECTOR_T*);
 
-#define IMPL_VECTOR(VECTOR_T, TYPE_T, TYPE, HELPERS)                                                      \
+#define IMPL_VECTOR(VECTOR_T, TYPE_T, TYPE, HELPERS)                                                            \
 	bool vector_##TYPE##_resize(VECTOR_T* v, size_t capacity) {                                                 \
 		if (!v) return false;                                                                                   \
                                                                                                                 \
@@ -210,13 +210,13 @@ struct vector_helpers {
 			if (!result) goto cleanup;                                                                          \
                                                                                                                 \
 			do {                                                                                                \
-				TYPE_T* pivot = vector_##TYPE##_get(v, (l + r) / 2);                                             \
+				TYPE_T* pivot = vector_##TYPE##_get(v, (l + r) / 2);                                            \
 				size_t i = l;                                                                                   \
 				size_t j = r;                                                                                   \
                                                                                                                 \
 				do {                                                                                            \
-					while (v->helpers.comparator(&v->buffer[i], pivot) == -1) i++;                             \
-					while (v->helpers.comparator(&v->buffer[j], pivot) == 1) j--;                              \
+					while (v->helpers.comparator(&v->buffer[i], pivot) == -1) i++;                              \
+					while (v->helpers.comparator(&v->buffer[j], pivot) == 1) j--;                               \
                                                                                                                 \
 					if (i <= j) {                                                                               \
 						vector_##TYPE##_swap(v, i, j);                                                          \
