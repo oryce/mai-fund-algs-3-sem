@@ -10,7 +10,7 @@ typedef struct string {
 /** Default value of |string_t| for |vector_string_t|. */
 extern const string_t STRING_DEF;
 
-DEFINE_VECTOR(string_t, str)
+DEFINE_VECTOR(vector_str_t, string_t, str)
 
 /** Creates a new string. */
 string_t string_create(void);
@@ -85,11 +85,11 @@ void string_reverse(string_t* string);
 /**
  * Compares multiple strings.
  *
- * @param s1 first string
- * @param s2 second string
+ * @param str1 first string
+ * @param str2 second string
  *
- * @return -1 if s1 < s2;
- * 			0 if s1 == s2;
- * 			1 if s1 > s2.
+ * @return -1 if str1 < str2;
+ * 			0 if str1 == str2;
+ * 			1 if str1 > str2.
  */
-int string_compare(const string_t* s1, const string_t* s2);
+int string_compare(const string_t* str1, const string_t* str2);

@@ -1,7 +1,5 @@
 #include "lib/collections/deque.h"
 
-#include <float.h>
-
 const int DEQUE_MIN_CAPACITY = 4;
 
 IMPL_DEQUE(deque_i64_t, int64_t, i64)

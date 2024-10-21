@@ -24,15 +24,15 @@ int64_t find_closest(int64_t value, vector_i64_t* others) {
 	size_t l = 0;
 	size_t r = vector_i64_size(others) - 1;
 
-	if (value < vector_i64_get(others, l)) {
-		return vector_i64_get(others, l);
-	} else if (value > vector_i64_get(others, r)) {
-		return vector_i64_get(others, r);
+	if (value < *vector_i64_get(others, l)) {
+		return *vector_i64_get(others, l);
+	} else if (value > *vector_i64_get(others, r)) {
+		return *vector_i64_get(others, r);
 	}
 
 	while (l <= r) {
 		size_t mid = (l + r) / 2;
-		int64_t midValue = vector_i64_get(others, mid);
+		int64_t midValue = *vector_i64_get(others, mid);
 
 		if (value < midValue) {
 			if (r == 0) break;
@@ -45,10 +45,10 @@ int64_t find_closest(int64_t value, vector_i64_t* others) {
 	}
 
 	if (l > vector_i64_size(others) - 1) {
-		return vector_i64_get(others, vector_i64_size(others) - 1);
+		return *vector_i64_get(others, vector_i64_size(others) - 1);
 	} else {
-		int64_t lValue = vector_i64_get(others, l);
-		int64_t rValue = vector_i64_get(others, r);
+		int64_t lValue = *vector_i64_get(others, l);
+		int64_t rValue = *vector_i64_get(others, r);
 		return labs(lValue - value) < labs(rValue - value) ? lValue : rValue;
 	}
 }
@@ -79,12 +79,12 @@ error_t main_(void) {
 
 	printf("Array A:\n");
 	for (int i = 0; i < vector_i64_size(&a); ++i) {
-		printf("%lld ", vector_i64_get(&a, i));
+		printf("%lld ", *vector_i64_get(&a, i));
 	}
 
 	printf("\nArray B:\n");
 	for (int i = 0; i < vector_i64_size(&b); ++i) {
-		printf("%lld ", vector_i64_get(&b, i));
+		printf("%lld ", *vector_i64_get(&b, i));
 	}
 
 	if (!vector_i64_sort(&b)) {
@@ -95,7 +95,7 @@ error_t main_(void) {
 	c = vector_i64_create_with_capacity(vector_i64_size(&a));
 
 	for (size_t i = 0; i != vector_i64_size(&a); ++i) {
-		int64_t value = vector_i64_get(&a, i);
+		int64_t value = *vector_i64_get(&a, i);
 		int64_t closest = find_closest(value, &b);
 
 		if (!vector_i64_push_back(&c, value + closest)) {
@@ -106,7 +106,7 @@ error_t main_(void) {
 
 	printf("\nArray C:\n");
 	for (int i = 0; i < vector_i64_size(&c); ++i) {
-		printf("%lld ", vector_i64_get(&c, i));
+		printf("%lld ", *vector_i64_get(&c, i));
 	}
 
 	return NO_EXCEPTION;

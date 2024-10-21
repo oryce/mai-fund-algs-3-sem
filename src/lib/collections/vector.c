@@ -1,6 +1,5 @@
 #include "lib/collections/vector.h"
 
-#include <float.h>
 #include <stdlib.h>
 
 const size_t VECTOR_MIN_CAPACITY = 4;
@@ -31,14 +30,14 @@ SIMPLE_COMPARATOR(uint8_t)
 SIMPLE_COMPARATOR(float)
 SIMPLE_COMPARATOR(double)
 
-IMPL_VECTOR(vector_i64_t, int64_t, i64, INT64_MAX, {&comparator_int64_t})
-IMPL_VECTOR(vector_i32_t, int32_t, i32, INT32_MAX, {&comparator_int32_t})
-IMPL_VECTOR(vector_i16_t, int16_t, i16, INT16_MAX, {&comparator_int16_t})
-IMPL_VECTOR(vector_i8_t, int8_t, i8, INT8_MAX, {&comparator_int8_t})
-IMPL_VECTOR(vector_u64_t, uint64_t, u64, UINT64_MAX, {&comparator_uint64_t})
-IMPL_VECTOR(vector_u32_t, uint32_t, u32, UINT32_MAX, {&comparator_uint32_t})
-IMPL_VECTOR(vector_u16_t, uint16_t, u16, UINT16_MAX, {&comparator_uint16_t})
-IMPL_VECTOR(vector_u8_t, uint8_t, u8, UINT8_MAX, {&comparator_uint8_t})
-IMPL_VECTOR(vector_flt_t, float, flt, FLT_MAX, {&comparator_float})
-IMPL_VECTOR(vector_dbl_t, double, dbl, DBL_MAX, {&comparator_double})
-IMPL_VECTOR(vector_ptr_t, void*, ptr, NULL, {NULL})
+IMPL_VECTOR(vector_i64_t, int64_t, i64, {&comparator_int64_t})
+IMPL_VECTOR(vector_i32_t, int32_t, i32, {&comparator_int32_t})
+IMPL_VECTOR(vector_i16_t, int16_t, i16, {&comparator_int16_t})
+IMPL_VECTOR(vector_i8_t, int8_t, i8, {&comparator_int8_t})
+IMPL_VECTOR(vector_u64_t, uint64_t, u64, {&comparator_uint64_t})
+IMPL_VECTOR(vector_u32_t, uint32_t, u32, {&comparator_uint32_t})
+IMPL_VECTOR(vector_u16_t, uint16_t, u16, {&comparator_uint16_t})
+IMPL_VECTOR(vector_u8_t, uint8_t, u8, {&comparator_uint8_t})
+IMPL_VECTOR(vector_flt_t, float, flt, {&comparator_float})
+IMPL_VECTOR(vector_dbl_t, double, dbl, {&comparator_double})
+IMPL_VECTOR(vector_ptr_t, void*, ptr, {NULL})

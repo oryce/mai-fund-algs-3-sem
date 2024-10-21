@@ -75,8 +75,8 @@ error_t determine_min_number_bases(FILE* in, FILE* out) {
 	}
 
 	for (int k = 0; k != vector_str_size(&lexemes); ++k) {
-		string_t lexeme = vector_str_get(&lexemes, k);
-		if (FAILED((error = process_lexeme(string_to_c_str(&lexeme), out)))) {
+		string_t* lexeme = vector_str_get(&lexemes, k);
+		if (FAILED((error = process_lexeme(string_to_c_str(lexeme), out)))) {
 			cleanup_(&lexemes);
 			PASS(error);
 		}

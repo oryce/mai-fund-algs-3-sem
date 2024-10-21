@@ -31,10 +31,10 @@ error_t task_merge_lexemes(FILE* input1, FILE* input2, FILE* output) {
 	size_t m = vector_str_size(&lexemes2);
 
 	for (; i < n && j < m; ++i, ++j) {
-		string_t first = vector_str_get(&lexemes1, i);
-		string_t second = vector_str_get(&lexemes2, j);
+		string_t* first = vector_str_get(&lexemes1, i);
+		string_t* second = vector_str_get(&lexemes2, j);
 
-		fprintf(output, "%s %s ", string_to_c_str(&first), string_to_c_str(&second));
+		fprintf(output, "%s %s ", string_to_c_str(first), string_to_c_str(second));
 		if (ferror(output)) {
 			task_merge_cleanup_(&lexemes1, &lexemes2);
 			THROW(IOException, "can't write lexeme to output file");
@@ -53,8 +53,8 @@ error_t task_merge_lexemes(FILE* input1, FILE* input2, FILE* output) {
 	}
 
 	for (; k < vector_str_size(&remainingVec); ++k) {
-		string_t lexeme = vector_str_get(&remainingVec, k);
-		fprintf(output, "%s ", string_to_c_str(&lexeme));
+		string_t* lexeme = vector_str_get(&remainingVec, k);
+		fprintf(output, "%s ", string_to_c_str(lexeme));
 		if (ferror(output)) {
 			task_merge_cleanup_(&lexemes1, &lexemes2);
 			THROW(IOException, "can't write lexeme to output file");
@@ -82,8 +82,8 @@ error_t task_process_lexemes(FILE* input, FILE* output) {
 	                        // Big enough to hold a 64-bit number (+null-byte)
 
 	for (int k = 0; k != vector_str_size(&lexemes); ++k) {
-		string_t lexeme = vector_str_get(&lexemes, k);
-		const char* value = string_to_c_str(&lexeme);
+		string_t* lexeme = vector_str_get(&lexemes, k);
+		const char* value = string_to_c_str(lexeme);
 
 		int n = k + 1;
 

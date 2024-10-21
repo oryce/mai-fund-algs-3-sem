@@ -8,8 +8,8 @@
 
 void lexeme_destroy(vector_str_t* lexemes) {
 	for (size_t i = 0; i != vector_str_size(lexemes); ++i) {
-		string_t lexeme = vector_str_get(lexemes, i);
-		string_destroy(&lexeme);
+		string_t* lexeme = vector_str_get(lexemes, i);
+		string_destroy(lexeme);
 	}
 
 	vector_str_destroy(lexemes);
@@ -80,9 +80,9 @@ error_t lexeme_read(FILE* file, vector_str_t* out) {
 
 error_t lexeme_write(FILE* file, vector_str_t* lexemes, char sep) {
 	for (int i = 0; i != vector_str_size(lexemes); ++i) {
-		string_t lexeme = vector_str_get(lexemes, i);
+		string_t* lexeme = vector_str_get(lexemes, i);
 
-		fprintf(file, "%s%c", string_to_c_str(&lexeme), sep);
+		fprintf(file, "%s%c", string_to_c_str(lexeme), sep);
 		if (ferror(file)) THROW(IOException, "can't write lexeme to file");
 	}
 

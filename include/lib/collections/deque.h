@@ -15,7 +15,7 @@ extern const int DEQUE_MIN_CAPACITY;
 		size_t tail;                                                         \
 		size_t capacity;                                                     \
 		size_t size;                                                         \
-	} deque_##TYPE##_t;                                                      \
+	} DEQUE_T;                                                               \
                                                                              \
 	DEQUE_T deque_##TYPE##_create(void);                                     \
                                                                              \
@@ -35,6 +35,8 @@ extern const int DEQUE_MIN_CAPACITY;
                                                                              \
 	const TYPE_T* deque_##TYPE##_peek_back(DEQUE_T*);                        \
                                                                              \
+	const TYPE_T* deque_##TYPE##_get(DEQUE_T* d, size_t idx);                \
+                                                                             \
 	inline static size_t deque_##TYPE##_size(DEQUE_T* d) { return d->size; } \
                                                                              \
 	inline static bool deque_##TYPE##_is_empty(DEQUE_T* d) { return d->size == 0; }
@@ -43,158 +45,161 @@ extern const int DEQUE_MIN_CAPACITY;
 	DEQUE_T deque_##TYPE##_create(void) { return deque_##TYPE##_create_with_capacity(DEQUE_MIN_CAPACITY); }         \
                                                                                                                     \
 	DEQUE_T deque_##TYPE##_create_with_capacity(size_t capacity) {                                                  \
-		DEQUE_T v = {.head = 0, .tail = 0, .size = 0, .buffer = NULL, .capacity = capacity};                        \
-		return v;                                                                                                   \
+		DEQUE_T d = {.head = 0, .tail = 0, .size = 0, .buffer = NULL, .capacity = capacity};                        \
+		return d;                                                                                                   \
 	}                                                                                                               \
                                                                                                                     \
-	void deque_##TYPE##_destroy(DEQUE_T* v) {                                                                       \
-		if (v->buffer != NULL) free(v->buffer);                                                                     \
+	void deque_##TYPE##_destroy(DEQUE_T* d) {                                                                       \
+		if (d->buffer != NULL) free(d->buffer);                                                                     \
                                                                                                                     \
-		v->head = 0;                                                                                                \
-		v->tail = 0;                                                                                                \
-		v->size = 0;                                                                                                \
-		v->buffer = NULL;                                                                                           \
-		v->capacity = 0;                                                                                            \
+		d->head = 0;                                                                                                \
+		d->tail = 0;                                                                                                \
+		d->size = 0;                                                                                                \
+		d->buffer = NULL;                                                                                           \
+		d->capacity = 0;                                                                                            \
 	}                                                                                                               \
                                                                                                                     \
-	bool deque_##TYPE##_grow(DEQUE_T* v) {                                                                          \
-		size_t newSize = v->capacity * 3 / 2;                                                                       \
+	bool deque_##TYPE##_grow(DEQUE_T* d) {                                                                          \
+		size_t newSize = d->capacity * 3 / 2;                                                                       \
                                                                                                                     \
-		TYPE_T* newBuffer = (TYPE_T*)realloc(v->buffer, newSize * sizeof(TYPE_T));                                  \
+		TYPE_T* newBuffer = (TYPE_T*)realloc(d->buffer, newSize * sizeof(TYPE_T));                                  \
 		if (newBuffer == NULL) return false;                                                                        \
                                                                                                                     \
-		size_t sizeDelta = newSize - v->capacity;                                                                   \
-		memmove(newBuffer + v->head + sizeDelta, newBuffer + v->head, (v->capacity - v->head) * sizeof(TYPE_T));    \
+		size_t sizeDelta = newSize - d->capacity;                                                                   \
+		memmove(newBuffer + d->head + sizeDelta, newBuffer + d->head, (d->capacity - d->head) * sizeof(TYPE_T));    \
                                                                                                                     \
-		if (v->head <= v->tail) {                                                                                   \
-			v->tail += sizeDelta;                                                                                   \
+		if (d->head <= d->tail) {                                                                                   \
+			d->tail += sizeDelta;                                                                                   \
 		}                                                                                                           \
-		v->head += sizeDelta;                                                                                       \
+		d->head += sizeDelta;                                                                                       \
                                                                                                                     \
-		v->buffer = newBuffer;                                                                                      \
-		v->capacity = newSize;                                                                                      \
+		d->buffer = newBuffer;                                                                                      \
+		d->capacity = newSize;                                                                                      \
                                                                                                                     \
 		return true;                                                                                                \
 	}                                                                                                               \
                                                                                                                     \
-	bool deque_##TYPE##_shrink(DEQUE_T* v) {                                                                        \
-		size_t newSize = v->capacity * 2 / 3;                                                                       \
+	bool deque_##TYPE##_shrink(DEQUE_T* d) {                                                                        \
+		size_t newSize = d->capacity * 2 / 3;                                                                       \
                                                                                                                     \
-		TYPE_T* newBuffer = (TYPE_T*)malloc(newSize * sizeof(TYPE_T));                                              \
+		TYPE_T* newBuffer = (TYPE_T*)calloc(newSize, sizeof(TYPE_T));                                               \
 		if (newBuffer == NULL) return false;                                                                        \
                                                                                                                     \
-		if (v->head <= v->tail) {                                                                                   \
-			/* If the vector layout is linear (head hasn't wrapped yet), we copy it as is */                        \
-			memcpy(newBuffer, v->buffer + v->head, v->size * sizeof(TYPE_T));                                       \
-                                                                                                                    \
-			v->head = 0;                                                                                            \
-			v->tail = v->size - 1;                                                                                  \
+		if (d->head <= d->tail) {                                                                                   \
+			/* If the deque layout is linear (head hasn't wrapped yet), we copy it as is */                         \
+			memcpy(newBuffer, d->buffer + d->head, d->size * sizeof(TYPE_T));                                       \
+			d->head = 0;                                                                                            \
+			d->tail = d->size - 1;                                                                                  \
 		} else {                                                                                                    \
-			/* If it had wrapped, we copy the multiple halves of the vector separately.*/                                \
-			size_t sizeDelta = v->capacity - newSize;                                                               \
+			/* If it had wrapped, we copy the multiple halves of the deque separately.*/                            \
+			size_t sizeDelta = d->capacity - newSize;                                                               \
                                                                                                                     \
-			memcpy(newBuffer + v->head - sizeDelta, v->buffer + v->head, (v->capacity - v->head) * sizeof(TYPE_T)); \
-			memcpy(newBuffer, v->buffer, (v->tail + 1) * sizeof(TYPE_T));                                           \
+			memcpy(newBuffer + d->head - sizeDelta, d->buffer + d->head, (d->capacity - d->head) * sizeof(TYPE_T)); \
+			memcpy(newBuffer, d->buffer, (d->tail + 1) * sizeof(TYPE_T));                                           \
                                                                                                                     \
-			v->head -= sizeDelta;                                                                                   \
+			d->head -= sizeDelta;                                                                                   \
 		}                                                                                                           \
                                                                                                                     \
-		free(v->buffer);                                                                                            \
-                                                                                                                    \
-		v->buffer = newBuffer;                                                                                      \
-		v->capacity = newSize;                                                                                      \
+		free(d->buffer);                                                                                            \
+		d->buffer = newBuffer;                                                                                      \
+		d->capacity = newSize;                                                                                      \
                                                                                                                     \
 		return true;                                                                                                \
 	}                                                                                                               \
                                                                                                                     \
-	inline static bool deque_##TYPE##_needs_shrink(DEQUE_T* v) {                                                    \
-		return v->size > DEQUE_MIN_CAPACITY && v->size <= v->capacity * 4 / 9;                                      \
+	inline static bool deque_##TYPE##_needs_shrink(DEQUE_T* d) {                                                    \
+		return d->size > DEQUE_MIN_CAPACITY && d->size <= d->capacity * 4 / 9;                                      \
 	}                                                                                                               \
                                                                                                                     \
-	inline static bool deque_##TYPE##_init(DEQUE_T* v) {                                                            \
-		if (v->capacity == 0) return false; /* deque is destroyed */                                                \
-		if (v->buffer != NULL) return true; /* deque is initialized */                                              \
+	inline static bool deque_##TYPE##_init(DEQUE_T* d) {                                                            \
+		if (d->capacity == 0) return false; /* deque is destroyed */                                                \
+		if (d->buffer != NULL) return true; /* deque is initialized */                                              \
                                                                                                                     \
-		v->buffer = calloc(v->capacity, sizeof(TYPE_T));                                                            \
-		return v->buffer != NULL;                                                                                   \
+		d->buffer = calloc(d->capacity, sizeof(TYPE_T));                                                            \
+		return d->buffer != NULL;                                                                                   \
 	}                                                                                                               \
                                                                                                                     \
-	bool deque_##TYPE##_push_front(DEQUE_T* v, TYPE_T value) {                                                      \
-		bool initialized = deque_##TYPE##_init(v);                                                                  \
+	bool deque_##TYPE##_push_front(DEQUE_T* d, TYPE_T value) {                                                      \
+		bool initialized = deque_##TYPE##_init(d);                                                                  \
 		if (!initialized) return false;                                                                             \
                                                                                                                     \
-		if (v->size == v->capacity) {                                                                               \
-			bool grown = deque_##TYPE##_grow(v);                                                                    \
+		if (d->size == d->capacity) {                                                                               \
+			bool grown = deque_##TYPE##_grow(d);                                                                    \
 			if (!grown) return false;                                                                               \
 		}                                                                                                           \
                                                                                                                     \
-		v->head = v->head == 0 ? v->capacity - 1 : v->head - 1;                                                     \
-		v->buffer[v->head] = value;                                                                                 \
-		v->size++;                                                                                                  \
+		d->head = d->head == 0 ? d->capacity - 1 : d->head - 1;                                                     \
+		d->buffer[d->head] = value;                                                                                 \
+		d->size++;                                                                                                  \
                                                                                                                     \
-		if (v->size == 1) v->tail = v->head;                                                                        \
+		if (d->size == 1) d->tail = d->head;                                                                        \
                                                                                                                     \
 		return true;                                                                                                \
 	}                                                                                                               \
                                                                                                                     \
-	bool deque_##TYPE##_push_back(DEQUE_T* v, TYPE_T value) {                                                       \
-		bool initialized = deque_##TYPE##_init(v);                                                                  \
+	bool deque_##TYPE##_push_back(DEQUE_T* d, TYPE_T value) {                                                       \
+		bool initialized = deque_##TYPE##_init(d);                                                                  \
 		if (!initialized) return false;                                                                             \
                                                                                                                     \
-		if (v->size == v->capacity) {                                                                               \
-			bool grown = deque_##TYPE##_grow(v);                                                                    \
+		if (d->size == d->capacity) {                                                                               \
+			bool grown = deque_##TYPE##_grow(d);                                                                    \
 			if (!grown) return false;                                                                               \
 		}                                                                                                           \
                                                                                                                     \
-		v->tail = (v->tail + 1) % v->capacity;                                                                      \
-		v->buffer[v->tail] = value;                                                                                 \
-		v->size++;                                                                                                  \
+		d->tail = (d->tail + 1) % d->capacity;                                                                      \
+		d->buffer[d->tail] = value;                                                                                 \
+		d->size++;                                                                                                  \
                                                                                                                     \
-		if (v->size == 1) v->head = v->tail;                                                                        \
+		if (d->size == 1) d->head = d->tail;                                                                        \
                                                                                                                     \
 		return true;                                                                                                \
 	}                                                                                                               \
                                                                                                                     \
-	bool deque_##TYPE##_pop_front(DEQUE_T* v, TYPE_T* out) {                                                        \
-		if (v->size == 0) {                                                                                         \
+	bool deque_##TYPE##_pop_front(DEQUE_T* d, TYPE_T* out) {                                                        \
+		if (d->size == 0) {                                                                                         \
 			return false;                                                                                           \
-		} else if (deque_##TYPE##_needs_shrink(v)) {                                                                \
-			bool shrunk = deque_##TYPE##_shrink(v);                                                                 \
+		} else if (deque_##TYPE##_needs_shrink(d)) {                                                                \
+			bool shrunk = deque_##TYPE##_shrink(d);                                                                 \
 			if (!shrunk) return false;                                                                              \
 		}                                                                                                           \
                                                                                                                     \
-		TYPE_T value = v->buffer[v->head];                                                                          \
-		v->head = (v->head + 1) % v->capacity;                                                                      \
-		v->size--;                                                                                                  \
+		TYPE_T value = d->buffer[d->head];                                                                          \
+		d->head = (d->head + 1) % d->capacity;                                                                      \
+		d->size--;                                                                                                  \
                                                                                                                     \
 		*out = value;                                                                                               \
 		return true;                                                                                                \
 	}                                                                                                               \
                                                                                                                     \
-	bool deque_##TYPE##_pop_back(DEQUE_T* v, TYPE_T* out) {                                                         \
-		if (out == NULL || v->size == 0) {                                                                          \
+	bool deque_##TYPE##_pop_back(DEQUE_T* d, TYPE_T* out) {                                                         \
+		if (out == NULL || d->size == 0) {                                                                          \
 			return false;                                                                                           \
-		} else if (deque_##TYPE##_needs_shrink(v)) {                                                                \
-			bool shrunk = deque_##TYPE##_shrink(v);                                                                 \
+		} else if (deque_##TYPE##_needs_shrink(d)) {                                                                \
+			bool shrunk = deque_##TYPE##_shrink(d);                                                                 \
 			if (!shrunk) return false;                                                                              \
 		}                                                                                                           \
                                                                                                                     \
-		TYPE_T value = v->buffer[v->tail];                                                                          \
-		v->tail = v->tail == 0 ? v->capacity - 1 : v->tail - 1;                                                     \
-		v->size--;                                                                                                  \
+		TYPE_T value = d->buffer[d->tail];                                                                          \
+		d->tail = d->tail == 0 ? d->capacity - 1 : d->tail - 1;                                                     \
+		d->size--;                                                                                                  \
                                                                                                                     \
 		*out = value;                                                                                               \
 		return true;                                                                                                \
 	}                                                                                                               \
                                                                                                                     \
-	const TYPE_T* deque_##TYPE##_peek_front(DEQUE_T* v) {                                                           \
-		if (v->size == 0) return (const TYPE_T*)NULL;                                                               \
-		return (const TYPE_T*)&v->buffer[v->head];                                                                  \
+	const TYPE_T* deque_##TYPE##_peek_front(DEQUE_T* d) {                                                           \
+		if (d->size == 0) return (const TYPE_T*)NULL;                                                               \
+		return (const TYPE_T*)&d->buffer[d->head];                                                                  \
 	}                                                                                                               \
                                                                                                                     \
-	const TYPE_T* deque_##TYPE##_peek_back(DEQUE_T* v) {                                                            \
-		if (v->size == 0) return (const TYPE_T*)NULL;                                                               \
-		return (const TYPE_T*)&v->buffer[v->tail];                                                                  \
+	const TYPE_T* deque_##TYPE##_peek_back(DEQUE_T* d) {                                                            \
+		if (d->size == 0) return (const TYPE_T*)NULL;                                                               \
+		return (const TYPE_T*)&d->buffer[d->tail];                                                                  \
+	}                                                                                                               \
+                                                                                                                    \
+	const TYPE_T* deque_##TYPE##_get(DEQUE_T* d, size_t idx) {                                                      \
+		if (idx >= d->size) return (const TYPE_T*)NULL;                                                             \
+		return (const TYPE_T*)&d->buffer[(d->head + idx) % d->capacity];                                            \
 	}
 
 DEFINE_DEQUE(deque_i64_t, int64_t, i64)
