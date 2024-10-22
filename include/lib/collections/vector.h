@@ -58,7 +58,7 @@ struct vector_helpers {
 	bool vector_##TYPE##_resize(VECTOR_T* v, size_t capacity) {                                                 \
 		if (!v) return false;                                                                                   \
                                                                                                                 \
-		TYPE_T* newBuffer = realloc(v->buffer, capacity * sizeof(TYPE_T));                                      \
+		TYPE_T* newBuffer = (TYPE_T*)realloc(v->buffer, capacity * sizeof(TYPE_T));                             \
 		if (newBuffer == NULL) return false;                                                                    \
                                                                                                                 \
 		v->buffer = newBuffer;                                                                                  \
@@ -110,7 +110,7 @@ struct vector_helpers {
 		if (v->buffer == NULL) {                                                                                \
 			if (v->capacity == 0) return false;                                                                 \
                                                                                                                 \
-			v->buffer = calloc(v->capacity, sizeof(TYPE_T));                                                    \
+			v->buffer = (TYPE_T*)calloc(v->capacity, sizeof(TYPE_T));                                           \
 			if (v->buffer == NULL) return false; /* allocation failed */                                        \
 		}                                                                                                       \
                                                                                                                 \

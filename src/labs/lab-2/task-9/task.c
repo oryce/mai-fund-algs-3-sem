@@ -2,10 +2,10 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include <stdckdint.h>
 
 #include "lib/collections/vector.h"
 #include "lib/mth.h"
+#include "lib/jtckdint.h"
 
 bool factorize(int n, vector_i32_t* factors) {
 	if (!factors) return false;

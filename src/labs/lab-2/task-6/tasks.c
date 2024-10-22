@@ -218,7 +218,7 @@ int from_base_specifier_(source_t* src, va_list* args, bool uppercase, size_t* n
 	buffer[length] = '\0';
 
 	long result;
-	if (*buffer == '\0' || FAILED(long_from_base(buffer, length, base, &result))) return 0;
+	if (long_from_base(buffer, length, base, &result)) return 0;
 	if (result > INT32_MAX || result < INT32_MIN) return 0;
 
 	*out = (int)result;

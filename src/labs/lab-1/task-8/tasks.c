@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "lib/chars.h"
+#include "lib/jtckdint.h"
 #include "lib/lexeme.h"
 #include "lib/mth.h"
 
@@ -15,11 +16,9 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 	char* ptr;
 
 	for (ptr = (char*)start; *ptr != '\0'; ++ptr) {
-		if (!chars_is_alpha(*ptr) && !chars_is_digit(*ptr)) {
-			THROWF(UnexpectedTokenException, "unexpected char in lexeme: %c", *ptr);
-		}
-
-		int ord = chars_is_alpha(*ptr) ? 10 + (chars_lower(*ptr) - 'a') : *ptr - '0';
+		if (!chars_is_alpha(*ptr) && !chars_is_digit(*ptr)) return ERR_UNEXPTOK;
+		int ord =
+		    chars_is_alpha(*ptr) ? 10 + (chars_lower(*ptr) - 'a') : *ptr - '0';
 		base = mth_int_max(base, ord + 1);
 	}
 
@@ -29,14 +28,10 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 
 	// Traverse backwards (|ptr| is '\0' when the first loop finishes).
 	for (ptr = ptr - 1; ptr >= start; --ptr) {
-		int ord = chars_is_alpha(*ptr) ? 10 + (chars_lower(*ptr) - 'a') : *ptr - '0';
-
-		base10 += ord * multiplier;
-		if (base10 < 0) {
-			THROW(OverflowException, "input number is too large");
-		}
-
-		multiplier *= base;
+		int ord =
+		    chars_is_alpha(*ptr) ? 10 + (chars_lower(*ptr) - 'a') : *ptr - '0';
+		if (ckd_add(&base10, base10, ord * multiplier)) return ERR_OVERFLOW;
+		if (ckd_mul(&multiplier, multiplier, base)) return ERR_OVERFLOW;
 	}
 
 	base10 *= sign;
@@ -47,16 +42,13 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 		++ptr;
 	} while (*ptr == '0');
 
-	if (sign == -1) {
+	if (sign == -1)
 		fprintf(out, "-%s %d %ld\n", ptr, base, base10);
-	} else {
+	else
 		fprintf(out, "%s %d %ld\n", ptr, base, base10);
-	}
-	if (ferror(out)) {
-		THROW(IOException, "can't write to output file");
-	}
+	if (ferror(out)) return ERR_IO;
 
-	return NO_EXCEPTION;
+	return 0;
 }
 
 void cleanup_(vector_str_t* lexemes) {
@@ -69,18 +61,18 @@ error_t determine_min_number_bases(FILE* in, FILE* out) {
 	error_t error;
 	vector_str_t lexemes = {.size = -1};
 
-	if (FAILED((error = lexeme_read(in, &lexemes)))) {
+	if ((error = lexeme_read(in, &lexemes))) {
 		cleanup_(&lexemes);
-		PASS(error);
+		return error;
 	}
 
 	for (int k = 0; k != vector_str_size(&lexemes); ++k) {
 		string_t* lexeme = vector_str_get(&lexemes, k);
-		if (FAILED((error = process_lexeme(string_to_c_str(lexeme), out)))) {
+		if ((error = process_lexeme(string_to_c_str(lexeme), out))) {
 			cleanup_(&lexemes);
-			PASS(error);
+			return error;
 		}
 	}
 
-	return NO_EXCEPTION;
+	return 0;
 }

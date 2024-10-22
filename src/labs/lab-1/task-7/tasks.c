@@ -17,13 +17,10 @@ error_t task_merge_lexemes(FILE* input1, FILE* input2, FILE* output) {
 	vector_str_t lexemes1 = {.size = -1};
 	vector_str_t lexemes2 = {.size = -1};
 
-	if (FAILED((status = lexeme_read(input1, &lexemes1)))) {
+	if ((status = lexeme_read(input1, &lexemes1)) ||
+	    (status = lexeme_read(input2, &lexemes2))) {
 		task_merge_cleanup_(&lexemes1, &lexemes2);
-		PASS(status);
-	}
-	if (FAILED((status = lexeme_read(input2, &lexemes2)))) {
-		task_merge_cleanup_(&lexemes1, &lexemes2);
-		PASS(status);
+		return status;
 	}
 
 	size_t i = 0, j = 0;
@@ -34,10 +31,11 @@ error_t task_merge_lexemes(FILE* input1, FILE* input2, FILE* output) {
 		string_t* first = vector_str_get(&lexemes1, i);
 		string_t* second = vector_str_get(&lexemes2, j);
 
-		fprintf(output, "%s %s ", string_to_c_str(first), string_to_c_str(second));
+		fprintf(output, "%s %s ", string_to_c_str(first),
+		        string_to_c_str(second));
 		if (ferror(output)) {
 			task_merge_cleanup_(&lexemes1, &lexemes2);
-			THROW(IOException, "can't write lexeme to output file");
+			return ERR_IO;
 		}
 	}
 
@@ -57,12 +55,12 @@ error_t task_merge_lexemes(FILE* input1, FILE* input2, FILE* output) {
 		fprintf(output, "%s ", string_to_c_str(lexeme));
 		if (ferror(output)) {
 			task_merge_cleanup_(&lexemes1, &lexemes2);
-			THROW(IOException, "can't write lexeme to output file");
+			return ERR_IO;
 		}
 	}
 
 	task_merge_cleanup_(&lexemes1, &lexemes2);
-	return NO_EXCEPTION;
+	return 0;
 }
 
 void task_process_cleanup_(vector_str_t* lexemes) {
@@ -73,13 +71,13 @@ error_t task_process_lexemes(FILE* input, FILE* output) {
 	error_t status;
 	vector_str_t lexemes = {.size = -1};
 
-	if (FAILED((status = lexeme_read(input, &lexemes)))) {
+	if ((status = lexeme_read(input, &lexemes))) {
 		task_process_cleanup_(&lexemes);
-		PASS(status);
+		return status;
 	}
 
-	char numberToBase[65];  // Holds the current number being converted to a base.
-	                        // Big enough to hold a 64-bit number (+null-byte)
+	char numberToBase[65];  // Holds the current number being converted to a
+	                        // base. Big enough to hold a 64-bit number.
 
 	for (int k = 0; k != vector_str_size(&lexemes); ++k) {
 		string_t* lexeme = vector_str_get(&lexemes, k);
@@ -89,10 +87,11 @@ error_t task_process_lexemes(FILE* input, FILE* output) {
 
 		if (n % 10 == 0) {
 			for (; *value != '\0'; ++value) {
-				status = long_to_base(chars_lower(*value), 4, numberToBase, sizeof(numberToBase));
-				if (FAILED(status)) {
+				status = long_to_base(chars_lower(*value), 4, numberToBase,
+				                      sizeof(numberToBase));
+				if (status) {
 					task_process_cleanup_(&lexemes);
-					PASS(status);
+					return status;
 				}
 
 				fprintf(output, "%s", numberToBase);
@@ -107,10 +106,11 @@ error_t task_process_lexemes(FILE* input, FILE* output) {
 			fputc(' ', output);
 		} else if (n % 5 == 0) {
 			for (; *value != '\0'; ++value) {
-				status = long_to_base(chars_lower(*value), 8, numberToBase, sizeof(numberToBase));
-				if (FAILED(status)) {
+				status = long_to_base(chars_lower(*value), 8, numberToBase,
+				                      sizeof(numberToBase));
+				if (status) {
 					task_process_cleanup_(&lexemes);
-					PASS(status);
+					return status;
 				}
 
 				fprintf(output, "%s", numberToBase);
@@ -123,10 +123,10 @@ error_t task_process_lexemes(FILE* input, FILE* output) {
 
 		if (ferror(output)) {
 			task_process_cleanup_(&lexemes);
-			THROW(IOException, "can't write to output file");
+			return ERR_IO;
 		}
 	}
 
 	task_process_cleanup_(&lexemes);
-	return NO_EXCEPTION;
+	return 0;
 }

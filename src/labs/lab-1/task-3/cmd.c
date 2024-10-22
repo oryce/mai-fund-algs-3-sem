@@ -18,7 +18,8 @@ void print_quad_eq_(double a, double b, double c, double eps) {
 			fprintf(stdout, "  x = %lf\n", result.solution.single);
 			break;
 		case QUAD_MULTIPLE_SOLUTIONS:
-			fprintf(stdout, "  x1 = %lf, x2 = %lf\n", result.solution.multiple[0], result.solution.multiple[1]);
+			fprintf(stdout, "  x1 = %lf, x2 = %lf\n",
+			        result.solution.multiple[0], result.solution.multiple[1]);
 			break;
 	}
 }
@@ -27,32 +28,27 @@ error_t cmd_quad_eq(int argc, char** argv) {
 	// <prog> <flag> <eps> <a> <b> <c>
 	if (argc != 6) {
 		fprintf(stderr, "Invalid arguments. See usage for more info.\n");
-		return NO_EXCEPTION;
+		return 0;
 	}
 
-	error_t error;
 	double eps;
 	double a, b, c;
 
-	if (FAILED((error = str_to_double(argv[2], &eps)))) {
-		fprintf(stderr, "Invalid `eps`: %s.\n", error.message);
-		return NO_EXCEPTION;
+	if (str_to_double(argv[2], &eps) || eps <= 0) {
+		fprintf(stderr, "Invalid `eps`: malformed number or out of range.\n");
+		return 0;
 	}
-	if (eps <= 0) {
-		fprintf(stderr, "Invalid `eps`: may not be less or equal to zero.\n");
-		return NO_EXCEPTION;
+	if (str_to_double(argv[3], &a)) {
+		fprintf(stderr, "Invalid `a`: malformed number.\n");
+		return 0;
 	}
-	if (FAILED((error = str_to_double(argv[3], &a)))) {
-		fprintf(stderr, "Invalid `a`: %s.\n", error.message);
-		return NO_EXCEPTION;
+	if (str_to_double(argv[4], &b)) {
+		fprintf(stderr, "Invalid `a`: malformed number.\n");
+		return 0;
 	}
-	if (FAILED((error = str_to_double(argv[4], &b)))) {
-		fprintf(stderr, "Invalid `b`: %s.\n", error.message);
-		return NO_EXCEPTION;
-	}
-	if (FAILED((error = str_to_double(argv[5], &c)))) {
-		fprintf(stderr, "Invalid `c`: %s.\n", error.message);
-		return NO_EXCEPTION;
+	if (str_to_double(argv[5], &c)) {
+		fprintf(stderr, "Invalid `a`: malformed number.\n");
+		return 0;
 	}
 
 	print_quad_eq_(a, b, c, eps);
@@ -61,68 +57,59 @@ error_t cmd_quad_eq(int argc, char** argv) {
 	print_quad_eq_(b, c, a, eps);
 	print_quad_eq_(c, a, b, eps);
 	print_quad_eq_(c, b, a, eps);
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t cmd_divisible(int argc, char** argv) {
 	if (argc != 4) {
 		fprintf(stderr, "Invalid arguments. See usage for more info.\n");
-		return NO_EXCEPTION;
+		return 0;
 	}
 
-	error_t error;
 	long a, b;
 
-	if (FAILED((error = str_to_long(argv[2], &a)))) {
-		fprintf(stderr, "Invalid `a`: %s.\n", error.message);
-		return NO_EXCEPTION;
+	if (str_to_long(argv[2], &a) || a == 0) {
+		fprintf(stderr, "Invalid `a`: malformed number or zero.\n");
+		return 0;
 	}
-	if (FAILED((error = str_to_long(argv[3], &b)))) {
-		fprintf(stderr, "Invalid `b`: %s.\n", error.message);
-		return NO_EXCEPTION;
-	}
-	if (a == 0 || b == 0) {
-		fprintf(stderr, "Invalid `a` or `b`: one is zero.\n");
-		return NO_EXCEPTION;
+	if (str_to_long(argv[3], &b) || b == 0) {
+		fprintf(stderr, "Invalid `b`: malformed number or zero.\n");
+		return 0;
 	}
 
-	fprintf(stdout, "%ld is %s by %ld\n", a, a % b ? "not divisible" : "divisible", b);
-	return NO_EXCEPTION;
+	fprintf(stdout, "%ld is %s by %ld\n", a,
+	        a % b ? "not divisible" : "divisible", b);
+	return 0;
 }
 
 error_t cmd_right_triangle(int argc, char** argv) {
 	// <prog> <flag> <eps> <a> <b> <c>
 	if (argc != 6) {
 		fprintf(stderr, "Invalid arguments. See usage for more info.\n");
-		return NO_EXCEPTION;
+		return 0;
 	}
 
-	error_t error;
 	double eps;
 	double a, b, c;
 
-	if (FAILED((error = str_to_double(argv[2], &eps)))) {
-		fprintf(stderr, "Invalid `eps`: %s.\n", error.message);
-		return NO_EXCEPTION;
+	if (str_to_double(argv[2], &eps) || eps <= 0) {
+		fprintf(stderr, "Invalid `eps`: malformed number or out of range.\n");
+		return 0;
 	}
-	if (eps <= 0) {
-		fprintf(stderr, "Invalid `eps`: may not be less or equal to zero.\n");
-		return NO_EXCEPTION;
+	if (str_to_double(argv[3], &a)) {
+		fprintf(stderr, "Invalid `a`: malformed number.\n");
+		return 0;
 	}
-	if (FAILED((error = str_to_double(argv[3], &a)))) {
-		fprintf(stderr, "Invalid `a`: %s.\n", error.message);
-		return NO_EXCEPTION;
+	if (str_to_double(argv[4], &b)) {
+		fprintf(stderr, "Invalid `b`: malformed number.\n");
+		return 0;
 	}
-	if (FAILED((error = str_to_double(argv[4], &b)))) {
-		fprintf(stderr, "Invalid `b`: %s.\n", error.message);
-		return NO_EXCEPTION;
-	}
-	if (FAILED((error = str_to_double(argv[5], &c)))) {
-		fprintf(stderr, "Invalid `c`: %s.\n", error.message);
-		return NO_EXCEPTION;
+	if (str_to_double(argv[5], &c)) {
+		fprintf(stderr, "Invalid `c`: malformed number.\n");
+		return 0;
 	}
 
 	fprintf(stdout, "%f %f %f %s build a right triangle\n", a, b, c,
 	        task_right_triangle(a, b, c, eps) ? "can" : "cannot");
-	return NO_EXCEPTION;
+	return 0;
 }

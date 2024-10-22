@@ -25,22 +25,22 @@ error_t task_remove_digits(FILE* in, FILE* out) {
 	while (getline(&line, &lineCap, in) > 0) {
 		if (lineCap == 0) {
 			remove_digits_cleanup_(line, modified);
-			THROW(AssertionError, "`getline` returned `lineCap` as zero");
+			return ERR_CHECK;
 		}
 
 		if (lineCap > modifiedCap) {
 			char* newBuffer = (char*)realloc(modified, lineCap);
-			if (newBuffer == NULL) {
+			if (!newBuffer) {
 				remove_digits_cleanup_(line, modified);
-				THROW(MemoryError, "can't resize modified buffer");
+				return ERR_MEM;
 			}
 			modified = newBuffer;
 			modifiedCap = lineCap;
 		}
 
-		if (modified == NULL) {
+		if (!modified) {
 			remove_digits_cleanup_(line, modified);
-			THROW(AssertionError, "`modified` buffer is NULL");
+			return ERR_CHECK;
 		}
 
 		int i = 0;
@@ -55,12 +55,12 @@ error_t task_remove_digits(FILE* in, FILE* out) {
 
 		if (ferror(out)) {
 			remove_digits_cleanup_(line, modified);
-			THROW(IOException, "can't write to output file");
+			return ERR_IO;
 		}
 	}
 
 	remove_digits_cleanup_(line, modified);
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t count_lines_predicate(FILE* in, FILE* out, line_count_predicate_t predicate) {
@@ -70,7 +70,7 @@ error_t count_lines_predicate(FILE* in, FILE* out, line_count_predicate_t predic
 	while (getline(&line, &lineCap, in) > 0) {
 		if (ferror(in)) {
 			free(line);
-			THROW(IOException, "can't read from input file");
+			return ERR_IO;
 		}
 
 		int count = 0;
@@ -89,12 +89,12 @@ error_t count_lines_predicate(FILE* in, FILE* out, line_count_predicate_t predic
 
 		if (ferror(out)) {
 			free(line);
-			THROW(IOException, "can't write to output file");
+			return ERR_IO;
 		}
 	}
 
 	free(line);
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t task_count_letters(FILE* in, FILE* out) { return count_lines_predicate(in, out, &predicate_is_letter_); }
@@ -122,23 +122,23 @@ error_t task_encode_non_digits(FILE* in, FILE* out) {
 	while (getline(&line, &lineCap, in) > 0) {
 		if (ferror(in)) {
 			encode_non_digits_cleanup_(line, modified);
-			THROW(IOException, "can't read from input file");
+			return ERR_IO;
 		}
 
 		// Allocate for the modified line buffer.
 		// (4 * lineCap is the worst case, if all chars are encoded)
-		if (modified == NULL) {
+		if (!modified) {
 			modifiedCap = lineCap * 4;
 			modified = malloc(modifiedCap);
-			if (modified == NULL) {
+			if (!modified) {
 				encode_non_digits_cleanup_(line, modified);
-				THROW(MemoryError, "can't allocate `modified` buffer");
+				return ERR_MEM;
 			}
 		} else if (lineCap * 4 > modifiedCap) {
 			char* newBuffer = realloc(modified, lineCap * 4);
-			if (newBuffer == NULL) {
+			if (!newBuffer) {
 				encode_non_digits_cleanup_(line, modified);
-				THROW(MemoryError, "can't resize `modified` buffer");
+				return ERR_MEM;
 			}
 			modified = newBuffer;
 			modifiedCap = lineCap * 4;
@@ -172,10 +172,10 @@ error_t task_encode_non_digits(FILE* in, FILE* out) {
 
 		if (ferror(out)) {
 			encode_non_digits_cleanup_(line, modified);
-			THROW(IOException, "can't write to output file");
+			return ERR_IO;
 		}
 	}
 
 	encode_non_digits_cleanup_(line, modified);
-	return NO_EXCEPTION;
+	return 0;
 }

@@ -2,56 +2,58 @@
 
 #include <limits.h>
 #include <math.h>
+#include <stdckdint.h>
 
 #define MTH_MAX_INTEGRAL_PARTITIONS (INT_MAX / 2)
 
-#define MTH_BIN_POW(TYPE, NAME)    \
-	TYPE NAME(TYPE n, int power) { \
-		TYPE result = 1;           \
-                                   \
-		while (power > 0) {        \
-			if (power & 1) {       \
-				result *= n;       \
-			}                      \
-                                   \
-			n = n * n;             \
-			power = power >> 1;    \
-		}                          \
-                                   \
-		return result;             \
+bool mth_long_bin_pow_(long n, int power, long* out) {
+	if (!out) return false;
+	long result = 1;
+
+	while (power > 0) {
+		if (power & 1) {
+			// result *= n
+			if (ckd_mul(&result, result, n)) return false;
+		}
+
+		// n = n * n
+		if (ckd_mul(&n, n, n)) return false;
+		power = power >> 1;
 	}
 
-MTH_BIN_POW(long, mth_long_bin_pow_)
-MTH_BIN_POW(double, mth_double_bin_pow_)
+	*out = result;
+	return true;
+}
 
-inline const char* mth_error_to_string(error_code_t error) {
-	switch (error) {
-		case IntegralException:
-			return "IntegralException";
-		case DivergingException:
-			return "DivergingException";
-		default:
-			return NULL;
+double mth_double_bin_pow_(double n, int power) {
+	double result = 1;
+
+	while (power > 0) {
+		if (power & 1) {
+			result *= n;
+		}
+
+		n = n * n;
+		power = power >> 1;
 	}
+
+	return result;
 }
 
 error_t mth_long_pow(long n, int power, long* out) {
-	if (power < 0) {
-		THROW(IllegalArgumentException, "negative power is invalid for `long`");
-	}
-
-	*out = mth_long_bin_pow_(n, power);
-	return NO_EXCEPTION;
+	if (power < 0) return ERR_INVVAL;
+	return mth_long_bin_pow_(n, power, out);
 }
 
 error_t mth_double_pow(double n, int power, double* out) {
+	if (!out) return ERR_INVVAL;
 	if (power < 0) return mth_double_pow(1. / n, power, out);
 
 	*out = mth_double_bin_pow_(n, power);
-	if (isinf(*out)) THROW(OverflowException, "overflow in power result");
-	if (isnan(*out)) THROW(UnderflowException, "underflow in power result");
+	if (isinf(*out)) return ERR_OVERFLOW;
+	if (isnan(*out)) return ERR_UNDERFLOW;
 
-	return NO_EXCEPTION;
+	return 0;
 }
 
 double mth_sequence_limit(double f(int), double eps) {
@@ -70,22 +72,20 @@ double mth_sequence_limit(double f(int), double eps) {
 	return next;
 }
 
-error_t mth_factorial(int n, long* out) {
-	if (n < 0) THROW(IllegalArgumentException, "`n` may not be less than zero");
+error_t mth_factorial(unsigned int n, unsigned long* out) {
+	if (!out) return ERR_INVVAL;
 
 	long result = 1;
 
 	if (n > 1) {
 		for (int i = 2; i != (n + 1); ++i) {
-			result *= i;
-			if (result < 0) {
-				THROW(OverflowException, "long overflow in `result`");
-			}
+			// result *= i
+			if (ckd_mul(&result, result, i)) return ERR_OVERFLOW;
 		}
 	}
 
 	*out = result;
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t mth_dichotomy(double f(double), double a, double b, double eps, double* out) {
@@ -93,7 +93,7 @@ error_t mth_dichotomy(double f(double), double a, double b, double eps, double* 
 	double r = f(b);
 
 	if (l * r > 0) {
-		THROW(IllegalArgumentException, "`f` must reach zero in [a; b]");
+		return ERR_INVVAL;
 	}
 
 	while (fabs(a - b) > eps) {
@@ -107,11 +107,11 @@ error_t mth_dichotomy(double f(double), double a, double b, double eps, double* 
 	}
 
 	*out = (a + b) / 2;
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes) {
-	if (n < 0) THROW(IllegalArgumentException, "invalid number count");
+	if (n < 0) return ERR_INVVAL;
 
 	if (zeroPrimes) {
 		for (int i = 0; i != (n + 1); ++i) {
@@ -127,7 +127,7 @@ error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes) {
 		}
 	}
 
-	return NO_EXCEPTION;
+	return 0;
 }
 
 /**
@@ -161,7 +161,7 @@ error_t mth_integral(double f(double x), double a, double b, double eps, double*
 	while (fabs(current - next) > eps) {
 		n *= 2;
 		if (n > MTH_MAX_INTEGRAL_PARTITIONS) {
-			THROW(IntegralException, "too many partitions");
+			return ERR_M_INTEGRAL;
 		}
 
 		current = next;
@@ -169,7 +169,7 @@ error_t mth_integral(double f(double x), double a, double b, double eps, double*
 	}
 
 	*out = next;
-	return NO_EXCEPTION;
+	return 0;
 }
 
 unsigned long mth_gcd(unsigned long a, unsigned long b) {

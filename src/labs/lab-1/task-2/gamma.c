@@ -28,18 +28,18 @@ double gamma_eq_sequence(const bool* isPrime, int t) {
 	return log(t) * product;
 }
 
-double compute_gamma_lim(double eps) { return mth_sequence_limit(&gamma_sequence, eps); }
+double compute_gamma_lim(double eps) {
+	return mth_sequence_limit(&gamma_sequence, eps);
+}
 
 double compute_gamma_series(double eps) {
 	double term = 0.5;
 	double sum = term;
-
 	double floor_sqrt_sq;
-	error_t error;
 
 	for (int k = 3; term == 0 || fabs(term) > eps; ++k) {
-		error = mth_double_pow(floor(sqrt(k)), 2, &floor_sqrt_sq);
-		if (FAILED(error)) return DBL_MIN;
+		error_t error = mth_double_pow(floor(sqrt(k)), 2, &floor_sqrt_sq);
+		if (error) return DBL_MIN;
 
 		term = 1.0 / floor_sqrt_sq - 1.0 / k;
 		sum += term;
@@ -52,16 +52,15 @@ double compute_gamma_eq(double eps) {
 	int primes = 15;
 
 	bool* isPrime = (bool*)malloc(sizeof(bool) * (primes + 1));
-	if (isPrime == NULL) return DBL_MIN;
+	if (!isPrime) return DBL_MIN;
 
 	error_t error = mth_prime_sieve(isPrime, primes, true);
-	if (FAILED(error)) {
+	if (error) {
 		free(isPrime);
 		return DBL_MIN;
 	}
 
 	int n = 2;
-
 	double current = gamma_eq_sequence(isPrime, 2);
 	double next = gamma_eq_sequence(isPrime, 3);
 
@@ -72,7 +71,8 @@ double compute_gamma_eq(double eps) {
 			// Need to resize the prime sieve
 			primes *= 2;
 
-			bool* newPrimes = (bool*)realloc(isPrime, sizeof(bool) * (primes + 1));
+			bool* newPrimes =
+			    (bool*)realloc(isPrime, sizeof(bool) * (primes + 1));
 			if (newPrimes == NULL) {
 				free(isPrime);
 				return DBL_MIN;
@@ -84,7 +84,7 @@ double compute_gamma_eq(double eps) {
 			}
 
 			error = mth_prime_sieve(isPrime, primes, false);
-			if (FAILED(error)) {
+			if (error) {
 				free(isPrime);
 				return DBL_MIN;
 			}

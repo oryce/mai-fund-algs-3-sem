@@ -5,83 +5,35 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef int32_t error_code_t;
+typedef int32_t error_t;
 
-typedef const char* (*error_fmt_t)(error_code_t code);
+typedef const char* (*error_fmt_t)(error_t);
 
-typedef struct error_ste {
-	char function[64];
-	char filename[64];
-	uint16_t line;
-} error_ste_t;
+#define ERR_INVVAL 0x00000001
+#define ERR_MEM 0x00000002
+#define ERR_OVERFLOW 0x00000003
+#define ERR_UNDERFLOW 0x00000004
+#define ERR_IO 0x00000005
+#define ERR_CHECK 0x00000006
+#define ERR_UNEXPTOK 0x00000007
+#define ERR_UNRECOPT 0x00000008
 
-typedef struct error {
-	/** Exception type. */
-	error_code_t code;
-	/** Exception message. */
-	char message[256];
-	/** Stack frames. */
-	error_ste_t stack_trace[8];
-	/** Amount of frames in stack_trace. */
-	size_t stack_trace_length;
-	/** Amount of frames that couldn't fit into stack_trace. */
-	uint16_t stack_trace_extra_frames;
-} error_t;
+#define FILENAME_ (strrchr("/" __FILE__, '/') + 1)
 
-#define E_FUNCTION __func__
-#define E_FILENAME (strrchr("/" __FILE__, '/') + 1)
-
-/** Throws an exception. */
-#define THROW(code, message)                                                 \
-	do {                                                                     \
-		return error_throw(code, message, E_FUNCTION, E_FILENAME, __LINE__); \
+#define CHECK(condition, msg)                                                  \
+	do {                                                                       \
+		if ((condition)) {                                                     \
+			fprintf(stderr, "check failed (%s:%d): %s\n", FILENAME_, __LINE__, \
+			        msg);                                                      \
+			return ERR_CHECK;                                                  \
+		}                                                                      \
 	} while (0);
-
-/** Throws a formatted exception. */
-#define THROWF(code, message, ...)                                                         \
-	do {                                                                                   \
-		return error_throwf(code, message, E_FUNCTION, E_FILENAME, __LINE__, __VA_ARGS__); \
-	} while (0);
-
-/** Re-throws an exception, adding a message before the original. */
-#define RETHROW(error, message)                                                 \
-	do {                                                                        \
-		return error_rethrow(message, E_FUNCTION, E_FILENAME, __LINE__, error); \
-	} while (0);
-
-/** Passes the exception to the caller. */
-#define PASS(error)                                                 \
-	do {                                                            \
-		return error_pass(error, E_FUNCTION, E_FILENAME, __LINE__); \
-	} while (0);
-
-#define FAILED(error) error.code != 0
-#define SUCCEEDED(error) error.code == 0
-
-#define OverflowException 0x00000001
-#define IllegalArgumentException 0x00000002
-#define MemoryError 0x00000003
-#define IOException 0x00000004
-#define AssertionError 0x00000005
-#define UnderflowException 0x00000006
-#define UnexpectedTokenException 0x00000007
-
-#define NO_EXCEPTION \
-	(error_t) { .code = 0x0000000 }
 
 /** Prints the error message to `stderr`. */
 void error_print(error_t error);
 
 /**
- * Prints the error message, but allows for several functions to determine the exception's name.
- * Useful for custom exceptions.
+ * Prints the error message, but allows for several functions to determine the
+ * exception's name. Useful for custom exceptions.
  */
 void error_print_ex(error_t error, error_fmt_t fmt[], size_t nFmt);
-
-error_t error_throw(error_code_t code, const char* message, const char* function, const char* filename, int line);
-
-error_t error_throwf(error_code_t code, const char* message, const char* function, const char* filename, int line, ...);
-
-error_t error_rethrow(const char* message, const char* function, const char* filename, int line, error_t error);
-
-error_t error_pass(error_t error, const char* function, const char* filename, int line);

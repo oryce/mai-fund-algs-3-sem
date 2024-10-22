@@ -10,14 +10,13 @@ error_t compute_series_a(double eps, double x, double* out) {
 
 	for (int k = 1; fabs(term) > eps; ++k) {
 		term *= x / k;
+
 		sum += term;
-		if (isinf(sum)) {
-			THROW(DivergingException, "series A diverges");
-		}
+		if (isinf(sum)) return ERR_M_DIVERGING;
 	}
 
 	*out = sum;
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t compute_series_b(double eps, double x, double* out) {
@@ -30,13 +29,11 @@ error_t compute_series_b(double eps, double x, double* out) {
 		term *= -(x * x) / ((2 * n + 1) * (2 * n + 2));
 
 		sum += term;
-		if (isinf(sum)) {
-			THROW(DivergingException, "series B diverges");
-		}
+		if (isinf(sum)) return ERR_M_DIVERGING;
 	}
 
 	*out = sum;
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t compute_series_c(double eps, double x, double* out) {
@@ -48,13 +45,11 @@ error_t compute_series_c(double eps, double x, double* out) {
 		term *= (9 * (n + 1) * (n + 1) * x * x) / ((3 * n + 1) * (3 * n + 2));
 
 		sum += term;
-		if (isinf(sum)) {
-			THROW(DivergingException, "series C diverges");
-		}
+		if (isinf(sum)) return ERR_M_DIVERGING;
 	}
 
 	*out = sum;
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t compute_series_d(double eps, double x, double* out) {
@@ -66,11 +61,9 @@ error_t compute_series_d(double eps, double x, double* out) {
 		term *= -((2 * n + 1) * x * x) / (2 * (n + 1));
 
 		sum += term;
-		if (isinf(sum)) {
-			THROW(DivergingException, "series D diverges");
-		}
+		if (isinf(sum)) return ERR_M_DIVERGING;
 	}
 
 	*out = sum;
-	return NO_EXCEPTION;
+	return 0;
 }

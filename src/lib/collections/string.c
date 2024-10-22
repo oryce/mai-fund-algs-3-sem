@@ -4,7 +4,8 @@
 
 #include "lib/mth.h"
 
-/** Comparison function for |vector_string_t|, which takes multiple void pointers. */
+/** Comparison function for |vector_string_t|, which takes multiple void
+ * pointers. */
 inline static int string_vector_compare(const void* p1, const void* p2) {
 	return string_compare((const string_t*)p1, (const string_t*)p2);
 }
@@ -13,7 +14,8 @@ IMPL_VECTOR(vector_str_t, string_t, str, {&string_vector_compare})
 
 bool string_enlarge(string_t* string, size_t size) {
 	if (!string->initialized) return false;
-	return vector_i8_ensure_capacity(&string->buffer, vector_i8_size(&string->buffer) + size);
+	return vector_i8_ensure_capacity(&string->buffer,
+	                                 vector_i8_size(&string->buffer) + size);
 }
 
 string_t string_create(void) {
@@ -39,7 +41,8 @@ bool string_append_char(string_t* string, char c) {
 	int8_t terminator;
 
 	bool success = true;
-	success &= vector_i8_pop_back(&string->buffer, &terminator) && terminator == '\0';
+	success &=
+	    vector_i8_pop_back(&string->buffer, &terminator) && terminator == '\0';
 	success &= vector_i8_push_back(&string->buffer, c);
 	success &= vector_i8_push_back(&string->buffer, '\0');
 	return success;

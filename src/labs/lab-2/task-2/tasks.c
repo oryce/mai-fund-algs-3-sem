@@ -5,29 +5,25 @@
 #include "lib/error.h"
 
 error_t task_geometric_mean(double* result, int n, ...) {
-	if (result == NULL) THROW(IllegalArgumentException, "`result` may not be null");
-	if (n < 1) THROW(IllegalArgumentException, "at least one number must be provided");
+	if (!result || n < 1) return ERR_INVVAL;
 
 	va_list args;
 	va_start(args, n);
 
 	double product = 1;
+
 	for (int i = 0; i != n; ++i) {
 		product *= va_arg(args, double);
 	}
 
 	va_end(args);
 
-	if (isinf(product)) {
-		THROW(OverflowException, "double overflow in number product");
-	}
+	if (isinf(product)) return ERR_OVERFLOW;
 
 	*result = pow(product, 1.0 / n);
-	if (isnan(*result)) {
-		THROW(UnderflowException, "double underflow in geometric mean");
-	}
+	if (isnan(*result)) return ERR_UNDERFLOW;
 
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t task_bin_exp(double* out, double number, int power) {
@@ -35,34 +31,29 @@ error_t task_bin_exp(double* out, double number, int power) {
 
 	if (power < 0) {
 		double result;
-		if (FAILED((status = task_bin_exp(&result, number, -power)))) {
-			PASS(status);
-		}
+
+		status = task_bin_exp(&result, number, -power);
+		if (status) return status;
 
 		*out = 1.0 / result;
-		if (isnan(*out)) {
-			THROW(OverflowException, "double underflow in negative exponent");
-		}
+		if (isnan(*out)) return ERR_UNDERFLOW;
 
-		return NO_EXCEPTION;
+		return 0;
 	} else if (power == 0) {
 		*out = 1;
-		return NO_EXCEPTION;
+		return 0;
 	}
 
 	double result;
-	if (FAILED((status = task_bin_exp(&result, number, power / 2)))) {
-		PASS(status);
-	}
 
-	if (power % 2) {
+	status = task_bin_exp(&result, number, power / 2);
+	if (status) return status;
+
+	if (power % 2)
 		*out = result * result * number;
-	} else {
+	else
 		*out = result * result;
-	}
-	if (isinf(*out)) {
-		THROW(OverflowException, "double overflow in exponent");
-	}
+	if (isinf(*out)) return ERR_UNDERFLOW;
 
-	return NO_EXCEPTION;
+	return 0;
 }

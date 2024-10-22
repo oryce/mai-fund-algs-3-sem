@@ -7,8 +7,8 @@ error_t main_(void) {
 
 int main(void) {
 	error_t error = main_();
-	if (FAILED(error)) {
+	if (error) {
 		error_print(error);
-		return (int)error.code;
+		return error;
 	}
 }

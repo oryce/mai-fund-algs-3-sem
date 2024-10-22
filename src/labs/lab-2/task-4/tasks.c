@@ -4,13 +4,14 @@
 #include <stdarg.h>
 
 #include "lib/convert.h"
+#include "lib/jtckdint.h"
 #include "lib/mth.h"
 
 const double M_2PI = M_PI * 2;
 
 error_t task_convex(bool* result, double eps, size_t n, ...) {
-	if (n < 3) THROW(IllegalArgumentException, "at least 3 points are required");
-	if (result == NULL) THROW(IllegalArgumentException, "`result` may not be null");
+	if (n < 3) return ERR_INVVAL;
+	if (result == NULL) return ERR_INVVAL;
 
 	va_list args;
 
@@ -31,7 +32,7 @@ error_t task_convex(bool* result, double eps, size_t n, ...) {
 
 	if (p1.x == p0.x && p1.y == p0.y) {
 		va_end(args);
-		THROW(IllegalArgumentException, "points may not have the same coords");
+		return ERR_INVVAL;
 	}
 
 	d1 = atan2(p1.x - p0.x, p1.y - p0.y);
@@ -45,7 +46,7 @@ error_t task_convex(bool* result, double eps, size_t n, ...) {
 
 		if (p1.x == p0.x && p1.y == p0.y) {
 			va_end(args);
-			THROW(IllegalArgumentException, "points may not have the same coords");
+			return ERR_INVVAL;
 		}
 
 		d1 = atan2(p1.x - p0.x, p1.y - p0.y);
@@ -58,7 +59,7 @@ error_t task_convex(bool* result, double eps, size_t n, ...) {
 			if (angle == 0) {
 				*result = false;
 				va_end(args);
-				return NO_EXCEPTION;
+				return 0;
 			}
 
 			orientation = angle /* - 0 */ > eps ? 1 : -1;
@@ -66,7 +67,7 @@ error_t task_convex(bool* result, double eps, size_t n, ...) {
 			if (orientation * angle /* - 0 */ <= eps) {
 				*result = false;
 				va_end(args);
-				return NO_EXCEPTION;
+				return 0;
 			}
 		}
 
@@ -75,12 +76,12 @@ error_t task_convex(bool* result, double eps, size_t n, ...) {
 
 	*result = fabs(round(angles / M_2PI)) == 1;
 	va_end(args);
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t task_polynomial(double* result, double x, int n, ...) {
-	if (n < 0) THROW(IllegalArgumentException, "at least one coefficient is required");
-	if (result == 0) THROW(IllegalArgumentException, "`result` may not be null");
+	if (n < 0) return ERR_INVVAL;
+	if (result == 0) return ERR_INVVAL;
 
 	va_list args;
 	va_start(args, n);
@@ -91,36 +92,30 @@ error_t task_polynomial(double* result, double x, int n, ...) {
 	}
 
 	va_end(args);
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t is_kaprekar_(const char* number, int base, bool* result) {
-	error_t status;
-
-	if (number == NULL) THROW(IllegalArgumentException, "`number` may not be null");
-	if (result == NULL) THROW(IllegalArgumentException, "`result` may not be null");
-	if (*number == '-') THROW(IllegalArgumentException, "can't check negative numbers");
+	if (!number || !result || *number == '-') return ERR_INVVAL;
 
 	long n;
-	if (FAILED((status = long_from_base(number, strlen(number), base, &n)))) {
-		RETHROW(status, "can't convert number from base");
-	}
+	if (long_from_base(number, strlen(number), base, &n)) return ERR_INVVAL;
+
 	if (n == 0) {
 		*result = false;
-		return NO_EXCEPTION;
+		return 0;
 	}
 
-	long nSq = n * n;
-	if (mth_sign(n) != mth_sign(nSq)) {
-		THROW(OverflowException, "number is too large");
-	}
+	long nSq;
+	if (ckd_mul(&nSq, n, n)) return ERR_OVERFLOW;
+
 	char nSqStr[65];
-	if (FAILED((status = long_to_base(nSq, base, nSqStr, sizeof(nSqStr))))) {
-		RETHROW(status, "can't convert square to base");
-	}
+	CHECK(long_to_base(nSq, base, nSqStr, sizeof(nSqStr)),
+	      "can't convert square to string");
 
 	// Split the squared number and check if the parts add up to `n`.
 	size_t length = strlen(nSqStr);
+
 	for (size_t i = 0; i < length; ++i) {
 		char leftStr[65];
 		char rightStr[65];
@@ -129,27 +124,28 @@ error_t is_kaprekar_(const char* number, int base, bool* result) {
 		leftStr[i] = '\0';
 		strncpy(rightStr, nSqStr + i, sizeof(rightStr));
 
-		long left;
-		long right;
-		if (FAILED((status = long_from_base(leftStr, i, base, &left)))) {
-			RETHROW(status, "can't convert left part to long");
-		}
-		if (FAILED((status = long_from_base(rightStr, length - i, base, &right)))) {
-			RETHROW(status, "can't convert right part to long");
-		}
+		long left = 0;
+		long right = 0;
+
+		if (i != 0)
+			CHECK(long_from_base(leftStr, i, base, &left),
+			      "can't convert left part to long");
+		if (length - i != 0)
+			CHECK(long_from_base(rightStr, length - i, base, &right),
+			      "can't convert right part to long");
 
 		if (left + right == n) {
 			*result = true;
-			return NO_EXCEPTION;
+			return 0;
 		}
 	}
 
 	*result = false;
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t task_kaprekar(vector_ptr_t* out, int base, size_t n, ...) {
-	if (out == NULL) THROW(IllegalArgumentException, "`out` may not be null");
+	if (out == NULL) return ERR_INVVAL;
 	*out = vector_ptr_create();
 
 	va_list args;
@@ -159,22 +155,21 @@ error_t task_kaprekar(vector_ptr_t* out, int base, size_t n, ...) {
 		const char* number = va_arg(args, const char*);
 		bool kaprekar = false;
 
-		error_t status = is_kaprekar_(number, base, &kaprekar);
-		if (FAILED(status)) {
+		if (is_kaprekar_(number, base, &kaprekar)) {
 			vector_ptr_destroy(out);
 			va_end(args);
-			PASS(status);
+			return ERR_INVVAL;
 		}
 
 		if (kaprekar) {
 			if (!vector_ptr_push_back(out, (void*)number)) {
 				vector_ptr_destroy(out);
 				va_end(args);
-				THROW(MemoryError, "can't insert into output vector");
+				return ERR_MEM;
 			}
 		}
 	}
 
 	va_end(args);
-	return NO_EXCEPTION;
+	return 0;
 }

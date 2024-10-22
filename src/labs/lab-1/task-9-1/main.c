@@ -7,7 +7,7 @@
 #include "lib/error.h"
 
 error_t task(long array[], size_t nItems, long a, long b) {
-	if (nItems == 0) THROW(IllegalArgumentException, "no items supplied");
+	if (nItems == 0) return ERR_INVVAL;
 
 	long* min = NULL;
 	long* max = NULL;
@@ -16,20 +16,17 @@ error_t task(long array[], size_t nItems, long a, long b) {
 		long value = rand() % (b + 1 - a) + a;  // NOLINT(*-msc50-cpp)
 		array[i] = value;
 
-		if (min == NULL || value <= *min) {
+		if (!min || value <= *min) {
 			min = array + i;
 		}
-		if (max == NULL || value >= *max) {
+		if (!max || value >= *max) {
 			max = array + i;
 		}
 
 		printf("[%zu] %ld\n", i, value);
 	}
 
-	if (min == NULL || max == NULL) {
-		THROW(AssertionError, "no min/max found");
-	}
-
+	CHECK(!min || !max, "no min/max found");
 	printf("min: %ld, max: %ld\n", *min, *max);
 
 	long temp = *min;
@@ -40,12 +37,10 @@ error_t task(long array[], size_t nItems, long a, long b) {
 		printf("[%zu] %ld\n", i, array[i]);
 	}
 
-	return NO_EXCEPTION;
+	return 0;
 }
 
 error_t main_(int argc, char** argv) {
-	error_t status;
-
 	srand(time(NULL));  // NOLINT(*-msc51-cpp)
 
 	if (argc != 3) {
@@ -53,17 +48,17 @@ error_t main_(int argc, char** argv) {
 		        "Usage: %s <a> <b>\n"
 		        "Finds the min and max values in an array of random elements in [a; b]\n",
 		        argv[0]);
-		return NO_EXCEPTION;
+		return 0;
 	}
 
 	long a, b;
-	if (FAILED((status = str_to_long(argv[1], &a)))) {
+	if (str_to_long(argv[1], &a)) {
 		fprintf(stderr, "Invalid arguments: malformed 'a'\n");
-		return NO_EXCEPTION;
+		return 0;
 	}
-	if (FAILED((status = str_to_long(argv[2], &b)))) {
+	if (str_to_long(argv[2], &b)) {
 		fprintf(stderr, "Invalid arguments: malformed 'b'\n");
-		return NO_EXCEPTION;
+		return 0;
 	}
 
 	long array[100];
@@ -71,9 +66,9 @@ error_t main_(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-	error_t status;
-	if (FAILED((status = main_(argc, argv)))) {
-		error_print(status);
-		return (int)status.code;
+	error_t error = main_(argc, argv);
+	if (error) {
+		error_print(error);
+		return error;
 	}
 }

@@ -81,7 +81,7 @@ bool roman_specifier_(sink_t* sink, va_list* args) {
 
 	char roman[1024] = {'\0'};
 
-	for (size_t i = 0; number != 0; ++i) {
+	for (size_t i = 0; number > 0; ++i) {
 		while (number >= values[i]) {
 			number -= values[i];
 
@@ -131,7 +131,7 @@ bool to_base_specifier_(sink_t* sink, va_list* args, bool uppercase) {
 	if (base < 2 || base > 36) base = 10;
 
 	char nInBase[65];
-	if (FAILED(long_to_base((long)n, base, nInBase, sizeof(nInBase)))) {
+	if (long_to_base((long)n, base, nInBase, sizeof(nInBase))) {
 		return false;
 	}
 
@@ -170,7 +170,7 @@ bool from_base_specifier_(sink_t* sink, va_list* args, bool uppercase) {
 	}
 
 	long base10;
-	if (FAILED(long_from_base(number, length, base, &base10))) {
+	if (long_from_base(number, length, base, &base10)) {
 		return false;
 	}
 

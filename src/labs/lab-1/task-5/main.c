@@ -13,28 +13,24 @@ typedef struct series {
 } series_t;
 
 error_t main_(int argc, char** argv) {
-	error_t error;
-
 	if (argc != 3) {
 		printf(
 		    "Usage: %s <eps> <x>\n"
 		    "Computes various series values given an error margin.\n",
 		    argv[0]);
-		return NO_EXCEPTION;
+		return 0;
 	}
 
 	double eps;
-	error = str_to_double(argv[1], &eps);
-	if (FAILED(error) || eps <= 0) {
+	if (str_to_double(argv[1], &eps) || eps <= 0) {
 		fprintf(stderr, "Invalid 'eps': malformed number or out of range.\n");
-		return NO_EXCEPTION;
+		return 0;
 	}
 
 	double x;
-	error = str_to_double(argv[2], &x);
-	if (FAILED(error)) {
+	if (str_to_double(argv[2], &x)) {
 		fprintf(stderr, "Invalid 'x': malformed number or out of range.\n");
-		return NO_EXCEPTION;
+		return 0;
 	}
 
 	series_t series[] = {
@@ -47,24 +43,26 @@ error_t main_(int argc, char** argv) {
 
 	for (int i = 0; i != nSeries; ++i) {
 		double value;
-		error = series[i].func(eps, x, &value);
-		if (error.code == DivergingException) {
+		error_t error = series[i].func(eps, x, &value);
+
+		if (!error)
 			printf("%8s | cannot be computed\n", series[i].name);
-		} else if (FAILED(error)) {
-			PASS(error);
-		} else {
+		else if (error == ERR_M_DIVERGING)
 			printf("%8s | %f\n", series[i].name, value);
-		}
+		else
+			return error;
 	}
 
-	return NO_EXCEPTION;
+	return 0;
 }
 
 int main(int argc, char** argv) {
 	error_t error = main_(argc, argv);
-	if (FAILED(error)) {
+
+	if (error) {
 		error_fmt_t fmt[] = {&mth_error_to_string};
 		error_print_ex(error, fmt, sizeof(fmt) / sizeof(fmt[0]));
-		return (int)error.code;
+
+		return error;
 	}
 }

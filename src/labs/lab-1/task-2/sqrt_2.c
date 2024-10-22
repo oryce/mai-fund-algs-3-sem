@@ -33,10 +33,6 @@ double compute_sqrt_2_series(double eps) {
 
 double compute_sqrt_2_eq(double eps) {
 	double value;
-
-	error_t error = mth_dichotomy(&sqrt_2_equation, -1.0, 2.0, eps, &value);
-	if (FAILED(error)) return DBL_MIN;
-
-	return value;
+	return mth_dichotomy(&sqrt_2_equation, -1.0, 2.0, eps, &value) ? DBL_MIN
+	                                                               : value;
 }
-

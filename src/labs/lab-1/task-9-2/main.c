@@ -12,12 +12,10 @@ error_t random_vec(vector_i64_t* vec) {
 
 	for (int i = 0; i != size; ++i) {
 		long value = mth_rand(-1000, 1000);
-		if (!vector_i64_push_back(vec, value)) {
-			THROW(MemoryError, "can't insert random value");
-		}
+		if (!vector_i64_push_back(vec, value)) return ERR_MEM;
 	}
 
-	return NO_EXCEPTION;
+	return 0;
 }
 
 int64_t find_closest(int64_t value, vector_i64_t* others) {
@@ -60,21 +58,15 @@ void cleanup(vector_i64_t* a, vector_i64_t* b, vector_i64_t* c) {
 }
 
 error_t main_(void) {
-	error_t status;
-
 	srand(time(NULL));  // NOLINT(*-msc51-cpp)
 
 	vector_i64_t a = {.size = -1};
 	vector_i64_t b = {.size = -1};
 	vector_i64_t c = {.size = -1};
 
-	if (FAILED((status = random_vec(&a)))) {
+	if (random_vec(&a) || random_vec(&b)) {
 		cleanup(&a, &b, &c);
-		RETHROW(status, "can't fill vector A");
-	}
-	if (FAILED((status = random_vec(&b)))) {
-		cleanup(&a, &b, &c);
-		RETHROW(status, "can't fill vector B");
+		return ERR_CHECK;
 	}
 
 	printf("Array A:\n");
@@ -89,7 +81,7 @@ error_t main_(void) {
 
 	if (!vector_i64_sort(&b)) {
 		cleanup(&a, &b, &c);
-		THROW(AssertionError, "can't sort vector B");
+		return ERR_CHECK;
 	}
 
 	c = vector_i64_create_with_capacity(vector_i64_size(&a));
@@ -100,7 +92,7 @@ error_t main_(void) {
 
 		if (!vector_i64_push_back(&c, value + closest)) {
 			cleanup(&a, &b, &c);
-			THROW(MemoryError, "can't push into vector C");
+			return ERR_MEM;
 		}
 	}
 
@@ -109,13 +101,13 @@ error_t main_(void) {
 		printf("%lld ", *vector_i64_get(&c, i));
 	}
 
-	return NO_EXCEPTION;
+	return 0;
 }
 
 int main(void) {
-	error_t error;
-	if (FAILED((error = main_()))) {
+	error_t error = main_();
+	if (error) {
 		error_print(error);
-		return (int)error.code;
+		return error;
 	}
 }

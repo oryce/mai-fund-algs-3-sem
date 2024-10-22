@@ -5,23 +5,33 @@
 
 #include "error.h"
 
-#define IntegralException 0x00010001
-#define DivergingException 0x00010002
+#define ERR_M_INTEGRAL 0x00010001
+#define ERR_M_DIVERGING 0x00010002
 
 /** Converts a Math error to string. */
-const char* mth_error_to_string(error_code_t error);
+inline static const char* mth_error_to_string(error_t error) {
+	switch (error) {
+		case ERR_M_INTEGRAL:
+			return "Integral could not be computed";
+		case ERR_M_DIVERGING:
+			return "The sequence is diverging";
+		default:
+			return NULL;
+	}
+}
 
 /**
- * Computes n^power using binary exponentiation.
+ * Computes n^power for a long number.
  *
- * @return `ERROR_INVALID_PARAMETER` if power < 0.
+ * @return `ERR_INVVAL` if power < 0.
  */
 error_t mth_long_pow(long n, int power, long* out);
 
 /**
- * Computes n^power using binary exponentiation.
+ * Computes n^power for a double number.
  *
- * @return `ERROR_INVALID_PARAMETER` if power < 0.
+ * @return `ERR_UNDERFLOW` if the resulting number is a NaN.
+ *         `ERR_OVERFLOW`  if the resulting number is an infinity.
  */
 error_t mth_double_pow(double n, int power, double* out);
 
@@ -36,7 +46,7 @@ double mth_sequence_limit(double f(int), double eps);
  * @return `ERROR_INVALID_PARAMETER` -- if n < 0;
  *   	   `ERROR_OVERFLOW` -- if the result is too large.
  */
-error_t mth_factorial(int n, long* out);
+error_t mth_factorial(unsigned int n, unsigned long* out);
 
 /**
  * Finds the root of f(x) using binary search (dichotomy).
@@ -70,7 +80,7 @@ error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes);
  * @param eps error margin
  * @param out approximate integral value
  *
- * @return error code; `NO_EXCEPTION` if the computation succeeded
+ * @return error code; `0` if the computation succeeded
  */
 error_t mth_integral(double f(double x), double a, double b, double eps, double* out);
 

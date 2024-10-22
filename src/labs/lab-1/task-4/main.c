@@ -17,10 +17,7 @@ typedef struct opt {
 } opt_t;
 
 error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
-	if (flag[0] != '-' && flag[0] != '/') {
-		THROW(IllegalArgumentException, "flag starts with an invalid character");
-	}
-
+	if (*flag != '-' && *flag != '/') return ERR_INVVAL;
 	++flag;
 
 	bool specify_output = false;
@@ -34,11 +31,11 @@ error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
 			*outOpt = opts[i];
 			outOpt->specify_output = specify_output;
 
-			return NO_EXCEPTION;
+			return 0;
 		}
 	}
 
-	THROWF(IllegalArgumentException, "unrecognized option: %c", flag[0]);
+	return ERR_UNRECOPT;
 }
 
 void print_opts(opt_t opts[], int nOpts) {
@@ -52,7 +49,7 @@ error_t add_prefix(const char* path, char** out) {
 	const char* prefix = "out_";
 
 	*out = (char*)malloc(strlen(path) + strlen(prefix) + 1);
-	if (*out == NULL) THROW(MemoryError, "can't allocate for modified path");
+	if (!(*out)) return ERR_MEM;
 
 	char delimiter;
 #ifdef _WIN32
@@ -72,7 +69,7 @@ error_t add_prefix(const char* path, char** out) {
 		strcat(*out, lastSeparator + 1);
 	}
 
-	return NO_EXCEPTION;
+	return 0;
 }
 
 void cleanup(FILE* input, FILE* output, char* outputPath) {
@@ -82,13 +79,14 @@ void cleanup(FILE* input, FILE* output, char* outputPath) {
 }
 
 error_t main_(int argc, char** argv) {
-	error_t status = NO_EXCEPTION;
-
 	opt_t opts[] = {
-	    {"d", "removes digit characters from the input file", &task_remove_digits},
+	    {"d", "removes digit characters from the input file",
+	     &task_remove_digits},
 	    {"i", "appends the letter count to each line", &task_count_letters},
-	    {"s", "appends the special character count to each line", &task_count_special_characters},
-	    {"a", "encodes non-digit characters in hex ASCII", &task_encode_non_digits},
+	    {"s", "appends the special character count to each line",
+	     &task_count_special_characters},
+	    {"a", "encodes non-digit characters in hex ASCII",
+	     &task_encode_non_digits},
 	};
 	int nOpts = sizeof(opts) / sizeof(opt_t);
 
@@ -99,14 +97,13 @@ error_t main_(int argc, char** argv) {
 		    "Flags:\n",
 		    argv[0]);
 		print_opts(opts, nOpts);
-		return NO_EXCEPTION;
+		return 0;
 	}
 
 	opt_t opt;
-	if (FAILED((status = parse_opt(argv[1], opts, nOpts, &opt)))) {
-		fprintf(stderr, "Invalid arguments: %s.", status.message);
-		return NO_EXCEPTION;
-	}
+
+	error_t error = parse_opt(argv[1], opts, nOpts, &opt);
+	if (error) return error;
 
 	const char* inPath = argv[2];
 	char* outPath = NULL;
@@ -115,62 +112,54 @@ error_t main_(int argc, char** argv) {
 
 	if (input == NULL) {
 		fprintf(stderr, "Can't open the input file.\n");
-		return NO_EXCEPTION;
+		return 0;
 	}
 
 	if (opt.specify_output) {
 		if (argc != 4) {
 			cleanup(input, output, outPath);
 			fprintf(stderr, "Specify the output file.\n");
-			return NO_EXCEPTION;
+			return 0;
 		}
 
 		bool samePaths;
-		if (FAILED((status = paths_same(argv[2], argv[3], &samePaths)))) {
+		if (paths_same(argv[2], argv[3], &samePaths) || samePaths) {
 			cleanup(input, output, outPath);
-			fprintf(stderr, "Path is malformed.\n");
-			return NO_EXCEPTION;
-		}
-		if (samePaths) {
-			cleanup(input, output, outPath);
-			fprintf(stderr, "Output path must be different from the input path.\n");
-			return NO_EXCEPTION;
+			fprintf(stderr,
+			        "Path is malformed or is the same as the input path.\n");
+			return 0;
 		}
 
 		output = fopen(argv[3], "w");
 		if (output == NULL) {
 			cleanup(input, output, outPath);
 			fprintf(stderr, "Can't open the output file.\n");
-			return NO_EXCEPTION;
+			return 0;
 		}
 	} else {
-		if (FAILED((status = add_prefix(inPath, &outPath)))) {
+		if ((error = add_prefix(inPath, &outPath))) {
 			cleanup(input, output, outPath);
-			PASS(status);
+			return error;
 		}
 
 		output = fopen(outPath, "w");
 		if (output == NULL) {
 			cleanup(input, output, outPath);
 			fprintf(stderr, "Can't open the output file.\n");
-			return NO_EXCEPTION;
+			return 0;
 		}
 	}
 
-	status = opt.handler(input, output);
+	error = opt.handler(input, output);
 	cleanup(input, output, outPath);
 
-	if (FAILED(status)) {
-		PASS(status);
-	} else {
-		return NO_EXCEPTION;
-	}
+	return error;
 }
 
 int main(int argc, char** argv) {
 	error_t error = main_(argc, argv);
-	if (FAILED(error)) {
+	if (error) {
 		error_print(error);
-		return (int)error.code;
+		return error;
 	}
 }

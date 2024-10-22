@@ -7,7 +7,7 @@ int main(void) {
 
 	overfprintf(stdout, "%*d %Ro\n", 5, 10, 123);
 	overfprintf(stdout, "this is a test %Ro %n\n", 2024);
-	overfprintf(stdout, "Number is: %Zr\n", (unsigned int)10);
+	overfprintf(stdout, "Number is: %Zr\n", (unsigned int)3);
 	overfprintf(stdout, "Number is: %Cv\n", 1234, 16);
 	overfprintf(stdout, "Numbers: %to %TO %to %TO\n", "abcdef", 16, "123", 12, "0001", 2, "-25", 17);
 	overfprintf(stdout, "%mi\n%mu\n%md\n%mf\n", (int)10, (unsigned int)12, (double)2.2, (double)5.6);
