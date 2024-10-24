@@ -95,6 +95,12 @@ inline static long mth_rand(long min, long max) {
 	return rand() % (max - min) + min;  // NOLINT(*-msc50-cpp)
 }
 
+/** Returns a pseudo-random double value in [a; b]. */
+inline static double mth_rand_double(double min, double max) {
+	double scale = rand() / (double)RAND_MAX;  // NOLINT(*-msc50-cpp)
+	return min + (max - min) * scale;
+}
+
 /** Returns the result of signum(a), where a is a long number. */
 inline static int mth_sign(long a) {
 	if (a > 0)
@@ -106,4 +112,4 @@ inline static int mth_sign(long a) {
 }
 
 /** Returns the greatest common divisor of `a` and `b`. */
-unsigned long mth_gcd (unsigned long a, unsigned long b);
+unsigned long mth_gcd(unsigned long a, unsigned long b);
