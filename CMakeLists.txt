@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
 
-project(mai_labs_3_sem)
+project(mai_labs_3_sem LANGUAGES C)
 
 set(CMAKE_C_STANDARD "99")
 set(CMAKE_C_FLAGS "-Wall -pedantic")
