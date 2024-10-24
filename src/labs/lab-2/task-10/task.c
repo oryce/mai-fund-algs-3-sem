@@ -28,9 +28,19 @@ bool polynomial_shift(double eps, double a, double** output, int n, ...) {
 	 * */
 
 	// Use Pascal's triangle to compute C(n, k) faster.
-	int C[n + 1][n + 1];
+	int** C = (int**)calloc(n + 1, sizeof(int*));
+	if (C == NULL) return false;
 
 	for (int i = 0; i < n + 1; ++i) {
+		C[i] = (int*)calloc(n + 1, sizeof(int*));
+
+		if (C[i] == NULL) {
+			for (int j = 0; j < n + 1; ++j) free(C[j]);
+			free(C);
+
+			return false;
+		}
+
 		C[i][0] = 1;
 		for (int j = 1; j < n + 1; ++j) C[i][j] = 0;
 	}
@@ -42,9 +52,14 @@ bool polynomial_shift(double eps, double a, double** output, int n, ...) {
 	}
 
 	*output = (double*)calloc(n + 1, sizeof(double));
-	if (*output == NULL) return false;
+	if (*output == NULL) {
+		for (int i = 0; i < n + 1; ++i) free(C[i]);
+		free(C);
 
-	double f[n + 1];
+		return false;
+	}
+
+	double* f = (double*)calloc(n + 1, sizeof(double));
 
 	va_list args;
 	va_start(args, n);
@@ -60,6 +75,10 @@ bool polynomial_shift(double eps, double a, double** output, int n, ...) {
 			(*output)[i] += f[k] * C[k][i] * pow(a, k - i);
 		}
 	}
+
+	for (int i = 0; i < n + 1; ++i) free(C[i]);
+	free(C);
+	free(f);
 
 	return true;
 }
