@@ -294,12 +294,15 @@ int overfscanf_(source_t* src, const char* fmt, va_list args) {
 			}
 			// '%n' assigns the amount of characters read to the next pointer.
 			else if (*fmt == 'n') {
+				void* ptr = va_arg(args, void*);
+				if (!ptr) return cleanup_(&spec, assigned);
+
 				// NB: not adding all the others, it's ridiculous.
-				if (strcmp(string_to_c_str(&spec), "%n") == 0) {
-					*(va_arg(args, int*)) = (int)nRead;
-				} else if (strcmp(string_to_c_str(&spec), "%zn") == 0) {
-					*(va_arg(args, size_t*)) = (size_t)nRead;
-				}
+				if (strcmp(string_to_c_str(&spec), "%n") == 0)
+					*((int*)ptr) = (int)nRead;
+				else if (strcmp(string_to_c_str(&spec), "%zn") == 0)
+					*((size_t*)ptr) = nRead;
+
 				assigned_ = 0;  // Shouldn't increase the count.
 			}
 			// (1) Check for a character that ends the builtin (`scanf`) specifier.
