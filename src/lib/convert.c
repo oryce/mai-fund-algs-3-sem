@@ -146,9 +146,9 @@ error_t long_from_base(const char* n, size_t length, int base, long* out) {
 	int sign = *n == '-' ? -1 : 1;
 	const char* start = sign == -1 ? n + 1 : n;
 
-	if (*start == '\0') {
-		THROW(IllegalArgumentException, "input number may not be empty");
-	}
+//	if (*start == '\0') {
+//		THROW(IllegalArgumentException, "input number may not be empty");
+//	}
 
 	// Traverse from the back of the number and assemble the base-10 number.
 	for (char* ptr = (char*)(n + length - 1); ptr >= start; --ptr) {

@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "lib/collections/string.h"
 #include "lib/convert.h"
 
 #define SEOF (-1)
@@ -65,7 +66,7 @@ void source_rewind_(source_t* src, int ch) {
 	}
 }
 
-inline static int roman_value_(int ch) {
+int roman_value_(int ch) {
 	switch (ch) {
 		case 'I':
 			return 1;
@@ -89,20 +90,24 @@ inline static int roman_value_(int ch) {
 int roman_specifier_(source_t* src, va_list* args, size_t* nRead) {
 	// https://stackoverflow.com/a/45064346
 	int* out = va_arg(*args, int*);
+	if (!out) return 0;
+
 	int result = 0;
 
 	bool iv_ix = false;
 	bool xl_xc = false;
 	bool cd_cm = false;
 	int ch;
-	int ch0 = 0;
+	int ch0 = -1;
 
 	while ((ch = source_get_char_(src)) != SEOF) {
 		++(*nRead);
-
 		int value = roman_value_(ch);
+
 		if (value == -1) {
+			// If the next char is invalid and no chars were read.
 			if (ch0 == -1) return 0;
+
 			source_rewind_(src, ch);
 			break;
 		}
@@ -116,6 +121,7 @@ int roman_specifier_(source_t* src, va_list* args, size_t* nRead) {
 		ch0 = ch;
 	}
 
+	// If exited with an EOF and no chars were read.
 	if (ch0 == -1) return 0;
 
 	if (iv_ix) result -= 2;
@@ -135,17 +141,16 @@ const unsigned int FIB[] = {1,         2,         3,         5,          8,     
 
 int zeckendorf_specifier_(source_t* src, va_list* args, size_t* nRead) {
 	unsigned int* out = va_arg(*args, unsigned int*);
+	if (!out) return 0;
+
 	unsigned int result = 0;
 
+	size_t i;
 	int ch;
 	int ch0 = 0;
 
-	for (size_t i = 0; (ch = source_get_char_(src)) != SEOF; ++i, ++(*nRead)) {
+	for (i = 0; (ch = source_get_char_(src)) != SEOF; ++i, ++(*nRead)) {
 		if (ch != '1' && ch != '0') {
-			if (ch0 == '1') {
-				// Terminating condition. Remove the extra number added before.
-				result -= FIB[i - 1];
-			}
 			source_rewind_(src, ch);
 			break;
 		}
@@ -166,12 +171,22 @@ int zeckendorf_specifier_(source_t* src, va_list* args, size_t* nRead) {
 		ch0 = ch;
 	}
 
+	if (ch0 == 0) {
+		// No numbers were read.
+		return 0;
+	} else if (ch0 == '1') {
+		// When the for loop exits (either with an EOF or by an invalid char),
+		// we need to remove the trailing '1' which is an end of data marker.
+		result -= FIB[i - 1];
+	}
+
 	*out = result;
 	return 1;
 }
 
 bool valid_for_base_(int ch, int base, bool uppercase) {
 	if (base < 2 || base > 36) return false;
+	if (ch == '-') return true;
 
 	int ord = -1;
 	if (ch >= '0' && ch <= '9')
@@ -180,11 +195,13 @@ bool valid_for_base_(int ch, int base, bool uppercase) {
 		ord = ch - 'A' + 10;
 	else if (!uppercase && ch >= 'a' && ch <= 'z')
 		ord = ch - 'a' + 10;
+
 	return ord != -1 && ord < base;
 }
 
 int from_base_specifier_(source_t* src, va_list* args, bool uppercase, size_t* nRead) {
 	int* out = va_arg(*args, int*);
+	if (!out) return 0;
 	int base = va_arg(*args, int);
 
 	char buffer[65];
@@ -201,7 +218,7 @@ int from_base_specifier_(source_t* src, va_list* args, bool uppercase, size_t* n
 	buffer[length] = '\0';
 
 	long result;
-	if (FAILED(long_from_base(buffer, length, base, &result))) return 0;
+	if (*buffer == '\0' || FAILED(long_from_base(buffer, length, base, &result))) return 0;
 	if (result > INT32_MAX || result < INT32_MIN) return 0;
 
 	*out = (int)result;
@@ -248,41 +265,39 @@ bool is_builtin_specifier_(char ch) {
 	}
 }
 
+int cleanup_(string_t* spec, int assigned) {
+	string_destroy(spec);
+	return assigned;
+}
+
 int overfscanf_(source_t* src, const char* fmt, va_list args) {
 	if (src == NULL || fmt == NULL) return -1;
 
 	int assigned = 0;  // Amount of variables assigned.
 	size_t nRead = 0;  // Amount of chars read.
 
-	char spec[64];                // Current format specifier being read.
-	size_t length = 0;            // Length of the specifier.
-	bool suppressAssign = false;  // Optional assignment suppressor as per the `scanf` spec.
+	string_t spec = {.initialized = false};  // Current format specifier being read.
+	bool suppressAssign = false;             // Optional assignment suppressor as per the `scanf` spec.
 
 	while (*fmt != '\0') {
-		if (length && *fmt != '%') {  // Format specifier parsing.
-			                          // Ignore additional '%' (escape sequence).
-			const size_t maxLength = sizeof(spec) / sizeof(char) - 1;
-			// Provided specifier is too large.
-			if (length == maxLength - 1) return assigned;
-
-			spec[length++] = *fmt;
-			spec[length] = '\0';
-
+		if (string_created(&spec) && *fmt != '%') {  // Format specifier parsing.
+			                                         // Ignore additional '%' (escape sequence).
+			if (!string_append_char(&spec, *fmt)) return cleanup_(&spec, assigned);
 			int assigned_ = -1;  // "-1" -- no specifier handler executed.
 
 			// Try resolving a custom specifier. If it fails, call original `scanf`.
-			scanf_specifier_t customSpecifier = get_custom_specifier_(spec);
+			scanf_specifier_t customSpecifier = get_custom_specifier_(string_to_c_str(&spec));
 
 			if (customSpecifier) {
 				assigned_ = customSpecifier(src, &args, &nRead);
-				if (assigned_ == 0) return assigned;
+				if (assigned_ == 0) return cleanup_(&spec, assigned);
 			}
 			// '%n' assigns the amount of characters read to the next pointer.
 			else if (*fmt == 'n') {
 				// NB: not adding all the others, it's ridiculous.
-				if (strcmp(spec, "%n") == 0) {
+				if (strcmp(string_to_c_str(&spec), "%n") == 0) {
 					*(va_arg(args, int*)) = (int)nRead;
-				} else if (strcmp(spec, "%zn") == 0) {
+				} else if (strcmp(string_to_c_str(&spec), "%zn") == 0) {
 					*(va_arg(args, size_t*)) = (size_t)nRead;
 				}
 				assigned_ = 0;  // Shouldn't increase the count.
@@ -292,16 +307,19 @@ int overfscanf_(source_t* src, const char* fmt, va_list args) {
 			//     count if it's after a '^'.
 			else if (is_builtin_specifier_(*fmt) || (*fmt == ']' && *(fmt - 1) != '^')) {
 				// Add '%n' to count the chars `scanf` consumed. This is needed for our '%n'.
-				strlcat(spec, "%zn", sizeof(spec));
+				if (!string_append_c_str(&spec, "%zn")) return cleanup_(&spec, assigned);
 				ssize_t read = -1;
 
 				if (suppressAssign) {
-					assigned_ = source_scanf_(src, spec, &read);
+					assigned_ = source_scanf_(src, string_to_c_str(&spec), &read);
 					// If `read` wasn't changed, the matching failed, and we bail out.
-					if (read == -1) return assigned;
+					if (read == -1) return cleanup_(&spec, assigned);
 				} else {
-					assigned_ = source_scanf_(src, spec, va_arg(args, void*), &read);
-					if (assigned_ == 0) return assigned;
+					void* ptr = va_arg(args, void*);  // Don't allow NULLs to be passed
+					if (!ptr) return cleanup_(&spec, assigned);
+
+					assigned_ = source_scanf_(src, string_to_c_str(&spec), ptr, &read);
+					if (assigned_ == 0) return cleanup_(&spec, assigned);
 				}
 
 				if (src->type == SOURCE_STRING) {
@@ -314,10 +332,11 @@ int overfscanf_(source_t* src, const char* fmt, va_list args) {
 
 			if (assigned_ != -1) {
 				assigned += assigned_;
-				length = 0;
+				string_destroy(&spec);  // Reset specifier after parsing
 			}
-		} else if (!length && *fmt == '%') {  // Format specifier start
-			spec[length++] = *fmt;
+		} else if (!string_created(&spec) && *fmt == '%') {  // Format specifier start
+			spec = string_create();
+			if (!string_created(&spec) || !string_append_char(&spec, *fmt)) return cleanup_(&spec, assigned);
 			// `scanf` specs specifies an optional assignment suppressor (*). It's either
 			// directly after the '%', or after a quote (') after '%'. We don't check for
 			// the quote.
@@ -330,21 +349,26 @@ int overfscanf_(source_t* src, const char* fmt, va_list args) {
 				source_rewind_(src, ch);
 			} else {
 				// No full match with the pattern -- exit.
-				if (source_get_char_(src) != *fmt) return assigned;
+				if (source_get_char_(src) != *fmt) return cleanup_(&spec, assigned);
 				++nRead;
 			}
 			// If there are two consecutive '%%' (escape sequence), we end up here in an
 			// unfinished parsing state. Reset it.
-			length = 0;
+			if (string_created(&spec)) string_destroy(&spec);
 		}
 
 		++fmt;
 	}
 
+	// Shouldn't be needed, but just to be sure.
+	string_destroy(&spec);
+
 	return assigned;
 }
 
 int overfscanf(FILE* input, const char* fmt, ...) {
+	if (!input) return 0;
+
 	va_list args;
 	va_start(args, fmt);
 
@@ -356,6 +380,8 @@ int overfscanf(FILE* input, const char* fmt, ...) {
 }
 
 int oversscanf(char* input, const char* fmt, ...) {
+	if (!input || !fmt) return 0;
+
 	va_list args;
 	va_start(args, fmt);
 
