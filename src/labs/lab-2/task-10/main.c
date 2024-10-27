@@ -24,7 +24,8 @@ bool fuzz(void) {
 	size_t iterations = 1000;
 
 	while (iterations--) {
-		const double f[] = {rand_double(), rand_double(), rand_double(), rand_double(), rand_double()};
+		const double f[] = {rand_double(), rand_double(), rand_double(),
+		                    rand_double(), rand_double()};
 		const int degree = sizeof(f) / sizeof(f[0]) - 1;
 
 		const double a = rand_double();

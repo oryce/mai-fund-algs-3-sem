@@ -42,7 +42,6 @@ bool polynomial_shift(double eps, double a, double** output, int n, ...) {
 		}
 
 		C[i][0] = 1;
-		for (int j = 1; j < n + 1; ++j) C[i][j] = 0;
 	}
 
 	for (int i = 1; i < n + 1; ++i) {
