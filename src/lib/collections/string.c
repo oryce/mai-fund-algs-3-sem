@@ -18,17 +18,21 @@ bool string_enlarge(string_t* string, size_t size) {
 	                                 vector_i8_size(&string->buffer) + size);
 }
 
-string_t string_create(void) {
-	string_t string = {.buffer = vector_i8_create(), .initialized = false};
+bool string_create(string_t* string) {
+	if (!string) return false;
+
+	*string = (string_t){.buffer = vector_i8_create(), .initialized = false};
 
 	// Null-terminate the string by default. If the push succeeds, mark
 	// the string as available for use ("initialized"). This is to prevent
 	// non-null-terminated strings.
-	if (vector_i8_push_back(&string.buffer, '\0')) {
-		string.initialized = true;
+	if (vector_i8_push_back(&string->buffer, '\0')) {
+		string->initialized = true;
+		return true;
+	} else {
+		string_destroy(string);
+		return false;
 	}
-
-	return string;
 }
 
 void string_destroy(string_t* string) {

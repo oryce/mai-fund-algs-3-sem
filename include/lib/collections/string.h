@@ -10,7 +10,7 @@ typedef struct string {
 DEFINE_VECTOR(vector_str_t, string_t, str)
 
 /** Creates a new string. */
-string_t string_create(void);
+bool string_create(string_t* string);
 
 /** Destroys the string, freeing allocated memory. */
 void string_destroy(string_t* string);

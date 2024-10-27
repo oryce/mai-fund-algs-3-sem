@@ -132,12 +132,15 @@ int roman_specifier_(source_t* src, va_list* args, size_t* nRead) {
 	return 1;
 }
 
-const unsigned int FIB[] = {1,         2,         3,         5,          8,          13,        21,        34,
-                            55,        89,        144,       233,        377,        610,       987,       1597,
-                            2584,      4181,      6765,      10946,      17711,      28657,     46368,     75025,
-                            121393,    196418,    317811,    514229,     832040,     1346269,   2178309,   3524578,
-                            5702887,   9227465,   14930352,  24157817,   39088169,   63245986,  102334155, 165580141,
-                            267914296, 433494437, 701408733, 1134903170, 1836311903, 2971215073};
+const unsigned int FIB[] = {
+    1,         2,          3,          5,         8,         13,
+    21,        34,         55,         89,        144,       233,
+    377,       610,        987,        1597,      2584,      4181,
+    6765,      10946,      17711,      28657,     46368,     75025,
+    121393,    196418,     317811,     514229,    832040,    1346269,
+    2178309,   3524578,    5702887,    9227465,   14930352,  24157817,
+    39088169,  63245986,   102334155,  165580141, 267914296, 433494437,
+    701408733, 1134903170, 1836311903, 2971215073};
 
 int zeckendorf_specifier_(source_t* src, va_list* args, size_t* nRead) {
 	unsigned int* out = va_arg(*args, unsigned int*);
@@ -199,19 +202,22 @@ bool valid_for_base_(int ch, int base, bool uppercase) {
 	return ord != -1 && ord < base;
 }
 
-int from_base_specifier_(source_t* src, va_list* args, bool uppercase, size_t* nRead) {
+int from_base_specifier_(source_t* src, va_list* args, bool uppercase,
+                         size_t* nRead) {
 	int* out = va_arg(*args, int*);
-	if (!out) return 0;
 	int base = va_arg(*args, int);
+	if (!out) return 0;
 
 	char buffer[65];
 	size_t length = 0;
 
 	for (int ch; (ch = source_get_char_(src)) != SEOF; ++(*nRead)) {
-		if (!valid_for_base_(ch, base, uppercase) || length == sizeof(buffer) - 2) {
+		if (!valid_for_base_(ch, base, uppercase) ||
+		    length == sizeof(buffer) - 2) {
 			source_rewind_(src, ch);
 			break;
 		}
+
 		buffer[length++] = (char)ch;
 	}
 
@@ -225,11 +231,13 @@ int from_base_specifier_(source_t* src, va_list* args, bool uppercase, size_t* n
 	return 1;
 }
 
-int from_base_lowercase_specifier_(source_t* source, va_list* args, size_t* nRead) {
+int from_base_lowercase_specifier_(source_t* source, va_list* args,
+                                   size_t* nRead) {
 	return from_base_specifier_(source, args, false, nRead);
 }
 
-int from_base_uppercase_specifier_(source_t* source, va_list* args, size_t* nRead) {
+int from_base_uppercase_specifier_(source_t* source, va_list* args,
+                                   size_t* nRead) {
 	return from_base_specifier_(source, args, true, nRead);
 }
 
@@ -276,17 +284,23 @@ int overfscanf_(source_t* src, const char* fmt, va_list args) {
 	int assigned = 0;  // Amount of variables assigned.
 	size_t nRead = 0;  // Amount of chars read.
 
-	string_t spec = {.initialized = false};  // Current format specifier being read.
-	bool suppressAssign = false;             // Optional assignment suppressor as per the `scanf` spec.
+	// Current format specifier being read.
+	string_t spec = {.initialized = false};
+	// Optional assignment suppressor as per the `scanf` spec.
+	bool suppressAssign = false;
 
 	while (*fmt != '\0') {
-		if (string_created(&spec) && *fmt != '%') {  // Format specifier parsing.
-			                                         // Ignore additional '%' (escape sequence).
-			if (!string_append_char(&spec, *fmt)) return cleanup_(&spec, assigned);
+		// Format specifier start. Ignore additional '%' (escaping).
+		if (string_created(&spec) && *fmt != '%') {
+			if (!string_append_char(&spec, *fmt))
+				return cleanup_(&spec, assigned);
+
 			int assigned_ = -1;  // "-1" -- no specifier handler executed.
 
-			// Try resolving a custom specifier. If it fails, call original `scanf`.
-			scanf_specifier_t customSpecifier = get_custom_specifier_(string_to_c_str(&spec));
+			// Try resolving a custom specifier. If it fails, call original
+			// `scanf`.
+			scanf_specifier_t customSpecifier =
+			    get_custom_specifier_(string_to_c_str(&spec));
 
 			if (customSpecifier) {
 				assigned_ = customSpecifier(src, &args, &nRead);
@@ -303,25 +317,34 @@ int overfscanf_(source_t* src, const char* fmt, va_list args) {
 				else if (strcmp(string_to_c_str(&spec), "%zn") == 0)
 					*((size_t*)ptr) = nRead;
 
-				assigned_ = 0;  // Shouldn't increase the count.
+				// Shouldn't increase the count.
+				assigned_ = 0;
 			}
-			// (1) Check for a character that ends the builtin (`scanf`) specifier.
-			// (2) Check that the ']' closes the pattern. Per the manpage, it doesn't
-			//     count if it's after a '^'.
-			else if (is_builtin_specifier_(*fmt) || (*fmt == ']' && *(fmt - 1) != '^')) {
-				// Add '%n' to count the chars `scanf` consumed. This is needed for our '%n'.
-				if (!string_append_c_str(&spec, "%zn")) return cleanup_(&spec, assigned);
+			// (1) Check for a character that ends the builtin (`scanf`)
+			// specifier.
+			// (2) Check that the ']' closes the pattern. Per the manpage, it
+			// doesn't count if it's after a '^'.
+			else if (is_builtin_specifier_(*fmt) ||
+			         (*fmt == ']' && *(fmt - 1) != '^')) {
+				// Add '%n' to count the chars `scanf` consumed. This is needed
+				// for our '%n'.
+				if (!string_append_c_str(&spec, "%zn"))
+					return cleanup_(&spec, assigned);
 				ssize_t read = -1;
 
 				if (suppressAssign) {
-					assigned_ = source_scanf_(src, string_to_c_str(&spec), &read);
-					// If `read` wasn't changed, the matching failed, and we bail out.
+					assigned_ =
+					    source_scanf_(src, string_to_c_str(&spec), &read);
+					// If `read` wasn't changed, the matching failed, and we
+					// bail out.
 					if (read == -1) return cleanup_(&spec, assigned);
 				} else {
-					void* ptr = va_arg(args, void*);  // Don't allow NULLs to be passed
+					void* ptr = va_arg(args, void*);
+					// Don't allow NULLs to be passed
 					if (!ptr) return cleanup_(&spec, assigned);
 
-					assigned_ = source_scanf_(src, string_to_c_str(&spec), ptr, &read);
+					assigned_ =
+					    source_scanf_(src, string_to_c_str(&spec), ptr, &read);
 					if (assigned_ == 0) return cleanup_(&spec, assigned);
 				}
 
@@ -337,26 +360,35 @@ int overfscanf_(source_t* src, const char* fmt, va_list args) {
 				assigned += assigned_;
 				string_destroy(&spec);  // Reset specifier after parsing
 			}
-		} else if (!string_created(&spec) && *fmt == '%') {  // Format specifier start
-			spec = string_create();
-			if (!string_created(&spec) || !string_append_char(&spec, *fmt)) return cleanup_(&spec, assigned);
-			// `scanf` specs specifies an optional assignment suppressor (*). It's either
-			// directly after the '%', or after a quote (') after '%'. We don't check for
-			// the quote.
-			suppressAssign = *(fmt + 1) != '\0' && (*(fmt + 1) == '*' || *(fmt + 2) == '*');
-		} else {  // Other characters in the pattern
+		}
+		// Format specifier start
+		else if (!string_created(&spec) && *fmt == '%') {
+			if (!string_create(&spec) || !string_append_char(&spec, *fmt))
+				return cleanup_(&spec, assigned);
+
+			// `scanf` specs specifies an optional assignment suppressor (*).
+			// It's either directly after the '%', or after a quote (') after
+			// '%'. We don't check for the quote.
+			suppressAssign =
+			    *(fmt + 1) != '\0' && (*(fmt + 1) == '*' || *(fmt + 2) == '*');
+		}
+		// Other characters in the pattern
+		else {
 			int ch;
+
 			if (*fmt == ' ') {
 				// Skip an arbitrary amount of spaces (can be none).
 				while (isspace(ch = source_get_char_(src))) ++nRead;
 				source_rewind_(src, ch);
 			} else {
 				// No full match with the pattern -- exit.
-				if (source_get_char_(src) != *fmt) return cleanup_(&spec, assigned);
+				if (source_get_char_(src) != *fmt)
+					return cleanup_(&spec, assigned);
 				++nRead;
 			}
-			// If there are two consecutive '%%' (escape sequence), we end up here in an
-			// unfinished parsing state. Reset it.
+
+			// If there are two consecutive '%%' (escape sequence), we end up
+			// here in an unfinished parsing state. Reset it.
 			if (string_created(&spec)) string_destroy(&spec);
 		}
 

@@ -74,17 +74,10 @@ error_t task_rearrange_chars(const char* str, char** out) {
 	if (out == NULL) return ERR_INVVAL;
 
 	bool error = false;
-	string_t numbers = string_create();
-	string_t letters = string_create();
-	string_t other = string_create();
-	string_t result = string_create();
+	string_t numbers, letters, other, result;
 
-	error |= !string_created(&numbers);
-	error |= !string_created(&letters);
-	error |= !string_created(&other);
-	error |= !string_created(&result);
-	if (!error) {
-		rearrange_chars_cleanup_(4, numbers, letters, other, result);
+	if (!string_create(&numbers) || !string_create(&letters) ||
+	    !string_create(&other) || !string_create(&result)) {
 		return ERR_MEM;
 	}
 
@@ -129,12 +122,8 @@ error_t task_concat_randomly(const char** strings, size_t n, char** out) {
 		strings[j] = temp;
 	}
 
-	string_t result = string_create();
-
-	if (!string_created(&result)) {
-		string_destroy(&result);
-		return ERR_MEM;
-	}
+	string_t result;
+	if (!string_create(&result)) return ERR_MEM;
 
 	for (int i = 0; i != n; ++i) {
 		if (!string_append_c_str(&result, strings[i]) ||

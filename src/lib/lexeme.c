@@ -22,10 +22,10 @@ void lexeme_read_cleanup_(vector_str_t* lexemes, string_t* lexeme) {
 
 error_t lexeme_read(FILE* file, vector_str_t* out) {
 	vector_str_t lexemes = vector_str_create();
-	string_t lexeme = string_create();
+	string_t lexeme;
 
-	if (!string_created(&lexeme)) {
-		lexeme_read_cleanup_(&lexemes, &lexeme);
+	if (!string_create(&lexeme)) {
+		vector_str_destroy(&lexemes);
 		return ERR_MEM;
 	}
 
@@ -45,8 +45,7 @@ error_t lexeme_read(FILE* file, vector_str_t* out) {
 					return ERR_MEM;
 				}
 
-				lexeme = string_create();
-				if (!string_created(&lexeme)) {
+				if (!string_create(&lexeme)) {
 					lexeme_read_cleanup_(&lexemes, &lexeme);
 					return ERR_MEM;
 				}

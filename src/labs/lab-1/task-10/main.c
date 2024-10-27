@@ -19,11 +19,8 @@ error_t read_and_find_max(int base, long* out) {
 	bool anyEntered = false;
 	bool stopped = false;
 
-	string_t input = string_create();
-	if (!string_created(&input)) {
-		string_destroy(&input);
-		return ERR_MEM;
-	}
+	string_t input;
+	if (!string_create(&input)) return ERR_MEM;
 
 	int ch;
 	while ((ch = getchar()) != EOF) {
@@ -56,12 +53,7 @@ error_t read_and_find_max(int base, long* out) {
 
 			// Prepare to read the next number.
 			string_destroy(&input);
-			input = string_create();
-
-			if (!string_created(&input)) {
-				string_destroy(&input);
-				return ERR_MEM;
-			}
+			if (!string_create(&input)) return ERR_MEM;
 
 			continue;
 		}

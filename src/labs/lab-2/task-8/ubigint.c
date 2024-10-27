@@ -104,9 +104,7 @@ bool ubi_add_mut(ubigint_t* a, const ubigint_t* b) {
 
 bool ubi_to_string(ubigint_t* a, string_t* out) {
 	if (!a || !out) return false;
-
-	*out = string_create();
-	if (!string_created(out)) return false;
+	if (!string_create(out)) return false;
 
 	vector_u8_t* digits = &a->digits;
 
