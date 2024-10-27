@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "lib/error.h"
-#include "lib/paths.h"
+#include "lib/io.h"
 #include "tasks.h"
 
 typedef error_t (*opt_handler_t)(FILE* in, FILE* out);

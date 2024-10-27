@@ -4,8 +4,8 @@
 
 #include "lib/chars.h"
 #include "lib/convert.h"
+#include "lib/io.h"
 #include "lib/lexeme.h"
-#include "lib/paths.h"
 
 void task_merge_cleanup_(vector_str_t* lexemes1, vector_str_t* lexemes2) {
 	if (vector_str_size(lexemes1) != -1) lexeme_destroy(lexemes1);

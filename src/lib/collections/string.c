@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "lib/mth.h"
+#include "lib/utils.h"
 
 /** Comparison function for |vector_string_t|, which takes multiple void
  * pointers. */
@@ -118,13 +119,12 @@ char string_char_at(string_t* string, size_t index) {
 void string_reverse(string_t* string) {
 	if (!string->initialized) return;
 
-	size_t i = string_length(string) - 1;
-	size_t j = 0;
+	vector_i8_t* buffer = &string->buffer;
+	int8_t* l = vector_i8_get(buffer, 0);
+	int8_t* r = vector_i8_get(buffer, string_length(string) - 1);
 
-	while (i > j) {
-		vector_i8_swap(&string->buffer, i, j);
-		i--;
-		j++;
+	for (; l < r; ++l, --r) {
+		SWAP(l, r, int8_t);
 	}
 }
 

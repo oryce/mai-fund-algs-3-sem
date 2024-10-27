@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "lib/error.h"
-#include "lib/paths.h"
+#include "lib/io.h"
 #include "tasks.h"
 
 void cleanup(FILE* inputFile, FILE* outputFile) {

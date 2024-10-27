@@ -1,7 +1,7 @@
 #include "cmd.h"
 
 #include "lib/error.h"
-#include "lib/paths.h"
+#include "lib/io.h"
 #include "tasks.h"
 
 void cmd_merge_cleanup_(FILE* input1, FILE* input2, FILE* output) {

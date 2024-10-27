@@ -47,7 +47,7 @@ error_t mth_long_pow(long n, int power, long* out) {
 
 error_t mth_double_pow(double n, int power, double* out) {
 	if (!out) return ERR_INVVAL;
-	if (power < 0) return mth_double_pow(1. / n, power, out);
+	if (power < 0) return mth_double_pow(1. / n, -power, out);
 
 	*out = mth_double_bin_pow_(n, power);
 	if (isinf(*out)) return ERR_OVERFLOW;
