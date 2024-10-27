@@ -2,8 +2,31 @@
 
 #include "error.h"
 
+/**
+ * Parses a long from a string.
+ *
+ * @return `ERR_INVVAL`   if either pointer is NULL.
+ *         `ERR_OVERFLOW` if the number is too large.
+ *         `ERR_UNEXPTOK` if the number contains invalid chars.
+ */
 error_t str_to_long(char* in, long* out);
 
+/**
+ * Parses an unsigned long from a string.
+ *
+ * @return `ERR_INVVAL`   if either pointer is NULL.
+ *         `ERR_OVERFLOW` if the number is too large.
+ *         `ERR_UNEXPTOK` if the number contains invalid chars.
+ */
+error_t str_to_ulong(char* in, unsigned long* out);
+
+/**
+ * Parses a double from a string.
+ *
+ * @return `ERR_INVVAL`   if the number is invalid, has only `-` or `.`
+ *         `ERR_UNEXPTOK` if the number has an invalid char.
+ *         `ERR_OVERFLOW` if the number is too large.
+ */
 error_t str_to_double(char* in, double* out);
 
 /**

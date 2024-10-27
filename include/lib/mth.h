@@ -55,9 +55,11 @@ error_t mth_factorial(unsigned int n, unsigned long* out);
  * @param b upper bound
  * @param eps error margin
  *
- * @return `ERROR_INVALID_PARAMETER` if the function does not have a root in [a; b].
+ * @return `ERROR_INVALID_PARAMETER` if the function does not have a root in [a;
+ * b].
  */
-error_t mth_dichotomy(double f(double), double a, double b, double eps, double* out);
+error_t mth_dichotomy(double f(double), double a, double b, double eps,
+                      double* out);
 
 /**
  * Computes a prime sieve.
@@ -71,8 +73,8 @@ error_t mth_dichotomy(double f(double), double a, double b, double eps, double* 
 error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes);
 
 /**
- * Computes an approximate value of a definite integral of f(x) in bounds [a; b],
- * given an error margin of `eps`.
+ * Computes an approximate value of a definite integral of f(x) in bounds [a;
+ * b], given an error margin of `eps`.
  *
  * @param f integral function
  * @param a lower bound
@@ -82,7 +84,8 @@ error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes);
  *
  * @return error code; `0` if the computation succeeded
  */
-error_t mth_integral(double f(double x), double a, double b, double eps, double* out);
+error_t mth_integral(double f(double x), double a, double b, double eps,
+                     double* out);
 
 /** Finds a maximum value between multiple numbers. */
 inline static int mth_int_max(int a, int b) { return a > b ? a : b; }
@@ -112,7 +115,27 @@ inline static double mth_rand_double(double min, double max) {
 }
 
 /** Returns the result of signum(a), where a is a long number. */
-inline static int mth_sign(long a) {
+inline static int mth_sign_long(long a) {
+	if (a > 0)
+		return 1;
+	else if (a == 0)
+		return 0;
+	else
+		return -1;
+}
+
+/** Returns the result of signum(a), where a is a double number. */
+inline static int mth_sign_double(double a) {
+	if (a > 0)
+		return 1;
+	else if (a == 0)
+		return 0;
+	else
+		return -1;
+}
+
+/** Returns the result of signum(a), where a is a unsigned long number. */
+inline static int mth_sign_ulong(unsigned long a) {
 	if (a > 0)
 		return 1;
 	else if (a == 0)

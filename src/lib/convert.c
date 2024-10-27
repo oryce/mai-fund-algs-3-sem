@@ -2,21 +2,12 @@
 
 #include "lib/chars.h"
 #include "lib/jtckdint.h"
+#include "lib/utils.h"
 
-/**
- * Parses a long from a string.
- *
- * @return `ERR_OVERFLOW` if the number is too large.
- *         `ERR_UNEXPTOK` if the number contains invalid chars.
- */
 error_t str_to_long(char* in, long* out) {
-	int sign = 1;
+	if (!in || !out) return ERR_INVVAL;
 
-	if (*in == '-') {
-		sign = -1;
-		++in;
-	}
-
+	int sign = (*in == '-') ? (++in, -1) : 1;
 	long value = 0;
 
 	for (; *in != '\0'; ++in) {
@@ -32,50 +23,51 @@ error_t str_to_long(char* in, long* out) {
 	return 0;
 }
 
-/**
- * Parses a double from a string.
- *
- * @return `ERR_INVVAL`   if the number is invalid, has only `-` or `.`
- *         `ERR_UNEXPTOK` if the number has an invalid char.
- *         `ERR_OVERFLOW` if the number is too large.
- */
-error_t str_to_double(char* in, double* out) {
-	if ((*in == '.' || *in == '-') && *(in + 1) == '\0') {
-		return ERR_INVVAL;
-	}
+error_t str_to_ulong(char* in, unsigned long* out) {
+	if (!in || !out) return ERR_INVVAL;
 
-	int sign = 1;
-
-	if (*in == '-') {
-		sign = -1;
-		++in;
-	}
-
-	double integer = 0, frac = 0;
-	double fracDivisor = 0;
+	unsigned long value = 0;
 
 	for (; *in != '\0'; ++in) {
-		if (*in == '.' && !fracDivisor) {
-			fracDivisor = 1;
+		if (*in >= '0' && *in <= '9') {
+			if (ckd_mul(&value, value, 10)) return ERR_OVERFLOW;
+			if (ckd_add(&value, value, *in - '0')) return ERR_OVERFLOW;
+		} else {
+			return ERR_UNEXPTOK;
+		}
+	}
+
+	*out = value;
+	return 0;
+}
+
+error_t str_to_double(char* in, double* out) {
+	if (!in || !out) return ERR_INVVAL;
+	if ((*in == '.' || *in == '-') && *(in + 1) == '\0') return ERR_INVVAL;
+
+	int sign = (*in == '-') ? (++in, -1) : 1;
+	double integer = 0, fraction = 0;
+	double divisor = 0;
+
+	for (; *in != '\0'; ++in) {
+		if (*in == '.' && !divisor) {
+			divisor = 1;
 		} else if (*in >= '0' && *in <= '9') {
 			int digit = *in - '0';
 
-			if (fracDivisor) {
-				frac = frac * 10 + digit;
-				if (frac < 0) return ERR_OVERFLOW;
-				fracDivisor *= 10;
-				if (fracDivisor < 0) return ERR_OVERFLOW;
+			if (divisor) {
+				fraction = fraction * 10 + digit;
+				divisor *= 10;
 			} else {
 				integer = integer * 10 + digit;
-				if (integer < 0) return ERR_OVERFLOW;
 			}
 		} else {
 			return ERR_UNEXPTOK;
 		}
 	}
 
-	if (fracDivisor)
-		*out = sign * (integer + frac / fracDivisor);
+	if (divisor)
+		*out = sign * (integer + fraction / divisor);
 	else
 		*out = sign * integer;
 	return 0;
@@ -91,7 +83,7 @@ error_t str_to_double(char* in, double* out) {
  *                      or the buffer is too small to hold the result.
  */
 error_t long_to_base(long in, int base, char* out, int outSize) {
-	if (base > 36 || base < 2) return ERR_INVVAL;
+	if (!out || base > 36 || base < 2) return ERR_INVVAL;
 
 	bool negative = in < 0;
 	if (negative) in = -in;
@@ -122,16 +114,8 @@ error_t long_to_base(long in, int base, char* out, int outSize) {
 	out[cur] = '\0';
 
 	// Reverse the string in-place.
-	int i = 0;
-	int j = cur - 1;
-
-	while (i < j) {
-		char temp = out[i];
-		out[i] = out[j];
-		out[j] = temp;
-
-		i++;
-		j--;
+	for (int i = 0, j = cur - 1; i < j; ++i, --j) {
+		SWAP(out[i], out[j], char);
 	}
 
 	return 0;
@@ -148,7 +132,7 @@ error_t long_to_base(long in, int base, char* out, int outSize) {
  *         `ERR_OVERFLOW` if the number is too large.
  */
 error_t long_from_base(const char* n, size_t length, int base, long* out) {
-	if (n == NULL || out == NULL) return ERR_INVVAL;
+	if (!n || !out) return ERR_INVVAL;
 
 	long base10 = 0;
 	long multiplier = 1;

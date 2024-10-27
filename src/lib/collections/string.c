@@ -124,7 +124,7 @@ void string_reverse(string_t* string) {
 	int8_t* r = vector_i8_get(buffer, string_length(string) - 1);
 
 	for (; l < r; ++l, --r) {
-		SWAP(l, r, int8_t);
+		SWAP(*l, *r, int8_t);
 	}
 }
 
@@ -135,5 +135,5 @@ int string_compare(const string_t* str1, const string_t* str2) {
 	const char* buf2 = string_to_c_str((string_t*)str2);
 	if (buf1 == buf2) return 0;
 
-	return mth_sign(strcmp(buf1, buf2));
+	return mth_sign_long(strcmp(buf1, buf2));
 }
