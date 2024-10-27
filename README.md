@@ -37,3 +37,7 @@
 - [Задача 8](src/labs/lab-2/task-8)
 - [Задача 9](src/labs/lab-2/task-9)
 - [Задача 10](src/labs/lab-2/task-10)
+
+### Лаба III
+
+- [Задача 1](src/labs/lab-3/task-1)
