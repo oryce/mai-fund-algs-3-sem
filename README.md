@@ -41,3 +41,4 @@
 ### Лаба III
 
 - [Задача 1](src/labs/lab-3/task-1)
+- [Задача 2](src/labs/lab-3/task-2)
