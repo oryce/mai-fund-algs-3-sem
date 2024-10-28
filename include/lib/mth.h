@@ -134,15 +134,5 @@ inline static int mth_sign_double(double a) {
 		return -1;
 }
 
-/** Returns the result of signum(a), where a is a unsigned long number. */
-inline static int mth_sign_ulong(unsigned long a) {
-	if (a > 0)
-		return 1;
-	else if (a == 0)
-		return 0;
-	else
-		return -1;
-}
-
 /** Returns the greatest common divisor of `a` and `b`. */
 unsigned long mth_gcd(unsigned long a, unsigned long b);

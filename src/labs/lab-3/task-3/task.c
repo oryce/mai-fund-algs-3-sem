@@ -121,7 +121,7 @@ static int compare_employees_natural(const void* p1, const void* p2) {
 	order = string_compare(&a->first_name, &b->first_name);
 	if (order != 0) return order;
 
-	return mth_sign_ulong(a->id - b->id);
+	return mth_sign_long((long)a->id - (long)b->id);
 }
 
 static int compare_employees_reverse(const void* p1, const void* p2) {

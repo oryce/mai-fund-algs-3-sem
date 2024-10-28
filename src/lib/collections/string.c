@@ -5,7 +5,7 @@
 #include "lib/mth.h"
 #include "lib/utils.h"
 
-/** Comparison function for |vector_string_t|, which takes multiple void
+/** Comparison function for |vector_str_t|, which takes multiple void
  * pointers. */
 inline static int string_vector_compare(const void* p1, const void* p2) {
 	return string_compare((const string_t*)p1, (const string_t*)p2);
@@ -13,10 +13,10 @@ inline static int string_vector_compare(const void* p1, const void* p2) {
 
 IMPL_VECTOR(vector_str_t, string_t, str, {&string_vector_compare})
 
-bool string_enlarge(string_t* string, size_t size) {
-	if (!string->initialized) return false;
-	return vector_i8_ensure_capacity(&string->buffer,
-	                                 vector_i8_size(&string->buffer) + size);
+bool string_enlarge(string_t* s, size_t size) {
+	if (!s->initialized) return false;
+	return vector_i8_ensure_capacity(&s->buffer,
+	                                 vector_i8_size(&s->buffer) + size);
 }
 
 bool string_create(string_t* string) {
@@ -24,9 +24,7 @@ bool string_create(string_t* string) {
 
 	*string = (string_t){.buffer = vector_i8_create(), .initialized = false};
 
-	// Null-terminate the string by default. If the push succeeds, mark
-	// the string as available for use ("initialized"). This is to prevent
-	// non-null-terminated strings.
+	// Null-terminate the string by default.
 	if (vector_i8_push_back(&string->buffer, '\0')) {
 		string->initialized = true;
 		return true;
@@ -36,6 +34,8 @@ bool string_create(string_t* string) {
 	}
 }
 
+string_t string_create_empty(void) { return (string_t){.initialized = false}; }
+
 void string_destroy(string_t* string) {
 	vector_i8_destroy(&string->buffer);
 	string->initialized = false;
@@ -43,26 +43,24 @@ void string_destroy(string_t* string) {
 
 bool string_append_char(string_t* string, char c) {
 	if (!string->initialized) return false;
-	int8_t terminator;
 
-	bool success = true;
-	success &=
-	    vector_i8_pop_back(&string->buffer, &terminator) && terminator == '\0';
-	success &= vector_i8_push_back(&string->buffer, c);
-	success &= vector_i8_push_back(&string->buffer, '\0');
-	return success;
+	int8_t t;
+	return (vector_i8_pop_back(&string->buffer, &t) && t == '\0') &&
+	       vector_i8_push_back(&string->buffer, c) &&
+	       vector_i8_push_back(&string->buffer, '\0');
 }
 
-bool string_append_c_str(string_t* string, const char* c) {
-	if (!string->initialized || c == NULL) return false;
+bool string_append_c_str(string_t* string, const char* cStr) {
+	if (!string->initialized || !cStr) return false;
 
 	// 1) Remove null-terminator.
-	int8_t terminator;
-	if (!vector_i8_pop_back(&string->buffer, &terminator)) return false;
-	if (terminator != '\0') return false;
+	int8_t t;
+	if (!vector_i8_pop_back(&string->buffer, &t) || t != '\0') {
+		return false;
+	}
 
-	// 2) Copy characters from |c| to |string| (including the null-term.)
-	char* ptr = (char*)c;
+	// 2) Copy characters from |cStr| to |string| (including the null-term.)
+	char* ptr = (char*)cStr;
 
 	do {
 		if (!vector_i8_push_back(&string->buffer, *ptr)) {
@@ -78,41 +76,54 @@ bool string_append(string_t* string, string_t* other) {
 
 	// 1) Enlarge the string ahead of time.
 	// 2) Remove the null-terminator.
-	int8_t terminator;
-	if (!string_enlarge(string, string_length(other))) return false;
-	if (!vector_i8_pop_back(&string->buffer, &terminator)) return false;
-	if (terminator != '\0') return false;
+	int8_t t;
+	if (!string_enlarge(string, string_length(other)) ||
+	    !vector_i8_pop_back(&string->buffer, &t) || t != '\0')
+		return false;
 
 	// 3) Copy characters from |other| to |string|.
 	for (size_t i = 0; i != string_length(other); i++) {
 		char ch = string_char_at(other, i);
-		if (!vector_i8_push_back(&string->buffer, ch)) {
-			return false;
-		}
+		if (!vector_i8_push_back(&string->buffer, ch)) return false;
 	}
 
 	// 4) Add the null-terminator.
-	if (!vector_i8_push_back(&string->buffer, '\0')) {
-		return false;
-	}
+	if (!vector_i8_push_back(&string->buffer, '\0')) return false;
 
 	return true;
 }
 
-size_t string_length(string_t* string) {
-	if (!string->initialized) return 0;
-	return vector_i8_size(&string->buffer) - 1;  // Account for the null-term.
+bool string_copy(string_t* src, string_t* dst) {
+	// Initialize |dst| if it's not initialized.
+	if (!string_created(dst)) {
+		if (!string_create(dst)) return false;
+	}
+
+	// Resize the dest buffer to fit the source string.
+	if (!vector_i8_ensure_capacity(&dst->buffer, vector_i8_size(&src->buffer)))
+		return false;
+
+	// Copy contents of |dst| into |src|.
+	memcpy((char*)vector_i8_to_array(&dst->buffer),
+	       (char*)vector_i8_to_array(&src->buffer),
+	       vector_i8_size(&src->buffer));
+
+	return true;
 }
 
-const char* string_to_c_str(string_t* string) {
-	if (!string->initialized) return NULL;
-	return (const char*)vector_i8_to_array(&string->buffer);
+size_t string_length(string_t* s) {
+	// Account for the null-term.
+	return s->initialized ? vector_i8_size(&s->buffer) - 1 : 0;
 }
 
-char string_char_at(string_t* string, size_t index) {
-	if (!string->initialized) return INT8_MAX;
+const char* string_to_c_str(string_t* s) {
+	return s->initialized ? (const char*)vector_i8_to_array(&s->buffer) : NULL;
+}
 
-	char* ch = (char*)vector_i8_get(&string->buffer, index);
+char string_char_at(string_t* s, size_t index) {
+	if (!s->initialized) return INT8_MAX;
+
+	char* ch = (char*)vector_i8_get(&s->buffer, index);
 	return (char)(ch == NULL ? INT8_MAX : *ch);
 }
 
@@ -130,6 +141,11 @@ void string_reverse(string_t* string) {
 
 int string_compare(const string_t* str1, const string_t* str2) {
 	if (!str1 || !str2 || str1 == str2) return 0;
+
+	int order;
+	order = mth_sign_long((long)string_length((string_t*)str1) -
+	                      (long)string_length((string_t*)str2));
+	if (order) return order;
 
 	const char* buf1 = string_to_c_str((string_t*)str1);
 	const char* buf2 = string_to_c_str((string_t*)str2);

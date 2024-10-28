@@ -12,65 +12,78 @@ DEFINE_VECTOR(vector_str_t, string_t, str)
 /** Creates a new string. */
 bool string_create(string_t* string);
 
+/** Creates an uninitialized string. */
+string_t string_create_empty(void);
+
 /** Destroys the string, freeing allocated memory. */
 void string_destroy(string_t* string);
 
-/** Returns whether the string was initialized successfully. */
+/** Returns whether the string was initialized
+ * (null-terminated, can be used safely). */
 inline static bool string_created(string_t* string) {
 	return string->initialized;
 }
 
 /**
- * Appends a character to the input string.
+ * Appends a character to the |input| string.
  *
  * @param string input string
- * @param c character
- * @return |true| if the append was successful, |false| otherwise.
+ * @param c      character
  */
 bool string_append_char(string_t* string, char c);
 
 /**
- * Appends a null-terminated string to the input string.
+ * Appends a null-terminated string to the |input| string.
  *
  * @param string input string
- * @param const_str null-terminated string
- * @return |true| if the append was successful, |false| otherwise.
+ * @param cStr   null-terminated string
  */
-bool string_append_c_str(string_t* string, const char* const_str);
+bool string_append_c_str(string_t* string, const char* cStr);
 
 /**
- * Appends another |string_t| to the input string.
+ * Appends |other| string to the |input| string.
  *
  * @param string input string
- * @param other another string
- * @return |true| if the append was successful, |false| otherwise.
+ * @param other  another string
  */
 bool string_append(string_t* string, string_t* other);
 
 /**
+ * Copies the |src| to |dst|, overwriting the contents.
+ *
+ * If the |dst| src wasn't created prior to calling |string_copy|,
+ * it's initialized with an empty src.
+ *
+ * @param src source src
+ * @param dst dest src
+ */
+bool string_copy(string_t* src, string_t* dst);
+
+/**
  * Returns the length of the string.
  *
- * @param string input string
+ * @param s input string
  * @return length of the string
  */
-size_t string_length(string_t* string);
+size_t string_length(string_t* s);
 
 /**
  * Returns a pointer to the string buffer.
  *
- * @param string input string
+ * @param s input string
  * @return string buffer
  */
-const char* string_to_c_str(string_t* string);
+const char* string_to_c_str(string_t* s);
 
 /**
- * Returns a character in |string| at position |index|.
+ * Returns a character in |s| at position |index|.
  *
- * @param string input string
+ * @param s     input string
  * @param index character index
- * @return character at position |index|; INT8_MAX if the index is invalid.
+ * @return character at position |index|;
+ *         INT8_MAX if the index is invalid.
  */
-char string_char_at(string_t* string, size_t index);
+char string_char_at(string_t* s, size_t index);
 
 /**
  * Reverses the string in-place.
@@ -80,7 +93,7 @@ char string_char_at(string_t* string, size_t index);
 void string_reverse(string_t* string);
 
 /**
- * Compares multiple strings.
+ * Compares two strings.
  *
  * @param str1 first string
  * @param str2 second string
