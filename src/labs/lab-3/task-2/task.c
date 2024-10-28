@@ -3,68 +3,90 @@
 #include <float.h>
 #include <math.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
-IMPL_VECTOR(vector_vec_t, vector_t, vec, {NULL})
+typedef struct norm_data {
+	norm_t func;
+	void* param;
+} norm_data_t;
 
-static error_t cleanup(error_t error, vector_vec_t* res, vector_vec_t* vecs) {
-	vector_vec_destroy(res);
-	vector_vec_destroy(vecs);
+static error_t longest_vecs0(vector_t* inVecs, unsigned nVecs, unsigned n,
+                             norm_t norm, const void* nParam,
+                             vector_t* outVectors, size_t* outLength) {
+	double maxNorm = 0;       // Max norm encountered.
+	const double eps = 1e-6;  // Error margin for vectors with the same norm.
 
-	return error;
-}
-
-error_t longest_vecs(vector_vec_t* res, norm_t norm, const void* nParam,
-                    unsigned n, unsigned nVecs, ...) {
-	if (!res || !norm || !nParam || !n || !nVecs) return ERR_INVVAL;
-
-	*res = vector_vec_create();
-
-	// Stores all the vecs passed with their norms.
-	vector_vec_t vecs = vector_vec_create();
-	// Max norm encountered.
-	double maxNorm = 0;
-	// Error margin for vectors with the same norm.
-	const double eps = 1e-6;
-
-	va_list args;
-	va_start(args, nVecs);
-
-	while (nVecs--) {
-		vector_t vec = va_arg(args, vector_t);
+	for (size_t i = 0; i != nVecs; ++i) {
+		vector_t* vec = &inVecs[i];
 		double norm_;
 
-		error_t error = norm(&norm_, &vec, n, nParam);
+		error_t error = norm(&norm_, vec, n, nParam);
 		if (!error) {
 			if (isinf(norm_)) error = ERR_OVERFLOW;
 			if (isnan(norm_)) error = ERR_UNDERFLOW;
 		}
-		if (error) {
-			va_end(args);
-			return cleanup(error, res, &vecs);
-		}
+		if (error) return error;
 
-		vec.norm = norm_;
-		if (!vector_vec_push_back(&vecs, vec)) {
-			va_end(args);
-			return cleanup(ERR_MEM, res, &vecs);
-		}
-
+		vec->norm = norm_;
 		maxNorm = fmax(maxNorm, norm_);
+	}
+
+	for (size_t i = 0; i != nVecs; ++i) {
+		vector_t vec = inVecs[i];
+
+		if (fabs(vec.norm - maxNorm) < eps) {
+			outVectors[*outLength] = vec;
+			*outLength += 1;
+		}
+	}
+
+	return 0;
+}
+
+static error_t cleanup(error_t error, vector_t* vecs, norm_data_t* norms) {
+	free(vecs);
+	free(norms);
+
+	return error;
+}
+
+error_t longest_vecs(vector_t** outVecs, size_t* outLens, unsigned n,
+                     unsigned nNorms, unsigned nVecs, ...) {
+	if (!outVecs || !outLens) return ERR_INVVAL;
+
+	vector_t* vecs = NULL;
+	norm_data_t* norms = NULL;
+
+	vecs = (vector_t*)calloc(nVecs, sizeof(vector_t));
+	if (!vecs) return cleanup(ERR_MEM, vecs, norms);
+	norms = (norm_data_t*)calloc(nNorms, sizeof(norm_data_t));
+	if (!norms) return cleanup(ERR_MEM, vecs, norms);
+
+	va_list args;
+	va_start(args, nVecs);
+
+	for (size_t i = 0; i != nNorms; ++i) {
+		norms[i] = (norm_data_t){.func = va_arg(args, norm_t),
+		                         .param = va_arg(args, void*)};
+	}
+
+	for (size_t i = 0; i != nVecs; ++i) {
+		vecs[i] = va_arg(args, vector_t);
 	}
 
 	va_end(args);
 
-	for (size_t i = 0; i != vector_vec_size(&vecs); ++i) {
-		vector_t* vec = vector_vec_get(&vecs, i);
+	for (size_t i = 0; i != nNorms; ++i) {
+		outVecs[i] = calloc(nVecs, sizeof(vector_t));
+		outLens[i] = 0;
+		if (!outVecs[i]) return cleanup(ERR_MEM, vecs, norms);
 
-		if (fabs(vec->norm - maxNorm) < eps) {
-			if (!vector_vec_push_back(res, *vec))
-				return cleanup(ERR_MEM, res, &vecs);
-		}
+		error_t error = longest_vecs0(vecs, nVecs, n, norms[i].func,
+		                              norms[i].param, outVecs[i], &outLens[i]);
+		if (error) return cleanup(error, vecs, norms);
 	}
 
-	vector_vec_destroy(&vecs);
-	return 0;
+	return cleanup(0, vecs, norms);
 }
 
 error_t norm_1(double* res, const vector_t* vec, unsigned n,
