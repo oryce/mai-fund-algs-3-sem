@@ -2,28 +2,32 @@
 
 #include <stdlib.h>
 
+#include "lib/utils.h"
+
 const char* DIGITS = "0123456789abcdefghijklmnopqrstuv";
 
-static void increment(unsigned long* n) {
+unsigned long increment(unsigned long n) {
 	unsigned long mask = 1;
 
-	while (*n & mask) {
-		*n &= ~mask;
+	while (n & mask) {
+		n &= ~mask;
 		mask <<= 1;
 	}
 
-	*n |= mask;
+	n |= mask;
+	return n;
 }
 
-static void decrement(unsigned long* n) {
+unsigned long decrement(unsigned long n) {
 	unsigned long mask = 1;
 
-	while (!(*n & mask)) {
-		*n |= mask;
+	while (!(n & mask)) {
+		n |= mask;
 		mask <<= 1;
 	}
 
-	*n &= ~mask;
+	n &= ~mask;
+	return n;
 }
 
 char* convert(long n0, int r) {
@@ -43,14 +47,14 @@ char* convert(long n0, int r) {
 	if (n0 < 0) {
 		// Convert from two's complement.
 		n = ~n;
-		increment(&n);
+		n = increment(n);
 	}
 
 	while (n) {
 		unsigned d = n & ~(ones << r);
 
 		result[idx] = DIGITS[d];
-		increment(&idx);
+		idx = increment(idx);
 
 		n >>= r;
 	}
@@ -61,15 +65,14 @@ char* convert(long n0, int r) {
 	size_t left = 0;
 	size_t right = idx;
 
-	if (n0 > 0) decrement(&right);
+	if (n0 > 0) {
+		right = decrement(right);
+	}
 
 	while (left < right) {
-		char temp = result[left];
-		result[left] = result[right];
-		result[right] = temp;
-
-		increment(&left);
-		decrement(&right);
+		SWAP(result[left], result[right], char);
+		left = increment(left);
+		right = decrement(right);
 	}
 
 	return result;

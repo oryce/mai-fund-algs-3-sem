@@ -4,7 +4,7 @@
 
 #include "task.h"
 
-static void print_base(long n, int r) {
+void print_base(long n, int r) {
 	char* result = convert(n, r);
 
 	if (result) printf("%s\n", result);
