@@ -12,8 +12,8 @@ DEFINE_VECTOR(vector_str_t, string_t, str)
 /** Creates a new string. */
 bool string_create(string_t* string);
 
-/** Creates an uninitialized string. */
-string_t string_create_empty(void);
+/** Creates a new string from a null-terminated string. */
+bool string_from_c_str(string_t* string, const char* cStr);
 
 /** Destroys the string, freeing allocated memory. */
 void string_destroy(string_t* string);

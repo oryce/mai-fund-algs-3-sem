@@ -8,16 +8,19 @@ extern const char* kCharsSepCrlf;
 extern const char* kCharsSepNone;
 
 /** Returns whether `ch` is a digit character. */
-inline static bool chars_is_digit(char ch) { return ch >= '0' && ch <= '9'; }
+bool chars_is_digit(char ch);
 
 /** Returns whether `ch` is a lower-case or upper-case ASCII letter. */
-inline static bool chars_is_alpha(char ch) { return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'); }
+bool chars_is_alpha(char ch);
+
+/** Returns whether `ch` is a whitespace character. */
+bool chars_is_space(char ch);
 
 /** Converts upper-case ASCII letters to lower-case. */
-inline static char chars_lower(char ch) { return (char)(ch >= 'A' && ch <= 'Z' ? ch + 32 : ch); }
+char chars_lower(char ch);
 
 /** Converts a lower-case ASCII letter to upper-case. */
-inline static char chars_upper(char ch) { return (char)(ch >= 'a' && ch <= 'z' ? ch - 32 : ch); }
+char chars_upper(char ch);
 
 /**
  * Checks if a string at |ptr| is a line separator.

@@ -34,7 +34,9 @@ bool string_create(string_t* string) {
 	}
 }
 
-string_t string_create_empty(void) { return (string_t){.initialized = false}; }
+bool string_from_c_str(string_t* string, const char* cStr) {
+	return string_create(string) && string_append_c_str(string, cStr);
+}
 
 void string_destroy(string_t* string) {
 	vector_i8_destroy(&string->buffer);

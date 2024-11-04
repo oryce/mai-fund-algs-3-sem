@@ -5,6 +5,7 @@
 
 #include "lib/chars.h"
 #include "lib/convert.h"
+#include "string_ex.h"
 
 static int compare_mail(const void* p1, const void* p2) {
 	if (!p1 || !p2 || p1 == p2) return 0;
