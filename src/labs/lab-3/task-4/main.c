@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "prompt.h"
+#include "string_ex.h"
 #include "task.h"
 
 static bool cmd_insert_mail(post_t* post) {
@@ -134,7 +135,68 @@ static void command_loop(post_t* post) {
 	free(line);
 }
 
+static bool test_strings_fail(string_t* a, string_t* b, string_t* c,
+                              string_t* d) {
+	string_destroy(a);
+	string_destroy(b);
+	string_destroy(c);
+	string_destroy(d);
+	return false;
+}
+
+bool test_strings(void) {
+	string_t a = string_create_empty();
+	string_t b = string_create_empty();
+	string_t c = string_create_empty();
+	string_t d = string_create_empty();
+
+	if (!string_from_c_str(&a, "AAAAAAAA")) {
+		return test_strings_fail(&a, &b, &c, &d);
+	}
+	if (!string_from_c_str(&b, "AAAAAAAB")) {
+		return test_strings_fail(&a, &b, &c, &d);
+	}
+	if (!string_copy(&a, &c)) {
+		return test_strings_fail(&a, &b, &c, &d);
+	}
+	if (!string_from_c_str(&d, "AAAAAAA")) {
+		return test_strings_fail(&a, &b, &c, &d);
+	}
+
+	printf("string_compare(a, b) = %d\n", string_compare(&a, &b));
+	printf("string_compare(b, a) = %d\n", string_compare(&b, &a));
+	printf("string_compare(a, c) = %d\n", string_compare(&a, &c));
+	printf("string_compare(a, d) = %d\n", string_compare(&a, &d));
+	printf("string_compare(d, a) = %d\n", string_compare(&d, &a));
+
+	if (!string_append(&a, &b)) {
+		return test_strings_fail(&a, &b, &c, &d);
+	}
+
+	printf("string_append(a, b): %s\n", string_to_c_str(&a));
+
+	string_t* dup = string_dup(&a);
+
+	if (!dup) {
+		free(dup);
+		return test_strings_fail(&a, &b, &c, &d);
+	}
+
+	printf("string_dup(a) = %s\n", string_to_c_str(dup));
+
+	free(dup);
+	string_destroy(&a);
+	string_destroy(&b);
+	string_destroy(&c);
+	string_destroy(&d);
+
+	return true;
+}
+
 int main(void) {
+//	test_strings();
+//	exit(0);
+
 	printf(
 	    "Welcome to the Auswitz post office. Arbeit Macht Frei!\n"
 	    "Enter the post office's address:\n");
