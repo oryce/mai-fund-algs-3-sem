@@ -91,7 +91,7 @@ static bool read_datetime_condition(char* line, void* output) {
 	parsed_dt_t* outDt = (parsed_dt_t*)output;
 
 	if (!datetime_parse(line, &outDt->datetime)) {
-		return false;
+		return true;
 	}
 	// if this fails, we're fucked, so we end the loop and check for this
 	// state later.
@@ -99,7 +99,7 @@ static bool read_datetime_condition(char* line, void* output) {
 		string_destroy(&outDt->source);
 	}
 
-	return true;
+	return false;
 }
 
 bool prompt_datetime(parsed_dt_t* output) {
