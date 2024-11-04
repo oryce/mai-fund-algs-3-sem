@@ -108,6 +108,7 @@ bool string_copy(string_t* src, string_t* dst) {
 	       (char*)vector_i8_to_array(&src->buffer),
 	       vector_i8_size(&src->buffer));
 
+	dst->buffer.size = src->buffer.size;
 	return true;
 }
 
