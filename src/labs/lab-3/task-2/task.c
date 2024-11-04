@@ -13,6 +13,8 @@ typedef struct norm_data {
 static error_t longest_vecs0(vector_t* inVecs, unsigned nVecs, unsigned n,
                              norm_t norm, const void* nParam,
                              vector_t* outVectors, size_t* outLength) {
+	if (!norm || !outVectors || !outLength) return ERR_INVVAL;
+
 	double maxNorm = 0;       // Max norm encountered.
 	const double eps = 1e-6;  // Error margin for vectors with the same norm.
 
@@ -52,7 +54,7 @@ static error_t cleanup(error_t error, vector_t* vecs, norm_data_t* norms) {
 
 error_t longest_vecs(vector_t** outVecs, size_t* outLens, unsigned n,
                      unsigned nNorms, unsigned nVecs, ...) {
-	if (!outVecs || !outLens) return ERR_INVVAL;
+	if (!outVecs || !outLens || !n || !nNorms || !nVecs) return ERR_INVVAL;
 
 	vector_t* vecs = NULL;
 	norm_data_t* norms = NULL;
@@ -102,6 +104,8 @@ error_t norm_1(double* res, const vector_t* vec, unsigned n,
 
 error_t norm_2(double* res, const vector_t* vec, unsigned n,
                const void* param) {
+	if (!param) return ERR_INVVAL;
+
 	double p = *(const double*)param;
 	if (p < 1) return ERR_INVVAL;
 
@@ -126,6 +130,7 @@ static double dot_product(unsigned n, const double* a, const double* b) {
 
 error_t norm_3(double* res, const vector_t* vec, unsigned n,
                const void* param) {
+	if (!param) return ERR_INVVAL;
 	const double** A = (const double**)param;
 
 	double* mul = (double*)calloc(n, sizeof(double));
