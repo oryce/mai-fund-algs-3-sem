@@ -5,12 +5,16 @@
 #define INVALID_COMMAND "Unknown or malformed command. Type 'h' for help\n"
 
 void print_student(student_t* student) {
+	if (!student) return;
+
 	printf("%lu %s %s %s\n", student->id, string_to_c_str(&student->first_name),
 	       string_to_c_str(&student->last_name),
 	       string_to_c_str(&student->group));
 }
 
 void cmd_find(vector_st_t* students, char* inType, char* inParam) {
+	if (!students || !inType || !inParam) return;
+
 	student_filter_t func;
 	const void* param;
 
@@ -56,6 +60,8 @@ void cmd_find(vector_st_t* students, char* inType, char* inParam) {
 }
 
 void cmd_sort(vector_st_t* students, char* inType) {
+	if (!students || !inType) return;
+
 	student_comp_t func;
 
 	if (strcmp(inType, "id") == 0) {
@@ -76,6 +82,8 @@ void cmd_sort(vector_st_t* students, char* inType) {
 }
 
 void cmd_id_trace(vector_st_t* students, char* inId, FILE* traceFile) {
+	if (!students || !inId) return;
+
 	unsigned long id;
 
 	if (str_to_ulong(inId, &id)) {
@@ -105,6 +113,8 @@ void cmd_id_trace(vector_st_t* students, char* inId, FILE* traceFile) {
 }
 
 void cmd_above_average(vector_st_t* students, FILE* traceFile) {
+	if (!students) return;
+
 	double avg = student_avg_grade_all(students);
 
 	student_t* st;
@@ -123,6 +133,8 @@ void cmd_above_average(vector_st_t* students, FILE* traceFile) {
 }
 
 void cmd_loop(vector_st_t* students, FILE* traceFile) {
+	if (!students) return;
+
 	printf("Input a command ('h' for help).\n");
 
 	char* command = NULL;
@@ -208,7 +220,7 @@ int main_cleanup(int status, FILE* studentsFile, FILE* traceFile,
                  vector_st_t* students) {
 	fclose(studentsFile);
 	fclose(traceFile);
-	student_destroy_all(students);
+	if (students) student_destroy_all(students);
 
 	return status;
 }
