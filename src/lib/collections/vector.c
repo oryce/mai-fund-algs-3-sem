@@ -4,19 +4,19 @@
 
 const size_t VECTOR_MIN_CAPACITY = 4;
 
-#define COMPARATOR(TYPE)                                            \
-	inline static int comp_##TYPE(const void* p1, const void* p2) { \
-		if (!p1 || !p2 || p1 == p2) return 0;                       \
-                                                                    \
-		TYPE t1 = *(TYPE*)p1;                                       \
-		TYPE t2 = *(TYPE*)p2;                                       \
-                                                                    \
-		if (t1 < t2)                                                \
-			return -1;                                              \
-		else if (t1 > t2)                                           \
-			return 1;                                               \
-		else                                                        \
-			return 0;                                               \
+#define COMPARATOR(TYPE)                              \
+	int comp_##TYPE(const void* p1, const void* p2) { \
+		if (!p1 || !p2 || p1 == p2) return 0;         \
+                                                      \
+		TYPE t1 = *(TYPE*)p1;                         \
+		TYPE t2 = *(TYPE*)p2;                         \
+                                                      \
+		if (t1 < t2)                                  \
+			return -1;                                \
+		else if (t1 > t2)                             \
+			return 1;                                 \
+		else                                          \
+			return 0;                                 \
 	}
 
 COMPARATOR(int64_t)

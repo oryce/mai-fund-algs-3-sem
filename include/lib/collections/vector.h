@@ -34,7 +34,7 @@ struct vector_utils {
                                                                       \
 	bool vector_##TYPE##_insert(VECTOR_T*, size_t idx, TYPE_T value); \
                                                                       \
-	TYPE_T* vector_##TYPE##_get(VECTOR_T*, size_t i);                 \
+	TYPE_T* vector_##TYPE##_get(const VECTOR_T*, size_t i);           \
                                                                       \
 	bool vector_##TYPE##_remove(VECTOR_T*, size_t i, TYPE_T* out);    \
                                                                       \
@@ -42,13 +42,13 @@ struct vector_utils {
                                                                       \
 	bool vector_##TYPE##_clear(VECTOR_T*);                            \
                                                                       \
-	size_t vector_##TYPE##_index_of(VECTOR_T*, TYPE_T value);         \
+	size_t vector_##TYPE##_index_of(const VECTOR_T*, TYPE_T value);   \
                                                                       \
-	size_t vector_##TYPE##_size(VECTOR_T*);                           \
+	size_t vector_##TYPE##_size(const VECTOR_T*);                     \
                                                                       \
-	bool vector_##TYPE##_is_empty(VECTOR_T*);                         \
+	bool vector_##TYPE##_is_empty(const VECTOR_T*);                   \
                                                                       \
-	const TYPE_T* vector_##TYPE##_to_array(VECTOR_T*);                \
+	const TYPE_T* vector_##TYPE##_to_array(const VECTOR_T*);          \
                                                                       \
 	bool vector_##TYPE##_sort(VECTOR_T*);
 
@@ -163,7 +163,7 @@ struct vector_utils {
 		return true;                                                           \
 	}                                                                          \
                                                                                \
-	TYPE_T* vector_##TYPE##_get(VECTOR_T* v, size_t i) {                       \
+	TYPE_T* vector_##TYPE##_get(const VECTOR_T* v, size_t i) {                 \
 		if (!v || i >= v->size) return NULL;                                   \
 		return &v->buffer[i];                                                  \
 	}                                                                          \
@@ -194,7 +194,7 @@ struct vector_utils {
 		return true;                                                           \
 	}                                                                          \
                                                                                \
-	size_t vector_##TYPE##_index_of(VECTOR_T* v, TYPE_T value) {               \
+	size_t vector_##TYPE##_index_of(const VECTOR_T* v, TYPE_T value) {         \
 		if (!v || v->utils.comp == NULL) return SIZE_MAX;                      \
                                                                                \
 		for (size_t i = 0; i != v->size; i++) {                                \
@@ -205,13 +205,15 @@ struct vector_utils {
 		return SIZE_MAX;                                                       \
 	}                                                                          \
                                                                                \
-	size_t vector_##TYPE##_size(vector_##TYPE##_t* v) { return v->size; }      \
+	size_t vector_##TYPE##_size(const vector_##TYPE##_t* v) {                  \
+		return v->size;                                                        \
+	}                                                                          \
                                                                                \
-	bool vector_##TYPE##_is_empty(vector_##TYPE##_t* v) {                      \
+	bool vector_##TYPE##_is_empty(const vector_##TYPE##_t* v) {                \
 		return v->size != 0;                                                   \
 	}                                                                          \
                                                                                \
-	const TYPE_T* vector_##TYPE##_to_array(vector_##TYPE##_t* v) {             \
+	const TYPE_T* vector_##TYPE##_to_array(const vector_##TYPE##_t* v) {       \
 		return (const TYPE_T*)v->buffer;                                       \
 	}                                                                          \
                                                                                \
