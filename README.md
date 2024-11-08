@@ -45,5 +45,6 @@
 - [Задача 3](src/labs/lab-3/task-3)
 - [Задача 4](src/labs/lab-3/task-4)
 - [Задача 5](src/labs/lab-3/task-5)
+- [Задача 6](src/labs/lab-3/task-6)
 - [Задача 9](src/labs/lab-3/task-9)
 - [Задача 10](src/labs/lab-3/task-10)
