@@ -156,3 +156,64 @@ int string_compare(const string_t* str1, const string_t* str2) {
 
 	return mth_sign_long(strcmp(buf1, buf2));
 }
+
+bool string_clear(string_t* string) {
+	if (!string || !string->initialized) return false;
+	return vector_i8_clear(&string->buffer) &&
+	       vector_i8_push_back(&string->buffer, '\0');
+}
+
+bool char_in_charset(char ch, const char* chars) {
+	for (char* p = (char*)chars; *p; ++p) {
+		if (*p == ch) return true;
+	}
+
+	return false;
+}
+
+bool string_strip0(string_t* string, const char* chars, bool leading,
+                   bool trailing) {
+	if (!string || !string->initialized) return false;
+	if (!string_length(string)) return true;
+
+	// Index of the first non-whitespace char
+	size_t first = 0;
+	// Index of the last non-whitespace char
+	size_t last = string_length(string) - 1;
+
+	if (trailing) {
+		for (; last > 0; --last) {
+			if (!char_in_charset(string_char_at(string, last), chars)) break;
+		}
+
+		*vector_i8_get(&string->buffer, last + 1) = '\0';
+		string->buffer.size = last + 2;  // Account for the '\0'
+	}
+
+	if (leading) {
+		for (; first < string_length(string); ++first) {
+			if (!char_in_charset(string_char_at(string, first), chars)) break;
+		}
+
+		if (first) {
+			int8_t* buffer = (int8_t*)vector_i8_to_array(&string->buffer);
+			memmove(buffer, buffer + first,
+			        (vector_i8_size(&string->buffer) - first) * sizeof(int8_t));
+			string->buffer.size -= first;
+		}
+	}
+
+	return true;
+}
+
+bool string_strip(string_t* string, const char* chars) {
+	return string_strip0(string, chars, true, true);
+}
+
+bool string_lstrip(string_t* string, const char* chars) {
+	return string_strip0(string, chars, true, false);
+}
+
+bool string_rstrip(string_t* string, const char* chars) {
+	return string_strip0(string, chars, false, true);
+}

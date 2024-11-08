@@ -103,3 +103,18 @@ void string_reverse(string_t* string);
  * 			1 if str1 > str2.
  */
 int string_compare(const string_t* str1, const string_t* str2);
+
+/** Clears the string contents. */
+bool string_clear(string_t* string);
+
+/** Strips the string in-place of leading and trailing whitespace characters,
+ * specified in |chars|. */
+bool string_strip(string_t* string, const char* chars);
+
+/** Strips the string in-place of leading whitespace characters,
+ * specified in |chars|. */
+bool string_lstrip(string_t* string, const char* chars);
+
+/** Strips the string in-place of trailing whitespace characters,
+ * specified in |chars|. */
+bool string_rstrip(string_t* string, const char* chars);
