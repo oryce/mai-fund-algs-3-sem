@@ -97,35 +97,24 @@ error_t insn_to_string(const insn_t* insn, string_t* string) {
 	if (!insn || !string) return ERR_INVVAL;
 	if (!string_create(string)) return ERR_MEM;
 
-	if (!string_append_c_str(string, "insn_t[op=")) {
-		return to_string_fail(ERR_MEM, string);
-	}
-	if (!string_append_c_str(string, opcode_to_string(insn->op))) {
-		return to_string_fail(ERR_MEM, string);
-	}
-	if (!string_append_c_str(string, ", args=[")) {
+	if (!string_append_c_str(string, "insn_t[ op=") ||
+	    !string_append_c_str(string, opcode_to_string(insn->op)) ||
+	    !string_append_c_str(string, ", args=[ ")) {
 		return to_string_fail(ERR_MEM, string);
 	}
 
 	for (size_t i = 0; i != vector_str_size(&insn->args); ++i) {
 		string_t* arg = vector_str_get(&insn->args, i);
 
-		if (!string_append_char(string, '\'')) {
-			return to_string_fail(ERR_MEM, string);
-		}
-		if (!string_append(string, arg)) {
-			return to_string_fail(ERR_MEM, string);
-		}
-		if (!string_append_char(string, '\'')) {
-			return to_string_fail(ERR_MEM, string);
-		}
-		if (i + 1 < vector_str_size(&insn->args) &&
-		    !string_append_c_str(string, ", ")) {
+		if (!string_append_char(string, '\'') || !string_append(string, arg) ||
+		    !string_append_char(string, '\'') ||
+		    (i + 1 < vector_str_size(&insn->args) &&
+		     !string_append_c_str(string, ", "))) {
 			return to_string_fail(ERR_MEM, string);
 		}
 	}
 
-	if (!string_append_c_str(string, "]]")) {
+	if (!string_append_c_str(string, " ] ]")) {
 		return to_string_fail(ERR_MEM, string);
 	}
 

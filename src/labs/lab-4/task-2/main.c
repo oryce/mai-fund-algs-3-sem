@@ -35,6 +35,17 @@ int main(void) {
 		return main_clean(error, &insns, &ip, cmds);
 	}
 
+	printf("[debug] Parsed instruction list:\n");
+
+	for (size_t i = 0; i != vector_insn_size(&insns); ++i) {
+		string_t string;
+		if ((error = insn_to_string(vector_insn_get(&insns, i), &string))) {
+			return main_clean(error, &insns, &ip, cmds);
+		}
+		printf("  %s\n", string_to_c_str(&string));
+		string_destroy(&string);
+	}
+
 	if ((error = interp_run(&ip, &insns))) {
 		return main_clean(error, &insns, &ip, cmds);
 	}
