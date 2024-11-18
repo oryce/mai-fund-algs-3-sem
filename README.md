@@ -49,3 +49,7 @@
 - [Задача 7](src/labs/lab-3/task-7)
 - [Задача 9](src/labs/lab-3/task-9)
 - [Задача 10](src/labs/lab-3/task-10)
+
+### Лаба IV
+
+- [Задача 2](src/labs/lab-4/task-2)

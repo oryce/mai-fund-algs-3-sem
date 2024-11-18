@@ -50,7 +50,9 @@ struct vector_utils {
                                                                       \
 	const TYPE_T* vector_##TYPE##_to_array(const VECTOR_T*);          \
                                                                       \
-	bool vector_##TYPE##_sort(VECTOR_T*);
+	bool vector_##TYPE##_sort(VECTOR_T*);                             \
+                                                                      \
+	bool vector_##TYPE##_dup(const VECTOR_T* src, VECTOR_T* dst);
 
 #define IMPL_VECTOR(VECTOR_T, TYPE_T, TYPE, UTILS)                             \
 	bool vector_##TYPE##_resize(VECTOR_T* v, size_t capacity) {                \
@@ -210,7 +212,7 @@ struct vector_utils {
 	}                                                                          \
                                                                                \
 	bool vector_##TYPE##_is_empty(const vector_##TYPE##_t* v) {                \
-		return v->size != 0;                                                   \
+		return v->size == 0;                                                   \
 	}                                                                          \
                                                                                \
 	const TYPE_T* vector_##TYPE##_to_array(const vector_##TYPE##_t* v) {       \
@@ -221,6 +223,20 @@ struct vector_utils {
 		if (!v || !v->utils.comp) return false;                                \
                                                                                \
 		qsort(v->buffer, v->size, sizeof(TYPE_T), v->utils.comp);              \
+                                                                               \
+		return true;                                                           \
+	}                                                                          \
+                                                                               \
+	bool vector_##TYPE##_dup(const VECTOR_T* src, VECTOR_T* dst) {             \
+		if (!src || !dst) return false;                                        \
+                                                                               \
+		*dst = vector_##TYPE##_create();                                       \
+		if (!vector_##TYPE##_ensure_capacity(dst, src->capacity)) {            \
+			return false;                                                      \
+		}                                                                      \
+                                                                               \
+		memcpy(dst->buffer, src->buffer, src->size * sizeof(TYPE_T));          \
+		dst->size = src->size;                                                 \
                                                                                \
 		return true;                                                           \
 	}
