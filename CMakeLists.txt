@@ -51,4 +51,5 @@ add_subdirectory("src/labs/lab-4/task-2" "src/labs/lab-4/task-2/output")
 
 add_subdirectory("src/labs/lab-5/task-1" "src/labs/lab-5/task-1/output")
 add_subdirectory("src/labs/lab-5/task-2" "src/labs/lab-5/task-2/output")
+add_subdirectory("src/labs/lab-5/task-3" "src/labs/lab-5/task-3/output")
 add_subdirectory("src/labs/lab-5/task-4" "src/labs/lab-5/task-4/output")
