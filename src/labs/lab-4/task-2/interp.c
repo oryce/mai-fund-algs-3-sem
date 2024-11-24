@@ -339,7 +339,7 @@ error_t interp_free_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
 	if (!ip || !insn || insn->op != OP_FREE) return ERR_INVVAL;
-	if (insn_argc(insn) != 2) return ERR_INVARGCNT;
+	if (insn_argc(insn) != 1) return ERR_INVARGCNT;
 
 	size_t idx;
 	if ((error = get_array_idx_(insn_arg(insn, 0), &idx))) {
