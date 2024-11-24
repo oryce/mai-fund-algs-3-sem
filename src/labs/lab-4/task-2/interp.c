@@ -348,7 +348,10 @@ error_t interp_free_(interp_t* ip, const insn_t* insn) {
 	}
 
 	vector_i64_t* array = &ip->state[idx];
-	vector_i64_destroy(array);
+	if (!vector_i64_clear(array)) {
+		fprintf(stderr, "Can't clean state array.\n");
+		return ERR_MEM;
+	}
 
 	return 0;
 }
