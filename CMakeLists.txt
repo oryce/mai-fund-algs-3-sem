@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.27)
 
-project(mai_labs_3_sem LANGUAGES C)
+project(mai_labs_3_sem LANGUAGES C CXX)
 
-set(CMAKE_C_STANDARD "17")
+set(CMAKE_C_STANDARD "23")
 set(CMAKE_C_FLAGS "-Wall -pedantic")
+set(CMAKE_CXX_STANDARD "23")
+set(CMAKE_CXX_FLAGS "-Wall -pedantic")
 
 if (CMAKE_BUILD_TYPE STREQUAL "ASAN")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fsanitize=address,undefined")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address,undefined")
 endif ()
 
 include(cmake/AddTask.cmake)
@@ -45,3 +48,7 @@ add_subdirectory("src/labs/lab-3/task-9" "src/labs/lab-3/task-9/output")
 add_subdirectory("src/labs/lab-3/task-10" "src/labs/lab-3/task-10/output")
 
 add_subdirectory("src/labs/lab-4/task-2" "src/labs/lab-4/task-2/output")
+
+add_subdirectory("src/labs/lab-5/task-1" "src/labs/lab-5/task-1/output")
+add_subdirectory("src/labs/lab-5/task-2" "src/labs/lab-5/task-2/output")
+add_subdirectory("src/labs/lab-5/task-4" "src/labs/lab-5/task-4/output")

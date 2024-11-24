@@ -53,3 +53,9 @@
 ### Лаба IV
 
 - [Задача 2](src/labs/lab-4/task-2)
+
+### Лаба V
+
+- [Задача 1](src/labs/lab-4/task-1)
+- [Задача 2](src/labs/lab-4/task-2)
+- [Задача 4](src/labs/lab-4/task-4)
