@@ -588,7 +588,7 @@ error_t interp_print_(interp_t* ip, const insn_t* insn) {
 		if (stricmp(arg, "all") == 0) {
 			// Special case, because (0 - 1) in an ulong is UB.
 			if (vector_i64_is_empty(array)) {
-				printf("<empty array>");
+				printf("<empty array>\n");
 			} else {
 				error = print_range_(array, 0, vector_i64_size(array) - 1);
 			}
@@ -620,6 +620,16 @@ error_t interp_run(interp_t* ip, const vector_insn_t* insns) {
 	for (size_t i = 0; i != vector_insn_size(insns); ++i) {
 		insn_t* insn = vector_insn_get(insns, i);
 		error_t error;
+
+		string_t dbgInsn;
+		if ((error = insn_to_string(insn, &dbgInsn))) {
+			return error;
+		}
+		printf(
+		    "> [bci %zu]\n"
+		    ">   %s\n",
+		    i, string_to_c_str(&dbgInsn));
+		string_destroy(&dbgInsn);
 
 		switch (insn->op) {
 			case OP_LOAD:
