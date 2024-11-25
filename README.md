@@ -60,3 +60,4 @@
 - [Задача 2](src/labs/lab-4/task-2)
 - [Задача 3](src/labs/lab-4/task-3)
 - [Задача 4](src/labs/lab-4/task-4)
+- [Задача 6](src/labs/lab-4/task-6)
