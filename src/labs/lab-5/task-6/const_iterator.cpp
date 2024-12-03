@@ -50,6 +50,10 @@ const_iterator& const_iterator::operator-=(ptrdiff_t n) {
 	return *this += (-n);
 }
 
+ptrdiff_t const_iterator::operator-(const const_iterator& other) const {
+	return position_ - other.position_;
+}
+
 std::partial_ordering const_iterator::operator<=>(
     const const_iterator& other) const {
 	if (begin_ != other.begin_ || end_ != other.end_) {

@@ -9,6 +9,19 @@ vector::vector(size_t size, double initial)
 	std::fill(data_, data_ + size_, initial);
 }
 
+vector::vector(const iterator& first, const iterator& last) : vector() {
+	for (iterator iter = first; iter != last; ++iter) {
+		push_back(*iter);
+	}
+}
+
+vector::vector(const const_iterator& first, const const_iterator& last)
+    : vector() {
+	for (const_iterator iter = first; iter != last; ++iter) {
+		push_back(*iter);
+	}
+}
+
 vector::vector(std::initializer_list<double> l)
     : size_(l.size()), capacity_(l.size()), data_(new double[l.size()]) {
 	std::copy(l.begin(), l.end(), data_);

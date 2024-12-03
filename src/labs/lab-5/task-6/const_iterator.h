@@ -2,6 +2,7 @@
 
 #include <compare>
 #include <cstddef>
+#include <iterator>
 #include <stdexcept>
 
 class const_iterator {
@@ -12,6 +13,12 @@ class const_iterator {
 	void advance(ptrdiff_t n);
 
    public:
+	using difference_type = ptrdiff_t;
+	using value_type = double;
+	using pointer = const double*;
+	using reference = const double&;
+	using iterator_category = std::random_access_iterator_tag;
+
 	explicit const_iterator(const double* begin, const double* end,
 	                        const double* position)
 	    : begin_(begin), end_(end), position_(position) {
@@ -36,6 +43,8 @@ class const_iterator {
 
 	const_iterator operator-(ptrdiff_t n) const;
 	const_iterator& operator-=(ptrdiff_t n);
+
+	ptrdiff_t operator-(const const_iterator& other) const;
 
 	bool operator==(const const_iterator& other) const = default;
 	bool operator!=(const const_iterator& other) const = default;

@@ -8,16 +8,23 @@
 #include "iterator.h"
 
 class vector {
-	const size_t DEFAULT_CAPACITY = 4;
+	static const size_t DEFAULT_CAPACITY = 4;
 
 	size_t size_;
 	size_t capacity_;
 	double* data_;
 
    public:
+	vector()
+	    : size_(0), capacity_(DEFAULT_CAPACITY), data_(new double[capacity_]) {}
+
 	explicit vector(size_t size, double initial);
 
 	explicit vector(size_t size) : vector(size, 0) {}
+
+	explicit vector(const iterator& first, const iterator& last);
+
+	explicit vector(const const_iterator& first, const const_iterator& last);
 
 	vector(std::initializer_list<double> l);
 
