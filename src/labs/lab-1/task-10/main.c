@@ -20,7 +20,7 @@ error_t read_and_find_max(int base, long* out) {
 	bool stopped = false;
 
 	string_t input;
-	if (!string_create(&input)) return ERR_MEM;
+	if (!string_create(&input)) return ERROR_OUT_OF_MEMORY;
 
 	int ch;
 	while ((ch = getchar()) != EOF) {
@@ -53,20 +53,20 @@ error_t read_and_find_max(int base, long* out) {
 
 			// Prepare to read the next number.
 			string_destroy(&input);
-			if (!string_create(&input)) return ERR_MEM;
+			if (!string_create(&input)) return ERROR_OUT_OF_MEMORY;
 
 			continue;
 		}
 
 		if (!string_append_char(&input, (char)ch)) {
 			string_destroy(&input);
-			return ERR_MEM;
+			return ERROR_OUT_OF_MEMORY;
 		}
 	}
 
 	if (!stopped) {
 		string_destroy(&input);
-		return ERR_CHECK;
+		return ERROR_ASSERT;
 	}
 	if (!anyEntered) {
 		string_destroy(&input);

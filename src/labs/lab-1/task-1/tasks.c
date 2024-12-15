@@ -5,7 +5,7 @@
 #include "lib/mth.h"
 
 error_t print_divisible(long x) {
-	if (x <= 0) return ERR_INVVAL;
+	if (x <= 0) return ERROR_INVALID_PARAMETER;
 
 	if (x > 100) {
 		fprintf(stdout, "No numbers in [1; 100] are divisible by %ld.\n", x);
@@ -20,7 +20,7 @@ error_t print_divisible(long x) {
 }
 
 error_t is_prime_(long x, bool* result) {
-	if (x <= 0) return ERR_INVVAL;
+	if (x <= 0) return ERROR_INVALID_PARAMETER;
 
 	if (x == 2 || x == 3) {
 		*result = true;
@@ -95,8 +95,8 @@ error_t print_powers(long x) {
 const long SUM_LIMIT = 4294967296;
 
 error_t arithmetic_progression_(long n, long* result) {
-	if (n < 1) return ERR_INVVAL;
-	if (n >= SUM_LIMIT) return ERR_OVERFLOW;
+	if (n < 1) return ERROR_INVALID_PARAMETER;
+	if (n >= SUM_LIMIT) return ERROR_OVERFLOW;
 
 	*result = (long)((long double)(1 + n) / 2 * (long double)n);
 	return 0;
@@ -107,9 +107,9 @@ error_t print_sums(long x) {
 	error_t error = arithmetic_progression_(x, &result);
 
 	if (error) {
-		if (error == ERR_INVVAL)
+		if (error == ERROR_INVALID_PARAMETER)
 			fprintf(stderr, "Invalid input\n");
-		else if (error == ERR_OVERFLOW)
+		else if (error == ERROR_OVERFLOW)
 			fprintf(stderr, "Can't compute. `x` is too large.\n");
 		return 0;
 	}
@@ -123,9 +123,9 @@ error_t print_factorial(long x) {
 	error_t error = mth_factorial((int)x, &result);
 
 	if (error) {
-		if (error == ERR_OVERFLOW)
+		if (error == ERROR_OVERFLOW)
 			fprintf(stderr, "Can't compute factorial. Number is too large.\n");
-		else if (error == ERR_INVVAL)
+		else if (error == ERROR_INVALID_PARAMETER)
 			fprintf(stderr, "Invalid input\n");
 		return 0;
 	}

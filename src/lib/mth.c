@@ -41,17 +41,17 @@ double mth_double_bin_pow_(double n, int power) {
 }
 
 error_t mth_long_pow(long n, int power, long* out) {
-	if (power < 0) return ERR_INVVAL;
+	if (power < 0) return ERROR_INVALID_PARAMETER;
 	return mth_long_bin_pow_(n, power, out);
 }
 
 error_t mth_double_pow(double n, int power, double* out) {
-	if (!out) return ERR_INVVAL;
+	if (!out) return ERROR_INVALID_PARAMETER;
 	if (power < 0) return mth_double_pow(1. / n, -power, out);
 
 	*out = mth_double_bin_pow_(n, power);
-	if (isinf(*out)) return ERR_OVERFLOW;
-	if (isnan(*out)) return ERR_UNDERFLOW;
+	if (isinf(*out)) return ERROR_OVERFLOW;
+	if (isnan(*out)) return ERROR_UNDERFLOW;
 
 	return 0;
 }
@@ -73,14 +73,14 @@ double mth_sequence_limit(double f(int), double eps) {
 }
 
 error_t mth_factorial(unsigned int n, unsigned long* out) {
-	if (!out) return ERR_INVVAL;
+	if (!out) return ERROR_INVALID_PARAMETER;
 
 	long result = 1;
 
 	if (n > 1) {
 		for (int i = 2; i != (n + 1); ++i) {
 			// result *= i
-			if (ckd_mul(&result, result, i)) return ERR_OVERFLOW;
+			if (ckd_mul(&result, result, i)) return ERROR_OVERFLOW;
 		}
 	}
 
@@ -93,7 +93,7 @@ error_t mth_dichotomy(double f(double), double a, double b, double eps, double* 
 	double r = f(b);
 
 	if (l * r > 0) {
-		return ERR_INVVAL;
+		return ERROR_INVALID_PARAMETER;
 	}
 
 	while (fabs(a - b) > eps) {
@@ -111,7 +111,7 @@ error_t mth_dichotomy(double f(double), double a, double b, double eps, double* 
 }
 
 error_t mth_prime_sieve(bool* isPrime, int n, bool zeroPrimes) {
-	if (n < 0) return ERR_INVVAL;
+	if (n < 0) return ERROR_INVALID_PARAMETER;
 
 	if (zeroPrimes) {
 		for (int i = 0; i != (n + 1); ++i) {

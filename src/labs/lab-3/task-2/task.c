@@ -13,7 +13,7 @@ typedef struct norm_data {
 static error_t longest_vecs0(vector_t* inVecs, unsigned nVecs, unsigned n,
                              norm_t norm, const void* nParam,
                              vector_t* outVectors, size_t* outLength) {
-	if (!norm || !outVectors || !outLength) return ERR_INVVAL;
+	if (!norm || !outVectors || !outLength) return ERROR_INVALID_PARAMETER;
 
 	double maxNorm = 0;       // Max norm encountered.
 	const double eps = 1e-6;  // Error margin for vectors with the same norm.
@@ -24,8 +24,8 @@ static error_t longest_vecs0(vector_t* inVecs, unsigned nVecs, unsigned n,
 
 		error_t error = norm(&norm_, vec, n, nParam);
 		if (!error) {
-			if (isinf(norm_)) error = ERR_OVERFLOW;
-			if (isnan(norm_)) error = ERR_UNDERFLOW;
+			if (isinf(norm_)) error = ERROR_OVERFLOW;
+			if (isnan(norm_)) error = ERROR_UNDERFLOW;
 		}
 		if (error) return error;
 
@@ -54,15 +54,15 @@ static error_t cleanup(error_t error, vector_t* vecs, norm_data_t* norms) {
 
 error_t longest_vecs(vector_t** outVecs, size_t* outLens, unsigned n,
                      unsigned nNorms, unsigned nVecs, ...) {
-	if (!outVecs || !outLens || !n || !nNorms || !nVecs) return ERR_INVVAL;
+	if (!outVecs || !outLens || !n || !nNorms || !nVecs) return ERROR_INVALID_PARAMETER;
 
 	vector_t* vecs = NULL;
 	norm_data_t* norms = NULL;
 
 	vecs = (vector_t*)calloc(nVecs, sizeof(vector_t));
-	if (!vecs) return cleanup(ERR_MEM, vecs, norms);
+	if (!vecs) return cleanup(ERROR_OUT_OF_MEMORY, vecs, norms);
 	norms = (norm_data_t*)calloc(nNorms, sizeof(norm_data_t));
-	if (!norms) return cleanup(ERR_MEM, vecs, norms);
+	if (!norms) return cleanup(ERROR_OUT_OF_MEMORY, vecs, norms);
 
 	va_list args;
 	va_start(args, nVecs);
@@ -81,7 +81,7 @@ error_t longest_vecs(vector_t** outVecs, size_t* outLens, unsigned n,
 	for (size_t i = 0; i != nNorms; ++i) {
 		outVecs[i] = calloc(nVecs, sizeof(vector_t));
 		outLens[i] = 0;
-		if (!outVecs[i]) return cleanup(ERR_MEM, vecs, norms);
+		if (!outVecs[i]) return cleanup(ERROR_OUT_OF_MEMORY, vecs, norms);
 
 		error_t error = longest_vecs0(vecs, nVecs, n, norms[i].func,
 		                              norms[i].param, outVecs[i], &outLens[i]);
@@ -104,10 +104,10 @@ error_t norm_1(double* res, const vector_t* vec, unsigned n,
 
 error_t norm_2(double* res, const vector_t* vec, unsigned n,
                const void* param) {
-	if (!param) return ERR_INVVAL;
+	if (!param) return ERROR_INVALID_PARAMETER;
 
 	double p = *(const double*)param;
-	if (p < 1) return ERR_INVVAL;
+	if (p < 1) return ERROR_INVALID_PARAMETER;
 
 	double sum = 0;
 	for (double* x = vec->coords; n--; ++x) {
@@ -130,11 +130,11 @@ static double dot_product(unsigned n, const double* a, const double* b) {
 
 error_t norm_3(double* res, const vector_t* vec, unsigned n,
                const void* param) {
-	if (!param) return ERR_INVVAL;
+	if (!param) return ERROR_INVALID_PARAMETER;
 	const double** A = (const double**)param;
 
 	double* mul = (double*)calloc(n, sizeof(double));
-	if (!mul) return ERR_MEM;
+	if (!mul) return ERROR_OUT_OF_MEMORY;
 
 	for (int i = 0; i != n; ++i) {
 		mul[i] = dot_product(n, A[i], vec->coords);

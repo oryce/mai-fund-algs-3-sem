@@ -17,7 +17,7 @@ typedef struct opt {
 } opt_t;
 
 error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
-	if (*flag != '-' && *flag != '/') return ERR_INVVAL;
+	if (*flag != '-' && *flag != '/') return ERROR_INVALID_PARAMETER;
 	++flag;
 
 	bool specify_output = false;
@@ -35,7 +35,7 @@ error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
 		}
 	}
 
-	return ERR_UNRECOPT;
+	return ERROR_UNRECOGNIZED_OPTION;
 }
 
 void print_opts(opt_t opts[], int nOpts) {
@@ -49,7 +49,7 @@ error_t add_prefix(const char* path, char** out) {
 	const char* prefix = "out_";
 
 	*out = (char*)malloc(strlen(path) + strlen(prefix) + 1);
-	if (!(*out)) return ERR_MEM;
+	if (!(*out)) return ERROR_OUT_OF_MEMORY;
 
 	char delimiter;
 #ifdef _WIN32

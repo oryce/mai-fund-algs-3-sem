@@ -5,7 +5,7 @@
 #include "lib/error.h"
 
 error_t task_geometric_mean(double* result, int n, ...) {
-	if (!result || n < 1) return ERR_INVVAL;
+	if (!result || n < 1) return ERROR_INVALID_PARAMETER;
 
 	va_list args;
 	va_start(args, n);
@@ -18,10 +18,10 @@ error_t task_geometric_mean(double* result, int n, ...) {
 
 	va_end(args);
 
-	if (isinf(product)) return ERR_OVERFLOW;
+	if (isinf(product)) return ERROR_OVERFLOW;
 
 	*result = pow(product, 1.0 / n);
-	if (isnan(*result)) return ERR_UNDERFLOW;
+	if (isnan(*result)) return ERROR_UNDERFLOW;
 
 	return 0;
 }
@@ -36,7 +36,7 @@ error_t task_bin_exp(double* out, double number, int power) {
 		if (status) return status;
 
 		*out = 1.0 / result;
-		if (isnan(*out)) return ERR_UNDERFLOW;
+		if (isnan(*out)) return ERROR_UNDERFLOW;
 
 		return 0;
 	} else if (power == 0) {
@@ -53,7 +53,7 @@ error_t task_bin_exp(double* out, double number, int power) {
 		*out = result * result * number;
 	else
 		*out = result * result;
-	if (isinf(*out)) return ERR_UNDERFLOW;
+	if (isinf(*out)) return ERROR_UNDERFLOW;
 
 	return 0;
 }

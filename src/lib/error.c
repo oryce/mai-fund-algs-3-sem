@@ -4,21 +4,21 @@
 
 const char* error_builtin_fmt(error_t code) {
 	switch (code) {
-		case ERR_INVVAL:
-			return "Invalid parameter";
-		case ERR_MEM:
-			return "Memory error";
-		case ERR_OVERFLOW:
+		case ERROR_INVALID_PARAMETER:
+			return "The parameter is incorrect";
+		case ERROR_OUT_OF_MEMORY:
+			return "Out of memory";
+		case ERROR_OVERFLOW:
 			return "Integer overflow";
-		case ERR_UNDERFLOW:
+		case ERROR_UNDERFLOW:
 			return "Integer underflow";
-		case ERR_IO:
+		case ERROR_IO:
 			return "I/O error";
-		case ERR_CHECK:
-			return "Check failed";
-		case ERR_UNEXPTOK:
+		case ERROR_ASSERT:
+			return "Assertion failed";
+		case ERROR_UNEXPECTED_TOKEN:
 			return "Unexpected token";
-		case ERR_UNRECOPT:
+		case ERROR_UNRECOGNIZED_OPTION:
 			return "Unrecognized option";
 		default:
 			return NULL;

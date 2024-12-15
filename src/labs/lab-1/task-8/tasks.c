@@ -16,7 +16,7 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 	char* ptr;
 
 	for (ptr = (char*)start; *ptr != '\0'; ++ptr) {
-		if (!chars_is_alpha(*ptr) && !chars_is_digit(*ptr)) return ERR_UNEXPTOK;
+		if (!chars_is_alpha(*ptr) && !chars_is_digit(*ptr)) return ERROR_UNEXPECTED_TOKEN;
 		int ord =
 		    chars_is_alpha(*ptr) ? 10 + (chars_lower(*ptr) - 'a') : *ptr - '0';
 		base = mth_int_max(base, ord + 1);
@@ -30,8 +30,8 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 	for (ptr = ptr - 1; ptr >= start; --ptr) {
 		int ord =
 		    chars_is_alpha(*ptr) ? 10 + (chars_lower(*ptr) - 'a') : *ptr - '0';
-		if (ckd_add(&base10, base10, ord * multiplier)) return ERR_OVERFLOW;
-		if (ckd_mul(&multiplier, multiplier, base)) return ERR_OVERFLOW;
+		if (ckd_add(&base10, base10, ord * multiplier)) return ERROR_OVERFLOW;
+		if (ckd_mul(&multiplier, multiplier, base)) return ERROR_OVERFLOW;
 	}
 
 	base10 *= sign;
@@ -46,7 +46,7 @@ error_t process_lexeme(const char* lexeme, FILE* out) {
 		fprintf(out, "-%s %d %ld\n", ptr, base, base10);
 	else
 		fprintf(out, "%s %d %ld\n", ptr, base, base10);
-	if (ferror(out)) return ERR_IO;
+	if (ferror(out)) return ERROR_IO;
 
 	return 0;
 }

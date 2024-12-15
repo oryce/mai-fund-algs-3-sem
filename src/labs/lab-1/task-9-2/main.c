@@ -12,7 +12,7 @@ error_t random_vec(vector_i64_t* vec) {
 
 	for (int i = 0; i != size; ++i) {
 		long value = mth_rand(-1000, 1000);
-		if (!vector_i64_push_back(vec, value)) return ERR_MEM;
+		if (!vector_i64_push_back(vec, value)) return ERROR_OUT_OF_MEMORY;
 	}
 
 	return 0;
@@ -66,7 +66,7 @@ error_t main_(void) {
 
 	if (random_vec(&a) || random_vec(&b)) {
 		cleanup(&a, &b, &c);
-		return ERR_CHECK;
+		return ERROR_ASSERT;
 	}
 
 	printf("Array A:\n");
@@ -81,7 +81,7 @@ error_t main_(void) {
 
 	if (!vector_i64_sort(&b)) {
 		cleanup(&a, &b, &c);
-		return ERR_CHECK;
+		return ERROR_ASSERT;
 	}
 
 	c = vector_i64_create_with_capacity(vector_i64_size(&a));
@@ -92,7 +92,7 @@ error_t main_(void) {
 
 		if (!vector_i64_push_back(&c, value + closest)) {
 			cleanup(&a, &b, &c);
-			return ERR_MEM;
+			return ERROR_OUT_OF_MEMORY;
 		}
 	}
 

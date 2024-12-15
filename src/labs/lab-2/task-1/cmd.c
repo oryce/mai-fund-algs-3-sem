@@ -6,7 +6,7 @@
 #include "tasks.h"
 
 error_t cmd_print_length(int argc, char** argv) {
-	if (!argv) return ERR_INVVAL;
+	if (!argv) return ERROR_INVALID_PARAMETER;
 	if (argc != 3) {
 		fprintf(stderr, "Invalid arguments, see usage for more info.");
 		return 0;
@@ -22,7 +22,7 @@ error_t cmd_print_length(int argc, char** argv) {
 }
 
 error_t cmd_reverse_string(int argc, char** argv) {
-	if (argc != 3) return ERR_INVVAL;
+	if (argc != 3) return ERROR_INVALID_PARAMETER;
 	if (!argv) {
 		fprintf(stderr, "Invalid arguments, see usage for more info.");
 		return 0;
@@ -40,7 +40,7 @@ error_t cmd_reverse_string(int argc, char** argv) {
 }
 
 error_t cmd_uppercase_odd_chars(int argc, char** argv) {
-	if (!argv) return ERR_INVVAL;
+	if (!argv) return ERROR_INVALID_PARAMETER;
 	if (argc != 3) {
 		fprintf(stderr, "Invalid arguments, see usage for more info.");
 		return 0;
@@ -58,7 +58,7 @@ error_t cmd_uppercase_odd_chars(int argc, char** argv) {
 }
 
 error_t cmd_rearrange_chars(int argc, char** argv) {
-	if (!argv) return ERR_INVVAL;
+	if (!argv) return ERROR_INVALID_PARAMETER;
 	if (argc != 3) {
 		fprintf(stderr, "Invalid arguments, see usage for more info.");
 		return 0;
@@ -76,7 +76,7 @@ error_t cmd_rearrange_chars(int argc, char** argv) {
 }
 
 error_t cmd_concat_randomly(int argc, char** argv) {
-	if (!argv) return ERR_INVVAL;
+	if (!argv) return ERROR_INVALID_PARAMETER;
 	if (argc < 4) {
 		fprintf(stderr, "Invalid arguments, see usage for more info.");
 		return 0;

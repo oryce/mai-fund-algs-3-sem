@@ -9,7 +9,7 @@
 #endif
 
 error_t paths_same(const char* path1, const char* path2, bool* result) {
-	if (!path1 || !path2) return ERR_INVVAL;
+	if (!path1 || !path2) return ERROR_INVALID_PARAMETER;
 
 	const int pathBufSize = 4096;
 	char abs1[pathBufSize];
@@ -23,8 +23,8 @@ error_t paths_same(const char* path1, const char* path2, bool* result) {
 		return ERR_IO;
 	}
 #else
-	if (realpath(path1, abs1) == NULL) return ERR_IO;
-	if (realpath(path2, abs2) == NULL) return ERR_IO;
+	if (realpath(path1, abs1) == NULL) return ERROR_IO;
+	if (realpath(path2, abs2) == NULL) return ERROR_IO;
 #endif
 
 	*result = strncmp(abs1, abs2, pathBufSize) == 0;

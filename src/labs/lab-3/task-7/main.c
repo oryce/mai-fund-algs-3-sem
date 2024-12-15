@@ -128,7 +128,7 @@ void cmd_change(liver_node_t** livers, size_t idx, const char* field,
 		error = liver_change_middle_name(liver, value, changes);
 	} else if (strcmp(field, "dob") == 0) {
 		struct tm tm;
-		if (!strptime(value, "%d.%m.%Y", &tm)) error = ERR_INVVAL;
+		if (!strptime(value, "%d.%m.%Y", &tm)) error = ERROR_INVALID_PARAMETER;
 		if (!error) {
 			dob_t dob = {.day = tm.tm_mday,
 			             .month = tm.tm_mon + 1,
@@ -136,7 +136,7 @@ void cmd_change(liver_node_t** livers, size_t idx, const char* field,
 			error = liver_change_dob(livers, ln, dob, changes);
 		}
 	} else if (strcmp(field, "gender") == 0) {
-		if (*value != '\0' && *(value + 1) != '\0') error = ERR_INVVAL;
+		if (*value != '\0' && *(value + 1) != '\0') error = ERROR_INVALID_PARAMETER;
 		if (!error) error = liver_change_gender(liver, *value, changes);
 	} else if (strcmp(field, "income") == 0) {
 		double income;

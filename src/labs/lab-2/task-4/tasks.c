@@ -10,8 +10,8 @@
 const double M_2PI = M_PI * 2;
 
 error_t task_convex(bool* result, double eps, size_t n, ...) {
-	if (n < 3) return ERR_INVVAL;
-	if (result == NULL) return ERR_INVVAL;
+	if (n < 3) return ERROR_INVALID_PARAMETER;
+	if (result == NULL) return ERROR_INVALID_PARAMETER;
 
 	va_list args;
 
@@ -32,7 +32,7 @@ error_t task_convex(bool* result, double eps, size_t n, ...) {
 
 	if (p1.x == p0.x && p1.y == p0.y) {
 		va_end(args);
-		return ERR_INVVAL;
+		return ERROR_INVALID_PARAMETER;
 	}
 
 	d1 = atan2(p1.x - p0.x, p1.y - p0.y);
@@ -46,7 +46,7 @@ error_t task_convex(bool* result, double eps, size_t n, ...) {
 
 		if (p1.x == p0.x && p1.y == p0.y) {
 			va_end(args);
-			return ERR_INVVAL;
+			return ERROR_INVALID_PARAMETER;
 		}
 
 		d1 = atan2(p1.x - p0.x, p1.y - p0.y);
@@ -80,8 +80,8 @@ error_t task_convex(bool* result, double eps, size_t n, ...) {
 }
 
 error_t task_polynomial(double* result, double x, int n, ...) {
-	if (n < 0) return ERR_INVVAL;
-	if (result == 0) return ERR_INVVAL;
+	if (n < 0) return ERROR_INVALID_PARAMETER;
+	if (result == 0) return ERROR_INVALID_PARAMETER;
 
 	va_list args;
 	va_start(args, n);
@@ -96,10 +96,11 @@ error_t task_polynomial(double* result, double x, int n, ...) {
 }
 
 error_t is_kaprekar_(const char* number, int base, bool* result) {
-	if (!number || !result || *number == '-') return ERR_INVVAL;
+	if (!number || !result || *number == '-') return ERROR_INVALID_PARAMETER;
 
 	long n;
-	if (long_from_base(number, strlen(number), base, &n)) return ERR_INVVAL;
+	if (long_from_base(number, strlen(number), base, &n))
+		return ERROR_INVALID_PARAMETER;
 
 	if (n == 0) {
 		*result = false;
@@ -107,11 +108,10 @@ error_t is_kaprekar_(const char* number, int base, bool* result) {
 	}
 
 	long nSq;
-	if (ckd_mul(&nSq, n, n)) return ERR_OVERFLOW;
+	if (ckd_mul(&nSq, n, n)) return ERROR_OVERFLOW;
 
 	char nSqStr[65];
-	CHECK(long_to_base(nSq, base, nSqStr, sizeof(nSqStr)),
-	      "can't convert square to string");
+	ASSERT(long_to_base(nSq, base, nSqStr, sizeof(nSqStr)));
 
 	// Split the squared number and check if the parts add up to `n`.
 	size_t length = strlen(nSqStr);
@@ -127,12 +127,12 @@ error_t is_kaprekar_(const char* number, int base, bool* result) {
 		long left = 0;
 		long right = 0;
 
-		if (i != 0)
-			CHECK(long_from_base(leftStr, i, base, &left),
-			      "can't convert left part to long");
-		if (length - i != 0)
-			CHECK(long_from_base(rightStr, length - i, base, &right),
-			      "can't convert right part to long");
+		if (i != 0) {
+			ASSERT(long_from_base(leftStr, i, base, &left));
+		}
+		if (length - i != 0) {
+			ASSERT(long_from_base(rightStr, length - i, base, &right));
+		}
 
 		if (left + right == n) {
 			*result = true;
@@ -145,7 +145,7 @@ error_t is_kaprekar_(const char* number, int base, bool* result) {
 }
 
 error_t task_kaprekar(vector_ptr_t* out, int base, size_t n, ...) {
-	if (out == NULL) return ERR_INVVAL;
+	if (out == NULL) return ERROR_INVALID_PARAMETER;
 	*out = vector_ptr_create();
 
 	va_list args;
@@ -158,14 +158,14 @@ error_t task_kaprekar(vector_ptr_t* out, int base, size_t n, ...) {
 		if (is_kaprekar_(number, base, &kaprekar)) {
 			vector_ptr_destroy(out);
 			va_end(args);
-			return ERR_INVVAL;
+			return ERROR_INVALID_PARAMETER;
 		}
 
 		if (kaprekar) {
 			if (!vector_ptr_push_back(out, (void*)number)) {
 				vector_ptr_destroy(out);
 				va_end(args);
-				return ERR_MEM;
+				return ERROR_OUT_OF_MEMORY;
 			}
 		}
 	}

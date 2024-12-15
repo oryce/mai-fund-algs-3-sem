@@ -67,7 +67,7 @@ int liver_cmp(const liver_t* a, const liver_t* b) {
 
 error_t ln_insert(liver_node_t** list, liver_t value,
                   vector_change_t* changes) {
-	if (!list) return ERR_INVVAL;
+	if (!list) return ERROR_INVALID_PARAMETER;
 
 	liver_node_t** node = list;
 	while (*node && liver_cmp(&(*node)->value, &value) > 0) {
@@ -75,7 +75,7 @@ error_t ln_insert(liver_node_t** list, liver_t value,
 	}
 
 	liver_node_t* newNode = (liver_node_t*)malloc(sizeof(liver_node_t));
-	if (!newNode) return ERR_MEM;
+	if (!newNode) return ERROR_OUT_OF_MEMORY;
 
 	newNode->value = value;
 	newNode->next = *node;
@@ -86,7 +86,7 @@ error_t ln_insert(liver_node_t** list, liver_t value,
 	               .variant = {.ptr = {.loc = (void**)node, .prev = *node}}});
 	if (changes && !registered) {
 		free(newNode);
-		return ERR_MEM;
+		return ERROR_OUT_OF_MEMORY;
 	}
 
 	*node = newNode;
@@ -94,7 +94,7 @@ error_t ln_insert(liver_node_t** list, liver_t value,
 }
 
 error_t ln_remove(liver_node_t** node, vector_change_t* changes) {
-	if (!node) return ERR_INVVAL;
+	if (!node) return ERROR_INVALID_PARAMETER;
 
 	liver_node_t* node0 = *node;
 
@@ -102,7 +102,7 @@ error_t ln_remove(liver_node_t** node, vector_change_t* changes) {
 	    changes,
 	    (change_t){.type = CHANGE_REMOVE,
 	               .variant = {.ptr = {.loc = (void**)node, .prev = node0}}});
-	if (changes && !registered) return ERR_MEM;
+	if (changes && !registered) return ERROR_OUT_OF_MEMORY;
 
 	*node = (*node)->next;
 	return 0;
@@ -119,17 +119,17 @@ void ln_destroy(liver_node_t* list) {
 
 error_t change_name(change_type_t type, char** pName, const char* name,
                     vector_change_t* changes) {
-	if (!pName || !name) return ERR_INVVAL;
+	if (!pName || !name) return ERROR_INVALID_PARAMETER;
 
 	// Copy the provided name to prevent a possible double-free on rollback.
 	char* nameCopy = strdup(name);
-	if (!nameCopy) return ERR_MEM;
+	if (!nameCopy) return ERROR_OUT_OF_MEMORY;
 
 	bool registered = vector_change_push_back(
 	    changes,
 	    (change_t){.type = type,
 	               .variant = {.ptr = {.loc = (void**)pName, .prev = *pName}}});
-	if (changes && !registered) return ERR_MEM;
+	if (changes && !registered) return ERROR_OUT_OF_MEMORY;
 
 	*pName = nameCopy;
 	return 0;
@@ -137,27 +137,27 @@ error_t change_name(change_type_t type, char** pName, const char* name,
 
 error_t liver_change_last_name(liver_t* liver, const char* lastName,
                                vector_change_t* changes) {
-	if (!liver || !validate_name(lastName)) return ERR_INVVAL;
+	if (!liver || !validate_name(lastName)) return ERROR_INVALID_PARAMETER;
 	return change_name(CHANGE_LAST_NAME, &liver->last_name, lastName, changes);
 }
 
 error_t liver_change_first_name(liver_t* liver, const char* firstName,
                                 vector_change_t* changes) {
-	if (!liver || !validate_name(firstName)) return ERR_INVVAL;
+	if (!liver || !validate_name(firstName)) return ERROR_INVALID_PARAMETER;
 	return change_name(CHANGE_FIRST_NAME, &liver->first_name, firstName,
 	                   changes);
 }
 
 error_t liver_change_middle_name(liver_t* liver, const char* middleName,
                                  vector_change_t* changes) {
-	if (!liver || !validate_middle_name(middleName)) return ERR_INVVAL;
+	if (!liver || !validate_middle_name(middleName)) return ERROR_INVALID_PARAMETER;
 	return change_name(CHANGE_MIDDLE_NAME, &liver->middle_name, middleName,
 	                   changes);
 }
 
 error_t liver_change_dob(liver_node_t** list, liver_node_t** node, dob_t dob,
                          vector_change_t* changes) {
-	if (!list || !node || !validate_dob(dob)) return ERR_INVVAL;
+	if (!list || !node || !validate_dob(dob)) return ERROR_INVALID_PARAMETER;
 
 	change_t change;
 	change_t newChange = {CHANGE_DOB};
@@ -168,7 +168,7 @@ error_t liver_change_dob(liver_node_t** list, liver_node_t** node, dob_t dob,
 	if (error) return error;
 
 	if (changes) {
-		error = vector_change_pop_back(changes, &change) ? 0 : ERR_MEM;
+		error = vector_change_pop_back(changes, &change) ? 0 : ERROR_OUT_OF_MEMORY;
 		if (error) return error;
 
 		newChange.variant.dob.c0Loc = change.variant.ptr.loc;
@@ -181,13 +181,13 @@ error_t liver_change_dob(liver_node_t** list, liver_node_t** node, dob_t dob,
 	if (error) return error;
 
 	if (changes) {
-		error = vector_change_pop_back(changes, &change) ? 0 : ERR_MEM;
+		error = vector_change_pop_back(changes, &change) ? 0 : ERROR_OUT_OF_MEMORY;
 		if (error) return error;
 
 		newChange.variant.dob.c1Loc = change.variant.ptr.loc;
 		newChange.variant.dob.c1Prev = change.variant.ptr.prev;
 
-		if (!vector_change_push_back(changes, newChange)) return ERR_MEM;
+		if (!vector_change_push_back(changes, newChange)) return ERROR_OUT_OF_MEMORY;
 	}
 
 	return 0;
@@ -195,13 +195,13 @@ error_t liver_change_dob(liver_node_t** list, liver_node_t** node, dob_t dob,
 
 error_t liver_change_gender(liver_t* liver, char gender,
                             vector_change_t* changes) {
-	if (!liver || !validate_gender(gender)) return ERR_INVVAL;
+	if (!liver || !validate_gender(gender)) return ERROR_INVALID_PARAMETER;
 
 	bool registered = vector_change_push_back(
 	    changes, (change_t){.type = CHANGE_GENDER,
 	                        .variant = {.gender = {.loc = &liver->gender,
 	                                               .prev = liver->gender}}});
-	if (changes && !registered) return ERR_MEM;
+	if (changes && !registered) return ERROR_OUT_OF_MEMORY;
 
 	liver->gender = gender;
 	return 0;
@@ -209,13 +209,13 @@ error_t liver_change_gender(liver_t* liver, char gender,
 
 error_t liver_change_income(liver_t* liver, double income,
                             vector_change_t* changes) {
-	if (!liver || !validate_income(income)) return ERR_INVVAL;
+	if (!liver || !validate_income(income)) return ERROR_INVALID_PARAMETER;
 
 	bool registered = vector_change_push_back(
 	    changes, (change_t){.type = CHANGE_INCOME,
 	                        .variant = {.income = {.loc = &liver->income,
 	                                               .prev = liver->income}}});
-	if (changes && !registered) return ERR_MEM;
+	if (changes && !registered) return ERROR_OUT_OF_MEMORY;
 
 	liver->income = income;
 	return 0;

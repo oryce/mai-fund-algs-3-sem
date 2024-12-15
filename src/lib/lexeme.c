@@ -26,7 +26,7 @@ error_t lexeme_read(FILE* file, vector_str_t* out) {
 
 	if (!string_create(&lexeme)) {
 		vector_str_destroy(&lexemes);
-		return ERR_MEM;
+		return ERROR_OUT_OF_MEMORY;
 	}
 
 	bool in_lexeme = false;
@@ -35,19 +35,19 @@ error_t lexeme_read(FILE* file, vector_str_t* out) {
 	while ((ch = fgetc(file)) != EOF) {
 		if (ferror(file)) {
 			lexeme_read_cleanup_(&lexemes, &lexeme);
-			return ERR_IO;
+			return ERROR_IO;
 		}
 
 		if (ch == '\t' || ch == '\n' || ch == '\r' || ch == ' ') {
 			if (in_lexeme) {
 				if (!vector_str_push_back(&lexemes, lexeme)) {
 					lexeme_read_cleanup_(&lexemes, &lexeme);
-					return ERR_MEM;
+					return ERROR_OUT_OF_MEMORY;
 				}
 
 				if (!string_create(&lexeme)) {
 					lexeme_read_cleanup_(&lexemes, &lexeme);
-					return ERR_MEM;
+					return ERROR_OUT_OF_MEMORY;
 				}
 
 				in_lexeme = false;
@@ -60,14 +60,14 @@ error_t lexeme_read(FILE* file, vector_str_t* out) {
 
 		if (!string_append_char(&lexeme, (char)ch)) {
 			lexeme_read_cleanup_(&lexemes, &lexeme);
-			return ERR_MEM;
+			return ERROR_OUT_OF_MEMORY;
 		}
 	}
 
 	if (in_lexeme) {
 		if (!vector_str_push_back(&lexemes, lexeme)) {
 			lexeme_read_cleanup_(&lexemes, &lexeme);
-			return ERR_MEM;
+			return ERROR_OUT_OF_MEMORY;
 		}
 	} else {
 		string_destroy(&lexeme);
@@ -82,7 +82,7 @@ error_t lexeme_write(FILE* file, vector_str_t* lexemes, char sep) {
 		string_t* lexeme = vector_str_get(lexemes, i);
 
 		fprintf(file, "%s%c", string_to_c_str(lexeme), sep);
-		if (ferror(file)) return ERR_IO;
+		if (ferror(file)) return ERROR_IO;
 	}
 
 	return 0;

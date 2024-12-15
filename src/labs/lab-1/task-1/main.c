@@ -14,7 +14,7 @@ typedef struct opt {
 } opt_t;
 
 error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
-	if (*flag != '-' && *flag != '/') return ERR_INVVAL;
+	if (*flag != '-' && *flag != '/') return ERROR_INVALID_PARAMETER;
 	++flag;
 
 	for (int i = 0; i != nOpts; ++i) {
@@ -24,7 +24,7 @@ error_t parse_opt(const char* flag, opt_t opts[], int nOpts, opt_t* outOpt) {
 		}
 	}
 
-	return ERR_UNRECOPT;
+	return ERROR_UNRECOGNIZED_OPTION;
 }
 
 void print_opts(opt_t opts[], int nOpts) {

@@ -87,7 +87,7 @@ static error_t test_kaprekars(void) {
 	}
 	if (vector_ptr_size(&kaprekars) != nBase10) {
 		vector_ptr_destroy(&kaprekars);
-		return ERR_CHECK;
+		return ERROR_ASSERT;
 	}
 
 	vector_ptr_destroy(&kaprekars);
@@ -110,7 +110,7 @@ static error_t test_kaprekars(void) {
 	}
 	if (vector_ptr_size(&kaprekars) != nBase16) {
 		vector_ptr_destroy(&kaprekars);
-		return ERR_CHECK;
+		return ERROR_ASSERT;
 	}
 
 	vector_ptr_destroy(&kaprekars);

@@ -112,7 +112,7 @@ error_t read_fail(error_t error, vector_st_t* students, student_t* student,
 }
 
 error_t student_read(FILE* fp, vector_st_t* students) {
-	if (!students) return ERR_INVVAL;
+	if (!students) return ERROR_INVALID_PARAMETER;
 
 	const int reqGrades = 5;
 
@@ -181,7 +181,7 @@ error_t student_read(FILE* fp, vector_st_t* students) {
 							return read_fail(ERR_INVGRD, students, &st.student,
 							                 line);
 						if (!vector_u8_push_back(&st.student.grades, *grTok))
-							return read_fail(ERR_MEM, students, &st.student,
+							return read_fail(ERROR_OUT_OF_MEMORY, students, &st.student,
 							                 line);
 					}
 
@@ -190,7 +190,7 @@ error_t student_read(FILE* fp, vector_st_t* students) {
 				}
 				case READ_VALID:
 					// Unexpected token.
-					return read_fail(ERR_UNEXPTOK, students, &st.student, line);
+					return read_fail(ERROR_UNEXPECTED_TOKEN, students, &st.student, line);
 			}
 		}
 
@@ -199,13 +199,13 @@ error_t student_read(FILE* fp, vector_st_t* students) {
 		if (vector_u8_size(&st.student.grades) != reqGrades)
 			return read_fail(ERR_INVGRDCNT, students, &st.student, line);
 		if (!vector_st_push_back(students, st.student))
-			return read_fail(ERR_MEM, students, &st.student, line);
+			return read_fail(ERROR_OUT_OF_MEMORY, students, &st.student, line);
 	}
 
 	free(line);
 
 	if (ferror(fp)) {
-		return read_fail(ERR_MEM, students, &st.student, NULL);
+		return read_fail(ERROR_OUT_OF_MEMORY, students, &st.student, NULL);
 	}
 
 	return 0;

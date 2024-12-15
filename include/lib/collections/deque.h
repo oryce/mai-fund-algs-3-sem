@@ -213,7 +213,7 @@ extern const int DEQUE_MIN_CAPACITY;
                                                                                \
 	size_t deque_##TYPE##_size(const DEQUE_T* d) { return d->size; }           \
                                                                                \
-	bool deque_##TYPE##_is_empty(const DEQUE_T* d) { return d->size != 0; }
+	bool deque_##TYPE##_is_empty(const DEQUE_T* d) { return d->size == 0; }
 
 DEFINE_DEQUE(deque_i64_t, int64_t, i64)
 DEFINE_DEQUE(deque_i32_t, int32_t, i32)

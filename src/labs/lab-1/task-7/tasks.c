@@ -35,7 +35,7 @@ error_t task_merge_lexemes(FILE* input1, FILE* input2, FILE* output) {
 		        string_to_c_str(second));
 		if (ferror(output)) {
 			task_merge_cleanup_(&lexemes1, &lexemes2);
-			return ERR_IO;
+			return ERROR_IO;
 		}
 	}
 
@@ -55,7 +55,7 @@ error_t task_merge_lexemes(FILE* input1, FILE* input2, FILE* output) {
 		fprintf(output, "%s ", string_to_c_str(lexeme));
 		if (ferror(output)) {
 			task_merge_cleanup_(&lexemes1, &lexemes2);
-			return ERR_IO;
+			return ERROR_IO;
 		}
 	}
 
@@ -123,7 +123,7 @@ error_t task_process_lexemes(FILE* input, FILE* output) {
 
 		if (ferror(output)) {
 			task_process_cleanup_(&lexemes);
-			return ERR_IO;
+			return ERROR_IO;
 		}
 	}
 

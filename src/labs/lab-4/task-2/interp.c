@@ -94,13 +94,13 @@ error_t to_string_fail(error_t errcode, string_t* string) {
 }
 
 error_t insn_to_string(const insn_t* insn, string_t* string) {
-	if (!insn || !string) return ERR_INVVAL;
-	if (!string_create(string)) return ERR_MEM;
+	if (!insn || !string) return ERROR_INVALID_PARAMETER;
+	if (!string_create(string)) return ERROR_OUT_OF_MEMORY;
 
 	if (!string_append_c_str(string, "insn_t[ op=") ||
 	    !string_append_c_str(string, opcode_to_string(insn->op)) ||
 	    !string_append_c_str(string, ", args=[ ")) {
-		return to_string_fail(ERR_MEM, string);
+		return to_string_fail(ERROR_OUT_OF_MEMORY, string);
 	}
 
 	for (size_t i = 0; i != vector_str_size(&insn->args); ++i) {
@@ -110,12 +110,12 @@ error_t insn_to_string(const insn_t* insn, string_t* string) {
 		    !string_append_char(string, '\'') ||
 		    (i + 1 < vector_str_size(&insn->args) &&
 		     !string_append_c_str(string, ", "))) {
-			return to_string_fail(ERR_MEM, string);
+			return to_string_fail(ERROR_OUT_OF_MEMORY, string);
 		}
 	}
 
 	if (!string_append_c_str(string, " ] ]")) {
-		return to_string_fail(ERR_MEM, string);
+		return to_string_fail(ERROR_OUT_OF_MEMORY, string);
 	}
 
 	return 0;
@@ -148,7 +148,7 @@ void interp_destroy(interp_t* ip) {
 
 error_t get_array_idx_(const char* arg, size_t* idx) {
 	if (!arg || !idx) {
-		return ERR_INVVAL;
+		return ERROR_INVALID_PARAMETER;
 	}
 	if ((*arg != '\0' && *(arg + 1) != '\0') || !chars_is_alpha(*arg)) {
 		return ERR_INVARRID;
@@ -171,7 +171,7 @@ error_t load_clean_(error_t errcode, FILE* stream, vector_str_t* lexemes) {
 error_t interp_load_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_LOAD) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_LOAD) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 2) return ERR_INVARGCNT;
 
 	size_t idx;
@@ -183,7 +183,7 @@ error_t interp_load_(interp_t* ip, const insn_t* insn) {
 	FILE* stream = fopen(insn_arg(insn, 1), "r");
 	if (!stream) {
 		fprintf(stderr, "Can't open the input file for reading.\n");
-		return ERR_IO;
+		return ERROR_IO;
 	}
 
 	vector_str_t lexemes;
@@ -194,7 +194,7 @@ error_t interp_load_(interp_t* ip, const insn_t* insn) {
 
 	if (!vector_i64_clear(&ip->state[idx])) {
 		fprintf(stderr, "Can't clear state array.\n");
-		return load_clean_(ERR_MEM, stream, &lexemes);
+		return load_clean_(ERROR_OUT_OF_MEMORY, stream, &lexemes);
 	}
 
 	for (size_t i = 0; i != vector_str_size(&lexemes); ++i) {
@@ -209,7 +209,7 @@ error_t interp_load_(interp_t* ip, const insn_t* insn) {
 
 		if (!vector_i64_push_back(&ip->state[idx], value)) {
 			fprintf(stderr, "Can't insert number into state array.\n");
-			return load_clean_(ERR_MEM, stream, &lexemes);
+			return load_clean_(ERROR_OUT_OF_MEMORY, stream, &lexemes);
 		}
 	}
 
@@ -236,7 +236,7 @@ error_t save_clean_(error_t errcode, FILE* stream) {
 error_t interp_save_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_SAVE) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_SAVE) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 2) return ERR_INVARGCNT;
 
 	size_t idx;
@@ -248,7 +248,7 @@ error_t interp_save_(interp_t* ip, const insn_t* insn) {
 	FILE* stream = fopen(insn_arg(insn, 1), "w");
 	if (!stream) {
 		fprintf(stderr, "Can't open output file for writing.\n");
-		return ERR_IO;
+		return ERROR_IO;
 	}
 
 	vector_i64_t* array = &ip->state[idx];
@@ -256,7 +256,7 @@ error_t interp_save_(interp_t* ip, const insn_t* insn) {
 		fprintf(stream, "%lld\n", *vector_i64_get(array, i));
 		if (ferror(stream)) {
 			fprintf(stderr, "Can't write to output file.\n");
-			return save_clean_(ERR_IO, stream);
+			return save_clean_(ERROR_IO, stream);
 		}
 	}
 
@@ -266,7 +266,7 @@ error_t interp_save_(interp_t* ip, const insn_t* insn) {
 error_t interp_rand_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_RAND) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_RAND) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 4) return ERR_INVARGCNT;
 
 	size_t idx;
@@ -297,7 +297,7 @@ error_t interp_rand_(interp_t* ip, const insn_t* insn) {
 		long value = mth_rand(lb, ub + 1);
 		if (!vector_i64_push_back(&ip->state[idx], value)) {
 			fprintf(stderr, "Can't push value into array.\n");
-			return ERR_MEM;
+			return ERROR_OUT_OF_MEMORY;
 		}
 	}
 
@@ -307,7 +307,7 @@ error_t interp_rand_(interp_t* ip, const insn_t* insn) {
 error_t interp_concat_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_CONCAT) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_CONCAT) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 2) return ERR_INVARGCNT;
 
 	size_t dstIdx;
@@ -328,7 +328,7 @@ error_t interp_concat_(interp_t* ip, const insn_t* insn) {
 		int64_t* value = vector_i64_get(src, i);
 		if (!vector_i64_push_back(dst, *value)) {
 			fprintf(stderr, "Can't push into destination array.\n");
-			return ERR_MEM;
+			return ERROR_OUT_OF_MEMORY;
 		}
 	}
 
@@ -338,7 +338,7 @@ error_t interp_concat_(interp_t* ip, const insn_t* insn) {
 error_t interp_free_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_FREE) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_FREE) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 1) return ERR_INVARGCNT;
 
 	size_t idx;
@@ -350,7 +350,7 @@ error_t interp_free_(interp_t* ip, const insn_t* insn) {
 	vector_i64_t* array = &ip->state[idx];
 	if (!vector_i64_clear(array)) {
 		fprintf(stderr, "Can't clean state array.\n");
-		return ERR_MEM;
+		return ERROR_OUT_OF_MEMORY;
 	}
 
 	return 0;
@@ -359,7 +359,7 @@ error_t interp_free_(interp_t* ip, const insn_t* insn) {
 error_t interp_remove_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_REMOVE) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_REMOVE) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 3) return ERR_INVARGCNT;
 
 	size_t idx;
@@ -381,7 +381,7 @@ error_t interp_remove_(interp_t* ip, const insn_t* insn) {
 			fprintf(stderr,
 			        "Can't remove item from vector. Index is out of range or \n"
 			        "the vector couldn't be shrunk.\n");
-			return ERR_CHECK;
+			return ERROR_ASSERT;
 		}
 	}
 
@@ -391,7 +391,7 @@ error_t interp_remove_(interp_t* ip, const insn_t* insn) {
 error_t interp_copy_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_COPY) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_COPY) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 4) return ERR_INVARGCNT;
 
 	size_t srcIdx;
@@ -415,7 +415,7 @@ error_t interp_copy_(interp_t* ip, const insn_t* insn) {
 	vector_i64_t* dst = &ip->state[dstIdx];
 
 	if (!vector_i64_clear(dst)) {
-		return ERR_MEM;
+		return ERROR_OUT_OF_MEMORY;
 	}
 
 	for (size_t i = from; i != to + 1; ++i) {
@@ -425,7 +425,7 @@ error_t interp_copy_(interp_t* ip, const insn_t* insn) {
 		}
 		if (!vector_i64_push_back(dst, *value)) {
 			fprintf(stderr, "Can't push value into destination array.\n");
-			return ERR_MEM;
+			return ERROR_OUT_OF_MEMORY;
 		}
 	}
 
@@ -448,7 +448,7 @@ int cmp_long_random(const int64_t* a, const int64_t* b) {
 }
 
 error_t interp_sort_(interp_t* ip, const insn_t* insn) {
-	if (!ip || !insn || insn->op != OP_SORT) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_SORT) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 1) return ERR_INVARGCNT;
 
 	const char* arg = insn_arg(insn, 0);
@@ -461,7 +461,7 @@ error_t interp_sort_(interp_t* ip, const insn_t* insn) {
 		sortAscending = *(arg + 1) == '+';
 	} else {
 		fprintf(stderr, "Invalid array index or sort order.\n");
-		return ERR_INVVAL;
+		return ERROR_INVALID_PARAMETER;
 	}
 
 	qsort(array->buffer, array->size, sizeof(int64_t),
@@ -474,7 +474,7 @@ error_t interp_sort_(interp_t* ip, const insn_t* insn) {
 error_t interp_shuffle_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_SHUFFLE) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_SHUFFLE) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 1) return ERR_INVARGCNT;
 
 	size_t idx;
@@ -499,7 +499,7 @@ error_t stats_clean_(error_t errcode, vector_i64_t* clone) {
 error_t interp_stats_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_STATS) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_STATS) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 1) return ERR_INVARGCNT;
 
 	size_t idx;
@@ -539,7 +539,7 @@ error_t interp_stats_(interp_t* ip, const insn_t* insn) {
 
 	vector_i64_t clone;
 	if (!vector_i64_dup(array, &clone) || !vector_i64_sort(&clone)) {
-		return stats_clean_(ERR_MEM, &clone);
+		return stats_clean_(ERROR_OUT_OF_MEMORY, &clone);
 	}
 
 	size_t maxCount = 1, count = 1;
@@ -573,7 +573,7 @@ error_t interp_stats_(interp_t* ip, const insn_t* insn) {
 error_t interp_print_(interp_t* ip, const insn_t* insn) {
 	error_t error;
 
-	if (!ip || !insn || insn->op != OP_PRINT) return ERR_INVVAL;
+	if (!ip || !insn || insn->op != OP_PRINT) return ERROR_INVALID_PARAMETER;
 	if (insn_argc(insn) != 2 && insn_argc(insn) != 3) return ERR_INVARGCNT;
 
 	size_t idx;
@@ -615,7 +615,7 @@ error_t interp_print_(interp_t* ip, const insn_t* insn) {
 }
 
 error_t interp_run(interp_t* ip, const vector_insn_t* insns) {
-	if (!ip || !insns) return ERR_INVVAL;
+	if (!ip || !insns) return ERROR_INVALID_PARAMETER;
 
 	for (size_t i = 0; i != vector_insn_size(insns); ++i) {
 		insn_t* insn = vector_insn_get(insns, i);

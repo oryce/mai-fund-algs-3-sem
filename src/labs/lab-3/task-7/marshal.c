@@ -32,7 +32,7 @@ error_t read_end(error_t ret, liver_node_t** list, char* line) {
 }
 
 error_t liver_read_all(liver_node_t** list, FILE* inFp) {
-	if (!list) return ERR_INVVAL;
+	if (!list) return ERROR_INVALID_PARAMETER;
 
 	// "Initialize" a new linked list.
 	*list = NULL;
@@ -56,30 +56,30 @@ error_t liver_read_all(liver_node_t** list, FILE* inFp) {
 	free(line);
 
 	if (ferror(inFp)) {
-		return read_end(ERR_IO, list, NULL);
+		return read_end(ERROR_IO, list, NULL);
 	}
 
 	return 0;
 }
 
 error_t liver_write(liver_t* liver, FILE* outFp) {
-	if (!liver) return ERR_INVVAL;
+	if (!liver) return ERROR_INVALID_PARAMETER;
 
 	fprintf(outFp, "%s,%s,%s,%02d.%02d.%02d,%c,%lf\n", liver->last_name,
 	        liver->first_name, liver->middle_name, liver->dob.day,
 	        liver->dob.month, liver->dob.year, liver->gender, liver->income);
-	if (ferror(outFp)) return ERR_IO;
+	if (ferror(outFp)) return ERROR_IO;
 
 	return 0;
 }
 
 error_t liver_write_pretty(liver_t* liver, FILE* outFp) {
-	if (!liver) return ERR_INVVAL;
+	if (!liver) return ERROR_INVALID_PARAMETER;
 
 	fprintf(outFp, "%s %s %s (%02d.%02d.%02d) | %c | %lf\n", liver->last_name,
 	        liver->first_name, liver->middle_name, liver->dob.day,
 	        liver->dob.month, liver->dob.year, liver->gender, liver->income);
-	if (ferror(outFp)) return ERR_IO;
+	if (ferror(outFp)) return ERROR_IO;
 
 	return 0;
 }
@@ -103,7 +103,7 @@ error_t parse_end(error_t ret, liver_t* liver) {
 }
 
 error_t liver_from_str(liver_t* liver, char* str) {
-	if (!liver || !str) return ERR_INVVAL;
+	if (!liver || !str) return ERROR_INVALID_PARAMETER;
 
 	// set these to NULL so we can freely free them
 	liver->last_name = NULL;
@@ -122,7 +122,7 @@ error_t liver_from_str(liver_t* liver, char* str) {
 
 				liver->last_name = strdup(token);
 				if (!liver->last_name) {
-					return parse_end(ERR_MEM, liver);
+					return parse_end(ERROR_OUT_OF_MEMORY, liver);
 				}
 
 				st = PARSE_FIRST_NAME;
@@ -134,7 +134,7 @@ error_t liver_from_str(liver_t* liver, char* str) {
 
 				liver->first_name = strdup(token);
 				if (!liver->first_name) {
-					return parse_end(ERR_MEM, liver);
+					return parse_end(ERROR_OUT_OF_MEMORY, liver);
 				}
 
 				st = PARSE_MIDDLE_NAME;
@@ -146,7 +146,7 @@ error_t liver_from_str(liver_t* liver, char* str) {
 
 				liver->middle_name = strdup(token);
 				if (!liver->middle_name) {
-					return parse_end(ERR_MEM, liver);
+					return parse_end(ERROR_OUT_OF_MEMORY, liver);
 				}
 
 				st = PARSE_DOB;
@@ -189,7 +189,7 @@ error_t liver_from_str(liver_t* liver, char* str) {
 				break;
 			}
 			case PARSE_VALID:
-				return parse_end(ERR_UNEXPTOK, liver);
+				return parse_end(ERROR_UNEXPECTED_TOKEN, liver);
 		}
 	}
 

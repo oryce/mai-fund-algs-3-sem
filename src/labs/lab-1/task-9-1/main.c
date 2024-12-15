@@ -7,7 +7,7 @@
 #include "lib/error.h"
 
 error_t task(long array[], size_t nItems, long a, long b) {
-	if (nItems == 0) return ERR_INVVAL;
+	if (nItems == 0) return ERROR_INVALID_PARAMETER;
 
 	long* min = NULL;
 	long* max = NULL;
@@ -26,7 +26,7 @@ error_t task(long array[], size_t nItems, long a, long b) {
 		printf("[%zu] %ld\n", i, value);
 	}
 
-	CHECK(!min || !max, "no min/max found");
+	ASSERT(!min || !max);
 	printf("min: %ld, max: %ld\n", *min, *max);
 
 	long temp = *min;

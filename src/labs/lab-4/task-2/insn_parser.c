@@ -34,7 +34,7 @@ error_t parse_stream_fail(error_t errcode, vector_insn_t* insns, insn_t* insn,
 typedef enum { PARSE_OP, PARSE_ARG, PARSE_SEMI } parse_st_t;
 
 error_t insn_parse_stream(vector_insn_t* insns, FILE* stream) {
-	if (!insns) return ERR_INVVAL;
+	if (!insns) return ERROR_INVALID_PARAMETER;
 
 	*insns = vector_insn_create();
 
@@ -45,7 +45,7 @@ error_t insn_parse_stream(vector_insn_t* insns, FILE* stream) {
 	// Temporary buffer to hold stuff being parsed.
 	string_t buffer;
 	if (!string_create(&buffer)) {
-		return parse_stream_fail(ERR_MEM, insns, &insn, &buffer);
+		return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn, &buffer);
 	}
 
 	// Parsing state.
@@ -79,17 +79,17 @@ error_t insn_parse_stream(vector_insn_t* insns, FILE* stream) {
 					// Ensure that only `Free(a);` is parsed with braces.
 					if ((op == OP_FREE && ch != '(') ||
 					    (op != OP_FREE && ch == '(')) {
-						return parse_stream_fail(ERR_UNEXPTOK, insns, &insn,
+						return parse_stream_fail(ERROR_UNEXPECTED_TOKEN, insns, &insn,
 						                         &buffer);
 					}
 					insn = insn_create(op);
 					if (!string_clear(&buffer)) {
-						return parse_stream_fail(ERR_MEM, insns, &insn,
+						return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn,
 						                         &buffer);
 					}
 				} else {
 					if (!string_append_char(&buffer, ch)) {
-						return parse_stream_fail(ERR_MEM, insns, &insn,
+						return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn,
 						                         &buffer);
 					}
 				}
@@ -98,7 +98,7 @@ error_t insn_parse_stream(vector_insn_t* insns, FILE* stream) {
 					st = PARSE_ARG;
 				} else if (ch == ';') {
 					if (!vector_insn_push_back(insns, insn)) {
-						return parse_stream_fail(ERR_MEM, insns, &insn,
+						return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn,
 						                         &buffer);
 					}
 					st = PARSE_OP;
@@ -112,21 +112,21 @@ error_t insn_parse_stream(vector_insn_t* insns, FILE* stream) {
 				    (ch == ')' && insn.op == OP_FREE)) {
 					string_t arg = {.initialized = false};
 					if (!string_copy(&buffer, &arg)) {
-						return parse_stream_fail(ERR_MEM, insns, &insn,
+						return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn,
 						                         &buffer);
 					}
 					if (!vector_str_push_back(&insn.args, arg)) {
 						string_destroy(&arg);
-						return parse_stream_fail(ERR_MEM, insns, &insn,
+						return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn,
 						                         &buffer);
 					}
 					if (!string_clear(&buffer)) {
-						return parse_stream_fail(ERR_MEM, insns, &insn,
+						return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn,
 						                         &buffer);
 					}
 				} else if (!chars_is_space(ch) && ch != '\n') {
 					if (!string_append_char(&buffer, ch)) {
-						return parse_stream_fail(ERR_MEM, insns, &insn,
+						return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn,
 						                         &buffer);
 					}
 				}
@@ -135,7 +135,7 @@ error_t insn_parse_stream(vector_insn_t* insns, FILE* stream) {
 					st = PARSE_ARG;
 				} else if (ch == ';') {
 					if (!vector_insn_push_back(insns, insn)) {
-						return parse_stream_fail(ERR_MEM, insns, &insn,
+						return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn,
 						                         &buffer);
 					}
 					st = PARSE_OP;
@@ -147,11 +147,11 @@ error_t insn_parse_stream(vector_insn_t* insns, FILE* stream) {
 			}
 			case PARSE_SEMI: {
 				if (ch != ';') {
-					return parse_stream_fail(ERR_UNEXPTOK, insns, &insn,
+					return parse_stream_fail(ERROR_UNEXPECTED_TOKEN, insns, &insn,
 					                         &buffer);
 				}
 				if (!vector_insn_push_back(insns, insn)) {
-					return parse_stream_fail(ERR_MEM, insns, &insn, &buffer);
+					return parse_stream_fail(ERROR_OUT_OF_MEMORY, insns, &insn, &buffer);
 				}
 				st = PARSE_OP;
 				break;
@@ -160,10 +160,10 @@ error_t insn_parse_stream(vector_insn_t* insns, FILE* stream) {
 	}
 
 	if (st != PARSE_OP) {
-		return parse_stream_fail(ERR_UNEXPTOK, insns, &insn, &buffer);
+		return parse_stream_fail(ERROR_UNEXPECTED_TOKEN, insns, &insn, &buffer);
 	}
 	if (ferror(stream)) {
-		return parse_stream_fail(ERR_IO, insns, &insn, &buffer);
+		return parse_stream_fail(ERROR_IO, insns, &insn, &buffer);
 	}
 
 	string_destroy(&buffer);

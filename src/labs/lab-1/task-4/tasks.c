@@ -25,14 +25,14 @@ error_t task_remove_digits(FILE* in, FILE* out) {
 	while (getline(&line, &lineCap, in) > 0) {
 		if (lineCap == 0) {
 			remove_digits_cleanup_(line, modified);
-			return ERR_CHECK;
+			return ERROR_ASSERT;
 		}
 
 		if (lineCap > modifiedCap) {
 			char* newBuffer = (char*)realloc(modified, lineCap);
 			if (!newBuffer) {
 				remove_digits_cleanup_(line, modified);
-				return ERR_MEM;
+				return ERROR_OUT_OF_MEMORY;
 			}
 			modified = newBuffer;
 			modifiedCap = lineCap;
@@ -40,7 +40,7 @@ error_t task_remove_digits(FILE* in, FILE* out) {
 
 		if (!modified) {
 			remove_digits_cleanup_(line, modified);
-			return ERR_CHECK;
+			return ERROR_ASSERT;
 		}
 
 		int i = 0;
@@ -55,7 +55,7 @@ error_t task_remove_digits(FILE* in, FILE* out) {
 
 		if (ferror(out)) {
 			remove_digits_cleanup_(line, modified);
-			return ERR_IO;
+			return ERROR_IO;
 		}
 	}
 
@@ -70,7 +70,7 @@ error_t count_lines_predicate(FILE* in, FILE* out, line_count_predicate_t predic
 	while (getline(&line, &lineCap, in) > 0) {
 		if (ferror(in)) {
 			free(line);
-			return ERR_IO;
+			return ERROR_IO;
 		}
 
 		int count = 0;
@@ -89,7 +89,7 @@ error_t count_lines_predicate(FILE* in, FILE* out, line_count_predicate_t predic
 
 		if (ferror(out)) {
 			free(line);
-			return ERR_IO;
+			return ERROR_IO;
 		}
 	}
 
@@ -122,7 +122,7 @@ error_t task_encode_non_digits(FILE* in, FILE* out) {
 	while (getline(&line, &lineCap, in) > 0) {
 		if (ferror(in)) {
 			encode_non_digits_cleanup_(line, modified);
-			return ERR_IO;
+			return ERROR_IO;
 		}
 
 		// Allocate for the modified line buffer.
@@ -132,13 +132,13 @@ error_t task_encode_non_digits(FILE* in, FILE* out) {
 			modified = malloc(modifiedCap);
 			if (!modified) {
 				encode_non_digits_cleanup_(line, modified);
-				return ERR_MEM;
+				return ERROR_OUT_OF_MEMORY;
 			}
 		} else if (lineCap * 4 > modifiedCap) {
 			char* newBuffer = realloc(modified, lineCap * 4);
 			if (!newBuffer) {
 				encode_non_digits_cleanup_(line, modified);
-				return ERR_MEM;
+				return ERROR_OUT_OF_MEMORY;
 			}
 			modified = newBuffer;
 			modifiedCap = lineCap * 4;
@@ -172,7 +172,7 @@ error_t task_encode_non_digits(FILE* in, FILE* out) {
 
 		if (ferror(out)) {
 			encode_non_digits_cleanup_(line, modified);
-			return ERR_IO;
+			return ERROR_IO;
 		}
 	}
 

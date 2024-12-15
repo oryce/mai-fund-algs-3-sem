@@ -62,10 +62,10 @@ error_t sn_parse_end(error_t ret, stop_node_t* node) {
 }
 
 error_t stop_node_from_line(stop_node_t** node, char* line) {
-	if (!node || !line) return ERR_INVVAL;
+	if (!node || !line) return ERROR_INVALID_PARAMETER;
 
 	*node = stop_node_create();
-	if (!(*node)) return ERR_MEM;
+	if (!(*node)) return ERROR_OUT_OF_MEMORY;
 
 	sn_parse_state_t st = SN_ID;
 
@@ -76,7 +76,7 @@ error_t stop_node_from_line(stop_node_t** node, char* line) {
 			case SN_ID:
 				(*node)->id = strdup(token);
 				if (!(*node)->id) {
-					return sn_parse_end(ERR_MEM, *node);
+					return sn_parse_end(ERROR_OUT_OF_MEMORY, *node);
 				}
 
 				st = SN_ARRIVE_TIME;
@@ -102,7 +102,7 @@ error_t stop_node_from_line(stop_node_t** node, char* line) {
 
 				// arrive_time must be < depart_time
 				if (difftime((*node)->arrive_time, (*node)->depart_time) >= 0) {
-					return sn_parse_end(ERR_INVVAL, *node);
+					return sn_parse_end(ERROR_INVALID_PARAMETER, *node);
 				}
 
 				st = SN_TYPE;
@@ -122,13 +122,13 @@ error_t stop_node_from_line(stop_node_t** node, char* line) {
 				break;
 			case SN_VALID:
 				// Unexpected token after the last valid token
-				return sn_parse_end(ERR_UNEXPTOK, *node);
+				return sn_parse_end(ERROR_UNEXPECTED_TOKEN, *node);
 		}
 	}
 
 	if (st != SN_VALID) {
 		// Not enough tokens.
-		return sn_parse_end(ERR_UNEXPTOK, *node);
+		return sn_parse_end(ERROR_UNEXPECTED_TOKEN, *node);
 	}
 
 	return 0;
@@ -165,7 +165,7 @@ error_t tn_parse_end(error_t ret, tr_node_t* tn, stop_node_t* sn, char* line) {
 }
 
 error_t tr_node_process_file(tr_node_t** node, FILE* fp) {
-	if (!node) return ERR_INVVAL;
+	if (!node) return ERROR_INVALID_PARAMETER;
 
 	// Coords for the stop.
 	double xCoord;
@@ -212,7 +212,7 @@ error_t tr_node_process_file(tr_node_t** node, FILE* fp) {
 			free(sn->id);
 		} else {
 			*tn = tr_node_create();
-			if (!(*tn)) return tn_parse_end(ERR_MEM, *node, sn, line);
+			if (!(*tn)) return tn_parse_end(ERROR_OUT_OF_MEMORY, *node, sn, line);
 
 			(*tn)->id = sn->id;
 		}
@@ -228,12 +228,12 @@ error_t tr_node_process_file(tr_node_t** node, FILE* fp) {
 			stop_node_t* sn0 = *ins;
 
 			*ins = stop_node_create();
-			if (!(*ins)) return tn_parse_end(ERR_MEM, *node, sn, line);
+			if (!(*ins)) return tn_parse_end(ERROR_OUT_OF_MEMORY, *node, sn, line);
 
 			(*ins)->next = sn0;
 		} else {
 			*ins = stop_node_create();
-			if (!(*ins)) return tn_parse_end(ERR_MEM, *node, sn, line);
+			if (!(*ins)) return tn_parse_end(ERROR_OUT_OF_MEMORY, *node, sn, line);
 		}
 
 		// Copy properties to the inserted node.
@@ -250,7 +250,7 @@ error_t tr_node_process_file(tr_node_t** node, FILE* fp) {
 	free(line);
 
 	if (ferror(fp)) {
-		return tn_parse_end(ERR_IO, *node, 0, NULL);
+		return tn_parse_end(ERROR_IO, *node, 0, NULL);
 	}
 
 	return 0;
@@ -260,7 +260,7 @@ error_t tr_next_route(const tr_node_t* tn, const stop_node_t** start,
                       const stop_node_t** end) {
 	// Check that any of the pointers are not NULL, and that *start points to a
 	// valid starting node.
-	if (!tn || !start || !end || !(*start)) return ERR_INVVAL;
+	if (!tn || !start || !end || !(*start)) return ERROR_INVALID_PARAMETER;
 	if ((*start)->type != STOP_START) return ERR_NOTSTARTNODE;
 
 	// Traverse the nodes from *start until the ptr ends, or we encounter a

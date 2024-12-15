@@ -9,24 +9,24 @@ typedef int32_t error_t;
 
 typedef const char* (*error_fmt_t)(error_t);
 
-#define ERR_INVVAL 0x00000001
-#define ERR_MEM 0x00000002
-#define ERR_OVERFLOW 0x00000003
-#define ERR_UNDERFLOW 0x00000004
-#define ERR_IO 0x00000005
-#define ERR_CHECK 0x00000006
-#define ERR_UNEXPTOK 0x00000007
-#define ERR_UNRECOPT 0x00000008
+#define ERROR_INVALID_PARAMETER 0x00000001
+#define ERROR_OUT_OF_MEMORY 0x00000002
+#define ERROR_OVERFLOW 0x00000003
+#define ERROR_UNDERFLOW 0x00000004
+#define ERROR_IO 0x00000005
+#define ERROR_ASSERT 0x00000006
+#define ERROR_UNEXPECTED_TOKEN 0x00000007
+#define ERROR_UNRECOGNIZED_OPTION 0x00000008
 
 #define FILENAME_ (strrchr("/" __FILE__, '/') + 1)
 
-#define CHECK(condition, msg)                                                  \
-	do {                                                                       \
-		if ((condition)) {                                                     \
-			fprintf(stderr, "check failed (%s:%d): %s\n", FILENAME_, __LINE__, \
-			        msg);                                                      \
-			return ERR_CHECK;                                                  \
-		}                                                                      \
+#define ASSERT(condition)                                                \
+	do {                                                                 \
+		if ((condition)) {                                               \
+			fprintf(stderr, "assertion failed (%s:%d): %s\n", FILENAME_, \
+			        __LINE__, #condition);                               \
+			return ERROR_ASSERT;                                         \
+		}                                                                \
 	} while (0);
 
 /** Prints the error message to `stderr`. */
